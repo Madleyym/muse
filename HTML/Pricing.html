@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pricing - Muse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 xl:px-0 py-4">
+        <div class="flex items-center justify-between">
+          <a href="index.html" class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white font-bold"
+            >
+              M
+            </div>
+            <span class="font-bold text-xl gradient-text">Muse</span>
+          </a>
+
+          <nav class="hidden md:flex items-center gap-6">
+            <a
+              href="index.html"
+              class="text-sm font-medium text-neutral-700 hover:text-purple-600"
+              >Home</a
+            >
+            <a
+              href="gallery.html"
+              class="text-sm font-medium text-neutral-700 hover:text-purple-600"
+              >Gallery</a
+            >
+            <a
+              href="pricing.html"
+              class="text-sm font-medium text-purple-600 border-b-2 border-purple-600"
+              >Pricing</a
+            >
+            <a
+              href="about.html"
+              class="text-sm font-medium text-neutral-700 hover:text-purple-600"
+              >About</a
+            >
+          </nav>
+
+          <div class="flex items-center gap-3">
+            <a
+              href="#"
+              class="items-center justify-center whitespace-nowrap text-sm font-medium transition-all shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] gradient-bg text-white hover:opacity-90 px-3 py-2 rounded-[0.625rem] flex"
+            >
+              Connect Wallet
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section
+      class="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-16"
+    >
+      <div class="max-w-7xl mx-auto px-4 xl:px-0 text-center">
+        <h1 class="text-4xl lg:text-5xl font-bold gradient-text mb-4">
+          Simple, Transparent Pricing
+        </h1>
+        <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+          Start free, upgrade when you're ready. No hidden fees, no surprises.
+        </p>
+      </div>
+    </section>
+
+    <!-- Pricing Cards -->
+    <section class="py-16">
+      <div class="max-w-6xl mx-auto px-4 xl:px-0">
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Free Plan -->
+          <div
+            class="bg-white rounded-2xl shadow-lg p-8 border-2 border-purple-200 relative"
+          >
+            <div
+              class="absolute -top-3 left-8 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full"
+            >
+              MOST POPULAR
+            </div>
+            <div class="mb-6">
+              <div class="text-sm font-medium text-green-600 mb-2">
+                🟢 FREE MINT
+              </div>
+              <h3 class="text-3xl font-bold mb-2">SD Edition</h3>
+              <div class="flex items-baseline gap-2 mb-4">
+                <span class="text-5xl font-bold gradient-text">FREE</span>
+                <span class="text-slate-500">forever</span>
+              </div>
+              <p class="text-slate-600">
+                Perfect for experimenting and sharing your mood with the
+                community
+              </p>
+            </div>
+
+            <ul class="space-y-4 mb-8">
+              <li class="flex items-start">
+                <svg
+                  class="w-5 h-5 text-green-500 mr-3 mt-0.5 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-slate-700">512px Resolution</div>
+                  <div class="text-sm text-slate-500">
+                    Good quality for social media
+                  </div>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <svg
+                  class="w-5 h-5 text-green-500 mr-3 mt-0.5 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-slate-700">
+                    Mint via Farcaster
+                  </div>
+                  <div class="text-sm text-slate-500">
+                    Just like a cast - super easy
+                  </div>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <svg
+                  class="w-5 h-5 text-green-500 mr-3 mt-0.5 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-slate-700">Base Mainnet</div>
+                  <div class="text-sm text-slate-500">
+                    Fully onchain & verifiable
+                  </div>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <svg
+                  class="w-5 h-5 text-green-500 mr-3 mt-0.5 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-slate-700">
+                    Community Features
+                  </div>
+                  <div class="text-sm text-slate-500">
+                    Gallery listing & social sharing
+                  </div>
+                </div>
+              </li>
+              <li class="flex items-start">
+                <svg
+                  class="w-5 h-5 text-green-500 mr-3 mt-0.5 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-slate-700">Unlimited Mints</div>
+                  <div class="text-sm text-slate-500">
+                    Mint as many moods as you want
+                  </div>
+                </div>
+              </li>
+            </ul>
+
+            <a
+              href="#"
+              class="block w-full text-center items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(139,92,246,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] gradient-bg text-white hover:opacity-90 px-4 py-3 rounded-[0.625rem]"
+            >
+              Claim Free NFT Now
+            </a>
+          </div>
+
+          <!-- Premium Plan -->
+          <div
+            class="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"
+            ></div>
+            <div class="relative z-10">
+              <div class="mb-6">
+                <div class="text-sm font-medium text-purple-200 mb-2">
+                  🔵 HD PREMIUM
+                </div>
+                <h3 class="text-3xl font-bold mb-2">HD Edition</h3>
+                <div class="flex items-baseline gap-2 mb-4">
+                  <span class="text-5xl font-bold">0.001 ETH</span>
+                  <span class="text-purple-200">per mint</span>
+                </div>
+                <p class="text-purple-100">
+                  For collectors and creators who want the best quality
+                </p>
+              </div>
+
+              <ul class="space-y-4 mb-8">
+                <li class="flex items-start">
+                  <svg
+                    class="w-5 h-5 text-purple-200 mr-3 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <div>
+                    <div class="font-medium">2048px High Resolution</div>
+                    <div class="text-sm text-purple-200">
+                      Perfect for prints & displays
+                    </div>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <svg
+                    class="w-5 h-5 text-purple-200 mr-3 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <div>
+                    <div class="font-medium">Optional Animation</div>
+                    <div class="text-sm text-purple-200">
+                      Bring your mood to life
+                    </div>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <svg
+                    class="w-5 h-5 text-purple-200 mr-3 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <div>
+                    <div class="font-medium">Commercial Rights</div>
+                    <div class="text-sm text-purple-200">
+                      Use for merch, PFPs, anything
+                    </div>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <svg
+                    class="w-5 h-5 text-purple-200 mr-3 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <div>
+                    <div class="font-medium">Priority Support</div>
+                    <div class="text-sm text-purple-200">
+                      Direct help from creators
+                    </div>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <svg
+                    class="w-5 h-5 text-purple-200 mr-3 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <div>
+                    <div class="font-medium">Support Development</div>
+                    <div class="text-sm text-purple-200">
+                      Help us build more features
+                    </div>
+                  </div>
+                </li>
+                <li class="flex items-start">
+                  <svg
+                    class="w-5 h-5 text-purple-200 mr-3 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                  <div>
+                    <div class="font-medium">Exclusive Badge</div>
+                    <div class="text-sm text-purple-200">
+                      Premium collector status
+                    </div>
+                  </div>
+                </li>
+              </ul>
+
+              <a
+                href="#"
+                class="block w-full text-center items-center justify-center whitespace-nowrap text-sm font-medium transition-all shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-white text-purple-600 hover:bg-purple-50 px-4 py-3 rounded-[0.625rem]"
+              >
+                Mint HD NFT
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="py-16 bg-white">
+      <div class="max-w-6xl mx-auto px-4 xl:px-0">
+        <h2 class="text-3xl font-bold gradient-text text-center mb-12">
+          Feature Comparison
+        </h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b-2 border-slate-200">
+                <th class="text-left py-4 px-4 font-semibold text-slate-700">
+                  Feature
+                </th>
+                <th class="text-center py-4 px-4 font-semibold text-slate-700">
+                  Free SD
+                </th>
+                <th class="text-center py-4 px-4 font-semibold text-slate-700">
+                  HD Premium
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="py-4 px-4 text-slate-600">Resolution</td>
+                <td class="py-4 px-4 text-center text-slate-600">512px</td>
+                <td class="py-4 px-4 text-center text-slate-600">2048px</td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 text-slate-600">Animation</td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-slate-400">✗</span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-green-500">✓</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 text-slate-600">Commercial Rights</td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-slate-400">✗</span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-green-500">✓</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 text-slate-600">Gallery Listing</td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-green-500">✓</span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-green-500">✓</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 text-slate-600">Base Mainnet</td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-green-500">✓</span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-green-500">✓</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 text-slate-600">Priority Support</td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-slate-400">✗</span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-green-500">✓</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-4 px-4 text-slate-600">Exclusive Badge</td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-slate-400">✗</span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                  <span class="text-green-500">✓</span>
+                </td>
+              </tr>
+              <tr class="bg-slate-50">
+                <td class="py-4 px-4 font-semibold text-slate-700">Price</td>
+                <td class="py-4 px-4 text-center font-bold text-green-600">
+                  FREE
+                </td>
+                <td class="py-4 px-4 text-center font-bold gradient-text">
+                  0.001 ETH
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-16 bg-slate-50">
+      <div class="max-w-4xl mx-auto px-4 xl:px-0">
+        <h2 class="text-3xl font-bold gradient-text text-center mb-12">
+          Frequently Asked Questions
+        </h2>
+
+        <div class="space-y-4">
+          <details class="bg-white rounded-lg shadow-sm p-6 group">
+            <summary
+              class="font-semibold text-slate-700 cursor-pointer flex items-center justify-between"
+            >
+              How does free minting work?
+              <svg
+                class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </summary>
+            <p class="mt-4 text-slate-600">
+              Simply like a cast on Farcaster that contains the MuseFrame. Your
+              mood will be analyzed and you'll receive a unique 512px NFT minted
+              directly to your wallet on Base - completely free!
+            </p>
+          </details>
+
+          <details class="bg-white rounded-lg shadow-sm p-6 group">
+            <summary
+              class="font-semibold text-slate-700 cursor-pointer flex items-center justify-between"
+            >
+              What's the difference between SD and HD?
+              <svg
+                class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </summary>
+            <p class="mt-4 text-slate-600">
+              SD (512px) is perfect for social media and casual collecting. HD
+              (2048px) offers museum-quality resolution, optional animation, and
+              commercial usage rights - ideal for serious collectors and
+              creators.
+            </p>
+          </details>
+
+          <details class="bg-white rounded-lg shadow-sm p-6 group">
+            <summary
+              class="font-semibold text-slate-700 cursor-pointer flex items-center justify-between"
+            >
+              Can I upgrade from SD to HD later?
+              <svg
+                class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </summary>
+            <p class="mt-4 text-slate-600">
+              Yes! You can mint an HD version of any mood you've already created
+              for 0.001 ETH. Your original SD NFT will remain in your wallet.
+            </p>
+          </details>
+
+          <details class="bg-white rounded-lg shadow-sm p-6 group">
+            <summary
+              class="font-semibold text-slate-700 cursor-pointer flex items-center justify-between"
+            >
+              What can I do with commercial rights?
+              <svg
+                class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </summary>
+            <p class="mt-4 text-slate-600">
+              HD NFT holders have full commercial rights to their artwork. Use
+              it for merchandise, profile pictures, marketing materials, or any
+              other commercial purpose without restrictions.
+            </p>
+          </details>
+
+          <details class="bg-white rounded-lg shadow-sm p-6 group">
+            <summary
+              class="font-semibold text-slate-700 cursor-pointer flex items-center justify-between"
+            >
+              How is my mood calculated?
+              <svg
+                class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </summary>
+            <p class="mt-4 text-slate-600">
+              Our algorithm analyzes your recent Farcaster activity including
+              posting times, engagement patterns, and interaction types to
+              generate a unique visual representation of your current vibe.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 bg-gradient-to-br from-purple-600 to-blue-600">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-3xl lg:text-4xl font-bold text-white mb-4">
+          Ready to Start Minting?
+        </h2>
+        <p class="text-lg text-purple-100 mb-8">
+          Join thousands of Farcaster users creating mood art on Base
+        </p>
+        <div class="flex flex-wrap gap-4 justify-center">
+          <a
+            href="#"
+            class="items-center justify-center whitespace-nowrap text-sm font-medium transition-all shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] bg-white text-purple-600 hover:bg-purple-50 px-6 py-3 rounded-[0.625rem] flex"
+          >
+            Start Free Minting
+          </a>
+          <a
+            href="gallery.html"
+            class="items-center justify-center whitespace-nowrap text-sm font-medium transition-all border border-white/30 bg-purple-500/30 text-white hover:bg-purple-400/40 px-6 py-3 rounded-[0.625rem] flex"
+          >
+            View Gallery
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-300 py-12">
+      <div class="max-w-7xl mx-auto px-4 xl:px-0">
+        <div class="grid md:grid-cols-4 gap-8">
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <div
+                class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white font-bold"
+              >
+                M
+              </div>
+              <span class="font-bold text-xl text-white">Muse</span>
+            </div>
+            <p class="text-sm">Mint your mood. Collect the vibe.</p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-white mb-4">Product</h4>
+            <ul class="space-y-2 text-sm">
+              <li>
+                <a href="index.html#how-it-works" class="hover:text-purple-400"
+                  >How it Works</a
+                >
+              </li>
+              <li>
+                <a href="gallery.html" class="hover:text-purple-400">Gallery</a>
+              </li>
+              <li>
+                <a href="pricing.html" class="hover:text-purple-400">Pricing</a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-white mb-4">Community</h4>
+            <ul class="space-y-2 text-sm">
+              <li><a href="#" class="hover:text-purple-400">Farcaster</a></li>
+              <li><a href="#" class="hover:text-purple-400">Twitter</a></li>
+              <li><a href="#" class="hover:text-purple-400">Discord</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-white mb-4">Resources</h4>
+            <ul class="space-y-2 text-sm">
+              <li><a href="#" class="hover:text-purple-400">Docs</a></li>
+              <li>
+                <a href="#" class="hover:text-purple-400">Base Network</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-purple-400">Smart Contract</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-slate-800 mt-12 pt-8 text-center text-sm">
+          <p>© 2025 Muse. Built with 💜 on Base.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
