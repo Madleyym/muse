@@ -24,10 +24,6 @@ export default function Header() {
     };
   }, [isMobileMenuOpen]);
 
-  const shortenAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
-
   return (
     <>
       <header className="py-3 pb-0">
@@ -87,14 +83,23 @@ export default function Header() {
                 </li>
                 <li>
                   <a
-                    className="flex items-center gap-x-1.5 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:text-purple-600"
+                    className="flex items-center gap-x-1.5 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:text-purple-600 group"
                     href="https://warpcast.com"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
+                    <div className="relative w-4 h-4 flex-shrink-0 opacity-70 group-hover:opacity-100 transition">
+                      <Image
+                        src="/assets/images/layout/farcaster.png"
+                        alt="Farcaster"
+                        width={16}
+                        height={16}
+                        className="object-contain"
+                      />
+                    </div>
                     Farcaster
                     <svg
-                      className="h-4 text-neutral-500"
+                      className="h-4 text-neutral-500 group-hover:text-purple-600 transition"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       fill="currentColor"
@@ -244,24 +249,35 @@ export default function Header() {
       {isMobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
           ></div>
 
           <div className="fixed top-0 right-0 h-full w-80 max-w-[85%] bg-white z-50 shadow-2xl lg:hidden overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-end mb-6">
+            <div className="gradient-bg p-6 pb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="relative w-8 h-8">
+                    <Image
+                      src="/assets/Logo/Muse.png"
+                      alt="Muse"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="font-bold text-xl text-white">Muse</span>
+                </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition"
+                  className="p-2 hover:bg-white/20 rounded-lg transition"
                   aria-label="Close menu"
                 >
                   <svg
-                    className="h-6 w-6 text-slate-600"
+                    className="h-6 w-6 text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
-                    strokeWidth="1.5"
+                    strokeWidth="2"
                     stroke="currentColor"
                   >
                     <path
@@ -274,9 +290,9 @@ export default function Header() {
               </div>
 
               {isConnected && (
-                <div className="mb-6 p-4 bg-purple-50 rounded-xl">
+                <div className="bg-white/20 backdrop-blur-md rounded-xl p-4">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-purple-300">
+                    <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/50 flex-shrink-0">
                       <Image
                         src={
                           farcasterData?.pfpUrl ||
@@ -284,16 +300,15 @@ export default function Header() {
                         }
                         alt="Profile"
                         fill
-                        sizes="48px"
                         className="object-cover"
                         quality={100}
                       />
                     </div>
-                    <div>
-                      <div className="font-semibold text-slate-800">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-white text-base truncate">
                         {farcasterData?.displayName || "Connected"}
                       </div>
-                      <div className="text-xs text-slate-600">
+                      <div className="text-xs text-white/80 truncate">
                         {farcasterData
                           ? `@${farcasterData.username}`
                           : address
@@ -301,7 +316,7 @@ export default function Header() {
                           : ""}
                       </div>
                       {farcasterData && (
-                        <div className="text-xs text-purple-600 font-medium mt-1">
+                        <div className="text-xs text-white font-semibold mt-1 bg-white/20 rounded px-2 py-0.5 inline-block">
                           {farcasterData.mood}
                         </div>
                       )}
@@ -309,37 +324,78 @@ export default function Header() {
                   </div>
                 </div>
               )}
+            </div>
 
-              <nav>
+            <div className="px-4 py-4">
+              <nav className="mb-4">
                 <ul className="space-y-1">
                   <li>
                     <Link
                       href="/#how-it-works"
-                      className="block px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
+                      className="flex items-center justify-between px-4 py-3 text-base font-medium text-neutral-700 hover:bg-purple-50 rounded-xl transition group"
                       onClick={() => setIsMobileMenuOpen(false)}
                       prefetch={false}
                     >
-                      How It Works
+                      <span>How It Works</span>
+                      <svg
+                        className="w-5 h-5 text-neutral-400 group-hover:text-purple-600 transition"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
                     </Link>
                   </li>
                   <li>
                     <Link
                       href="/gallery"
-                      className="block px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
+                      className="flex items-center justify-between px-4 py-3 text-base font-medium text-neutral-700 hover:bg-purple-50 rounded-xl transition group"
                       onClick={() => setIsMobileMenuOpen(false)}
                       prefetch={true}
                     >
-                      Gallery
+                      <span>Gallery</span>
+                      <svg
+                        className="w-5 h-5 text-neutral-400 group-hover:text-purple-600 transition"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
                     </Link>
                   </li>
                   <li>
                     <Link
                       href="/roadmap"
-                      className="block px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
+                      className="flex items-center justify-between px-4 py-3 text-base font-medium text-neutral-700 hover:bg-purple-50 rounded-xl transition group"
                       onClick={() => setIsMobileMenuOpen(false)}
                       prefetch={true}
                     >
-                      Roadmap
+                      <span>Roadmap</span>
+                      <svg
+                        className="w-5 h-5 text-neutral-400 group-hover:text-purple-600 transition"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
                     </Link>
                   </li>
                   <li>
@@ -347,14 +403,24 @@ export default function Header() {
                       href="https://warpcast.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
+                      className="flex items-center justify-between px-4 py-3 text-base font-medium text-neutral-700 hover:bg-purple-50 rounded-xl transition group"
                     >
-                      Farcaster
+                      <div className="flex items-center gap-2.5">
+                        <div className="relative w-5 h-5 flex-shrink-0 opacity-70 group-hover:opacity-100 transition">
+                          <Image
+                            src="/assets/images/layout/farcaster.png"
+                            alt="Farcaster"
+                            width={20}
+                            height={20}
+                            className="object-contain"
+                          />
+                        </div>
+                        <span>Farcaster</span>
+                      </div>
                       <svg
-                        className="h-4 text-neutral-500"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
+                        className="w-4 h-4 text-neutral-400 group-hover:text-purple-600 transition"
                         fill="currentColor"
+                        viewBox="0 0 24 24"
                       >
                         <path
                           fillRule="evenodd"
@@ -367,19 +433,30 @@ export default function Header() {
                   <li>
                     <Link
                       href="/about"
-                      className="block px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
+                      className="flex items-center justify-between px-4 py-3 text-base font-medium text-neutral-700 hover:bg-purple-50 rounded-xl transition group"
                       onClick={() => setIsMobileMenuOpen(false)}
                       prefetch={true}
                     >
-                      About
+                      <span>About</span>
+                      <svg
+                        className="w-5 h-5 text-neutral-400 group-hover:text-purple-600 transition"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
                     </Link>
                   </li>
                 </ul>
               </nav>
 
-              <div className="border-t border-neutral-200 my-6"></div>
-
-              <div className="space-y-3">
+              <div className="border-t border-neutral-200 pt-4 space-y-3">
                 <ConnectButton.Custom>
                   {({ account, chain, openConnectModal, mounted }) => {
                     const connected = mounted && account && chain;
@@ -391,7 +468,7 @@ export default function Header() {
                             openConnectModal();
                             setIsMobileMenuOpen(false);
                           }}
-                          className="w-full text-center px-4 py-3 text-sm font-medium border-2 border-purple-200 bg-white text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                          className="w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white rounded-xl transition shadow-lg hover:opacity-90"
                         >
                           Connect Wallet
                         </button>
@@ -402,7 +479,7 @@ export default function Header() {
                       <>
                         <a
                           href="/#pricing"
-                          className="block w-full text-center px-4 py-3 text-sm font-medium gradient-bg text-white hover:opacity-90 rounded-lg transition"
+                          className="block w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white hover:opacity-90 rounded-xl transition shadow-lg"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           {hasFID ? "Mint Now - FREE" : "Setup FID - FREE"}
@@ -412,14 +489,34 @@ export default function Header() {
                             disconnect();
                             setIsMobileMenuOpen(false);
                           }}
-                          className="w-full text-center px-4 py-3 text-sm font-medium border border-neutral-200 bg-white text-red-600 hover:bg-red-50 rounded-lg transition"
+                          className="w-full text-center px-4 py-3 text-sm font-semibold border-2 border-red-200 bg-white text-red-600 hover:bg-red-50 rounded-xl transition"
                         >
-                          Disconnect
+                          Disconnect Wallet
                         </button>
                       </>
                     );
                   }}
                 </ConnectButton.Custom>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-neutral-200">
+                <div className="flex items-center justify-center gap-1.5">
+                  <p className="text-xs text-neutral-500">Minted on</p>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-semibold text-purple-600">
+                      Base Network
+                    </span>
+                    <div className="relative w-3.5 h-3.5 flex-shrink-0">
+                      <Image
+                        src="/assets/images/layout/eth-base.png"
+                        alt="Base"
+                        width={14}
+                        height={14}
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
