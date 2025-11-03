@@ -27,7 +27,7 @@ export default function TopBanner() {
             LIVE ON BASE
           </div>
           <div className="text-sm font-medium text-slate-700">
-            🎨 Mint your first mood NFT - FREE on Farcaster
+            🎨 Connect wallet & Enter FID to mint your mood NFT - FREE
           </div>
         </div>
         <button
