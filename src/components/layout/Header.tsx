@@ -59,6 +59,7 @@ export default function Header() {
                     className="px-3 py-2 text-sm font-medium text-neutral-700 transition hover:text-purple-600"
                     href="/#how-it-works"
                     prefetch={false}
+                    scroll={true}
                   >
                     How It Works
                   </Link>
@@ -178,8 +179,10 @@ export default function Header() {
 
                             return (
                               <div className="flex items-center gap-2">
-                                <a
+                                {/* 🔥 FIXED: Changed <a> to <Link> */}
+                                <Link
                                   href="/#pricing"
+                                  scroll={true}
                                   className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] gradient-bg text-white hover:opacity-90 px-3 py-2 rounded-[0.625rem] flex"
                                 >
                                   {hasFID ? "Mint Now" : "Setup FID"}
@@ -187,7 +190,7 @@ export default function Header() {
                                     {" "}
                                     - FREE
                                   </span>
-                                </a>
+                                </Link>
 
                                 <button
                                   onClick={openAccountModal}
@@ -335,6 +338,7 @@ export default function Header() {
                       className="flex items-center justify-between px-4 py-3 text-base font-medium text-neutral-700 hover:bg-purple-50 rounded-xl transition group"
                       onClick={() => setIsMobileMenuOpen(false)}
                       prefetch={false}
+                      scroll={true}
                     >
                       <span>How It Works</span>
                       <svg
@@ -477,13 +481,15 @@ export default function Header() {
 
                     return (
                       <>
-                        <a
+                        {/* 🔥 FIXED: Changed <a> to <Link> */}
+                        <Link
                           href="/#pricing"
+                          scroll={true}
                           className="block w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white hover:opacity-90 rounded-xl transition shadow-lg"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
                           {hasFID ? "Mint Now - FREE" : "Setup FID - FREE"}
-                        </a>
+                        </Link>
                         <button
                           onClick={() => {
                             disconnect();
