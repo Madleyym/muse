@@ -275,7 +275,7 @@ export default function HeroSection() {
                 href="#how-it-works"
                 className="flex-1 sm:flex-none items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all duration-200 shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-purple-100 bg-white text-purple-600 hover:border-purple-200 hover:bg-purple-50 active:scale-95 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] flex group"
               >
-                <svg
+                {/* <svg
                   className="shrink-0 mr-1.5 sm:mr-2 h-3.5 sm:h-4 group-hover:rotate-12 transition-transform"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -286,7 +286,7 @@ export default function HeroSection() {
                     d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z"
                     clipRule="evenodd"
                   />
-                </svg>
+                </svg> */}
                 Learn more
               </Link>
               <Link

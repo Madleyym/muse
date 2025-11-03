@@ -287,7 +287,7 @@ export default function PricingSection() {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <div className="flex gap-2 mb-4">
                 <input
                   type="text"
                   placeholder="Enter FID (e.g., 5650)"
@@ -298,17 +298,16 @@ export default function PricingSection() {
                       handleVerifyFID();
                     }
                   }}
-                  className="flex-1 px-4 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-base sm:text-lg"
+                  className="flex-1 min-w-0 px-3 py-2.5 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
                 />
                 <button
                   onClick={handleVerifyFID}
                   disabled={loading || !fid}
-                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] gradient-bg text-white font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-xs sm:text-sm active:scale-95 shadow-lg"
+                  className="px-3 py-2.5 rounded-xl gradient-bg text-white font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-xs active:scale-95 shadow-lg flex-shrink-0 min-w-[80px]"
                 >
-                  {loading ? "Analyzing..." : "Verify FID"}
+                  {loading ? "..." : "Verify"}
                 </button>
               </div>
-
               {error && (
                 <div className="text-sm text-red-600 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                   {error}
