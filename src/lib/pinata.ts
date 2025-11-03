@@ -1,6 +1,7 @@
 // src/lib/pinata.ts
 
 const PINATA_JWT = process.env.PINATA_JWT!;
+// 🔥 FIX: Use HTTP gateway
 const PINATA_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
 
 export interface NFTMetadata {
@@ -12,10 +13,12 @@ export interface NFTMetadata {
     value: string | number;
   }>;
   external_url?: string;
+  properties?: any;
 }
 
 /**
  * Upload NFT metadata to IPFS via Pinata
+ * ✅ Returns HTTP gateway URL (not ipfs://)
  */
 export async function uploadMetadataToIPFS(
   metadata: NFTMetadata
@@ -45,7 +48,7 @@ export async function uploadMetadataToIPFS(
     const data = await response.json();
     const ipfsHash = data.IpfsHash;
 
-    // Return full IPFS URL
+    // 🔥 FIX: Return HTTP URL instead of ipfs://
     return `${PINATA_GATEWAY}${ipfsHash}`;
   } catch (error) {
     console.error("Failed to upload to IPFS:", error);
@@ -55,6 +58,7 @@ export async function uploadMetadataToIPFS(
 
 /**
  * Upload image to IPFS via Pinata
+ * ✅ Returns HTTP gateway URL (not ipfs://)
  */
 export async function uploadImageToIPFS(
   imageUrl: string,
@@ -93,6 +97,7 @@ export async function uploadImageToIPFS(
     const data = await response.json();
     const ipfsHash = data.IpfsHash;
 
+    // 🔥 FIX: Return HTTP URL instead of ipfs://
     return `${PINATA_GATEWAY}${ipfsHash}`;
   } catch (error) {
     console.error("Failed to upload image to IPFS:", error);
@@ -102,6 +107,7 @@ export async function uploadImageToIPFS(
 
 /**
  * Generate complete NFT metadata
+ * ✅ Uses HTTP gateway URLs
  */
 export function generateNFTMetadata(params: {
   fid: number;
@@ -115,7 +121,7 @@ export function generateNFTMetadata(params: {
   return {
     name: `${params.moodName} #${params.fid}`,
     description: `A unique mood NFT representing @${params.username}'s Farcaster vibe. Generated from on-chain activity with an engagement score of ${params.engagementScore}.`,
-    image: params.imageIPFS,
+    image: params.imageIPFS, // ✅ Already HTTP URL
     attributes: [
       {
         trait_type: "Mood",
@@ -147,5 +153,9 @@ export function generateNFTMetadata(params: {
       },
     ],
     external_url: `https://warpcast.com/${params.username}`,
+    properties: {
+      blockchain: "Base",
+      standard: "ERC-721",
+    },
   };
 }
