@@ -335,7 +335,7 @@ export default function HeroSection() {
               </div>
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold gradient-text">
-                  99999+
+                  99+
                 </div>
                 <div className="text-[10px] sm:text-xs text-slate-500 mt-1 font-medium">
                   Pro Moods
