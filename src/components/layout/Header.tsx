@@ -11,7 +11,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
-  const { farcasterData, hasFID } = useFarcaster(); // 🔥 NEW
+  const { farcasterData, hasFID } = useFarcaster();
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -34,7 +34,12 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 xl:px-0">
           <div className="bg-white/90 backdrop-blur-md flex items-center justify-between gap-x-4 rounded-2xl py-2.5 pl-5 pr-2.5 shadow-[0_2px_10px_0px_rgba(139,92,246,0.2)] border border-purple-100/50 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:justify-stretch lg:gap-x-12 lg:rounded-[1.375rem]">
             <div className="flex items-center gap-x-10">
-              <Link href="/" title="Home" className="flex items-center gap-2">
+              <Link
+                href="/"
+                title="Home"
+                className="flex items-center gap-2"
+                prefetch={true}
+              >
                 <div className="relative w-8 h-8 flex-shrink-0">
                   <Image
                     src="/assets/Logo/Muse.png"
@@ -57,6 +62,7 @@ export default function Header() {
                   <Link
                     className="px-3 py-2 text-sm font-medium text-neutral-700 transition hover:text-purple-600"
                     href="/#how-it-works"
+                    prefetch={false}
                   >
                     How It Works
                   </Link>
@@ -65,6 +71,7 @@ export default function Header() {
                   <Link
                     className="px-3 py-2 text-sm font-medium text-neutral-700 transition hover:text-purple-600"
                     href="/gallery"
+                    prefetch={true}
                   >
                     Gallery
                   </Link>
@@ -73,6 +80,7 @@ export default function Header() {
                   <Link
                     className="px-3 py-2 text-sm font-medium text-neutral-700 transition hover:text-purple-600"
                     href="/roadmap"
+                    prefetch={true}
                   >
                     Roadmap
                   </Link>
@@ -103,6 +111,7 @@ export default function Header() {
                   <Link
                     className="px-3 py-2 text-sm font-medium text-neutral-700 transition hover:text-purple-600"
                     href="/about"
+                    prefetch={true}
                   >
                     About
                   </Link>
@@ -180,7 +189,6 @@ export default function Header() {
                                   type="button"
                                   className="flex items-center gap-2 px-3 py-2 border border-purple-200 bg-white hover:bg-purple-50 rounded-[0.625rem] transition"
                                 >
-                                  {/* 🔥 Show Farcaster profile if available */}
                                   <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300">
                                     <Image
                                       src={
@@ -233,7 +241,6 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu - UPDATED */}
       {isMobileMenuOpen && (
         <>
           <div
@@ -266,7 +273,6 @@ export default function Header() {
                 </button>
               </div>
 
-              {/* 🔥 Show Farcaster data if available */}
               {isConnected && (
                 <div className="mb-6 p-4 bg-purple-50 rounded-xl">
                   <div className="flex items-center gap-3">
@@ -304,7 +310,6 @@ export default function Header() {
                 </div>
               )}
 
-              {/* Navigation - same as before */}
               <nav>
                 <ul className="space-y-1">
                   <li>
@@ -312,6 +317,7 @@ export default function Header() {
                       href="/#how-it-works"
                       className="block px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
                       onClick={() => setIsMobileMenuOpen(false)}
+                      prefetch={false}
                     >
                       How It Works
                     </Link>
@@ -321,6 +327,7 @@ export default function Header() {
                       href="/gallery"
                       className="block px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
                       onClick={() => setIsMobileMenuOpen(false)}
+                      prefetch={true}
                     >
                       Gallery
                     </Link>
@@ -330,6 +337,7 @@ export default function Header() {
                       href="/roadmap"
                       className="block px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
                       onClick={() => setIsMobileMenuOpen(false)}
+                      prefetch={true}
                     >
                       Roadmap
                     </Link>
@@ -361,6 +369,7 @@ export default function Header() {
                       href="/about"
                       className="block px-4 py-3 text-base font-medium text-neutral-700 hover:bg-slate-50 rounded-lg transition"
                       onClick={() => setIsMobileMenuOpen(false)}
+                      prefetch={true}
                     >
                       About
                     </Link>
