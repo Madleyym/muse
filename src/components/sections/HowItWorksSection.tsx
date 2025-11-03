@@ -2,21 +2,21 @@ export default function HowItWorksSection() {
   const steps = [
     {
       number: 1,
-      title: "Interact on Farcaster",
+      title: "Connect Your Wallet",
       description:
-        "Like, cast, or reply on Farcaster. Your activity creates your unique mood signature.",
+        "Connect your Web3 wallet to get started. We support MetaMask, Coinbase Wallet, and more via WalletConnect.",
     },
     {
       number: 2,
-      title: "Generate Your NFT",
+      title: "Enter Your Farcaster ID",
       description:
-        "Our algorithm analyzes your vibe and creates a unique generative art piece just for you.",
+        "Our algorithm analyzes your Farcaster activity - likes, casts, and engagement - to determine your unique mood.",
     },
     {
       number: 3,
-      title: "Mint on Base",
+      title: "Mint Your Mood NFT",
       description:
-        "Mint directly from Farcaster Frame. Free SD version or premium HD for 0.001 ETH.",
+        "Choose between free SD (512px) or premium HD (2048px) edition. Minted instantly on Base mainnet.",
     },
   ];
 
@@ -31,8 +31,8 @@ export default function HowItWorksSection() {
             How Muse Works
           </h2>
           <p className="mt-4 text-slate-600 max-w-2xl mx-auto">
-            Three simple steps to transform your Farcaster vibe into collectible
-            art
+            Three simple steps to transform your Farcaster activity into a
+            collectible mood NFT
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
