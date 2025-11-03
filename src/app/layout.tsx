@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Web3Provider } from "@/components/providers/Web3Provider";
+import { NavigationProgress } from "@/components/providers/NavigationProgress";
+import { FarcasterProvider } from "@/contexts/FarcasterContext";
 import TopBanner from "@/components/layout/TopBanner";
 import Footer from "@/components/layout/Footer";
-import { Web3Provider } from "@/components/providers/Web3Provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Muse - Mint Your Mood on Base",
-  description:
-    "Turn your vibe into collectible art. Every interaction on Farcaster becomes a unique NFT.",
+  title: "Muse - Mint Your Mood NFT",
+  description: "Turn your Farcaster vibe into collectible art on Base",
 };
 
 export default function RootLayout({
@@ -22,9 +23,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Web3Provider>
-          <TopBanner />
-          {children}
-          <Footer />
+          <NavigationProgress>
+            <FarcasterProvider>
+              <TopBanner />
+              <div className="page-transition">{children}</div>
+              <Footer />
+            </FarcasterProvider>
+          </NavigationProgress>
         </Web3Provider>
       </body>
     </html>
