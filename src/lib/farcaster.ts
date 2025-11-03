@@ -1,5 +1,3 @@
-// src/lib/farcaster.ts
-
 const NEYNAR_API_KEY = process.env.NEXT_PUBLIC_NEYNAR_API_KEY;
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2/farcaster";
 
@@ -171,7 +169,7 @@ function calculateMood(
   console.log("Calculating mood:", { engagementScore, casts, likes });
 
   // 🔥 ONLY these 11 PRO moods exist in /public/assets/images/Pro/
-  
+
   // Very high engagement (6000+)
   if (engagementScore > 6000) {
     return { name: "Fire Starter 🔥", id: "fire-starter" };
