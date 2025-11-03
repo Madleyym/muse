@@ -78,7 +78,9 @@ export async function POST(request: Request) {
     }
 
     const imageData = await imageUploadResponse.json();
-    const imageIPFS = `ipfs://${imageData.IpfsHash}`;
+
+    // 🔥 FIX 1: Use HTTP gateway instead of ipfs://
+    const imageIPFS = `https://gateway.pinata.cloud/ipfs/${imageData.IpfsHash}`;
     console.log("✅ Image uploaded to IPFS:", imageIPFS);
 
     // Create metadata with gradient colors in attributes
@@ -89,7 +91,8 @@ export async function POST(request: Request) {
       }\n\nMinted by @${username} with ${engagementScore.toLocaleString()} engagement score on Farcaster.\n\nThis mood features ${
         moodData.gradients.length
       } unique gradient color combinations that represent your social energy.`,
-      image: imageIPFS,
+      image: imageIPFS, // ✅ Now uses HTTP URL
+      external_url: `https://muse.write3.fun/nft/${fid}`,
       attributes: [
         { trait_type: "Mood", value: moodName },
         { trait_type: "Mood ID", value: moodId },
@@ -102,15 +105,16 @@ export async function POST(request: Request) {
         { trait_type: "Engagement Score", value: engagementScore },
         { trait_type: "Edition", value: isHD ? "HD (2048px)" : "SD (512px)" },
         { trait_type: "Gradient Variations", value: moodData.gradients.length },
-        // Add first gradient colors as traits
         { trait_type: "Primary Color", value: moodData.gradients[0].from },
         { trait_type: "Secondary Color", value: moodData.gradients[0].to },
         { trait_type: "Minted On", value: "Base" },
+        { trait_type: "Network", value: "Base Mainnet" },
       ],
-      external_url: `https://muse.write3.fun`,
       // Add gradient data for future use
       properties: {
         gradients: moodData.gradients,
+        blockchain: "Base",
+        standard: "ERC-721",
       },
     };
 
@@ -143,13 +147,15 @@ export async function POST(request: Request) {
     }
 
     const metadataData = await metadataUploadResponse.json();
-    const metadataURI = `ipfs://${metadataData.IpfsHash}`;
+
+    // 🔥 FIX 2: Use HTTP gateway for metadata URI too
+    const metadataURI = `https://gateway.pinata.cloud/ipfs/${metadataData.IpfsHash}`;
     console.log("✅ Metadata uploaded to IPFS:", metadataURI);
 
     return NextResponse.json({
       success: true,
       imageIPFS,
-      metadataURI,
+      metadataURI, // ✅ Now uses HTTP URL
       metadata,
     });
   } catch (error: any) {
