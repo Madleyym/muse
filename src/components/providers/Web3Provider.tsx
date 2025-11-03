@@ -16,7 +16,7 @@ import {
 import "@rainbow-me/rainbowkit/styles.css";
 import { ReactNode, useEffect, useState } from "react";
 
-// Define chains manually for wagmi v2.5.19
+// Define Base Mainnet chain
 const base = {
   id: 8453,
   name: "Base",
@@ -48,6 +48,7 @@ const base = {
   },
 };
 
+// Ethereum Mainnet (optional, for multi-chain support)
 const mainnet = {
   id: 1,
   name: "Ethereum",
@@ -131,7 +132,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
           initialChain={base as any}
           showRecentTransactions={true}
         >
-          <div suppressHydrationWarning>{mounted ? children : null}</div>
+          {mounted ? children : null}
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
