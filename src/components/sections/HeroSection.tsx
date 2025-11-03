@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { nftMoods } from "@/data/nftMoods";
 
 export default function HeroSection() {
@@ -15,26 +15,28 @@ export default function HeroSection() {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsReady(true);
   }, []);
 
-  // Gradient animation
+  // 🔧 FIX 1: Use current mood's gradient length
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || !proMoods[featuredIndex]) return;
+
+    const currentMood = proMoods[featuredIndex];
+    const gradientCount = currentMood.gradients.length;
 
     const interval = setInterval(() => {
-      setFeaturedGradientIndex((prev) => (prev + 1) % 10);
+      setFeaturedGradientIndex((prev) => (prev + 1) % gradientCount);
     }, 400);
 
     return () => clearInterval(interval);
-  }, [isReady]);
+  }, [isReady, featuredIndex, proMoods]);
 
   // Auto-rotate featured mood
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || proMoods.length === 0) return;
 
     const interval = setInterval(() => {
       setIsTransitioning(true);
@@ -52,13 +54,21 @@ export default function HeroSection() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
-        setFeaturedIndex(
-          (prev) => (prev - 1 + proMoods.length) % proMoods.length
-        );
-        setFeaturedGradientIndex(0);
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setFeaturedIndex(
+            (prev) => (prev - 1 + proMoods.length) % proMoods.length
+          );
+          setFeaturedGradientIndex(0);
+          setIsTransitioning(false);
+        }, 150);
       } else if (e.key === "ArrowRight") {
-        setFeaturedIndex((prev) => (prev + 1) % proMoods.length);
-        setFeaturedGradientIndex(0);
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setFeaturedIndex((prev) => (prev + 1) % proMoods.length);
+          setFeaturedGradientIndex(0);
+          setIsTransitioning(false);
+        }, 150);
       }
     };
 
@@ -91,11 +101,16 @@ export default function HeroSection() {
       : `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`;
   };
 
-  if (!isReady) {
+  // 🔧 FIX 2: Safety checks
+  if (!isReady || proMoods.length === 0) {
     return null;
   }
 
   const featuredMood = proMoods[featuredIndex];
+  if (!featuredMood || !featuredMood.gradients[featuredGradientIndex]) {
+    return null;
+  }
+
   const featuredGradient = getGradientStyle(
     featuredMood.gradients[featuredGradientIndex]
   );
@@ -105,7 +120,7 @@ export default function HeroSection() {
     <section className="relative overflow-hidden py-8 sm:py-12 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
         <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:px-8 xl:gap-x-16 xl:px-10">
-          {/* NFT CARD - ORIGINAL SIZE */}
+          {/* NFT CARD */}
           <div className="relative w-full max-w-[500px] mx-auto lg:max-w-none mb-8 lg:mb-0 lg:order-2">
             <div
               className="relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-500 select-none group"
@@ -134,7 +149,7 @@ export default function HeroSection() {
               {/* Shimmer overlay */}
               <div className="absolute inset-0 animate-shimmer pointer-events-none opacity-30" />
 
-              {/* NFT Character - ORIGINAL POSITIONING */}
+              {/* NFT Character */}
               <div
                 className={`absolute inset-0 flex items-center justify-center pb-20 sm:pb-24 pt-6 px-4 sm:px-6 transition-all duration-300 pointer-events-none ${
                   isTransitioning
@@ -151,6 +166,7 @@ export default function HeroSection() {
                     priority
                     draggable={false}
                     onContextMenu={(e) => e.preventDefault()}
+                    sizes="(max-width: 640px) 260px, (max-width: 1024px) 300px, 350px"
                   />
                 </div>
               </div>
@@ -163,7 +179,7 @@ export default function HeroSection() {
                 }}
               />
 
-              {/* Particle effects for Fire & Chaos */}
+              {/* Particle effects */}
               {(featuredMood.id === "fire-starter" ||
                 featuredMood.id === "chaos-energy") && (
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -194,8 +210,9 @@ export default function HeroSection() {
                     </p>
                   </div>
                   <div className="flex-shrink-0">
-                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-lg">
-                      <span className="text-white text-[10px] sm:text-xs font-bold">
+                    {/* 🔧 FIX 3: Equal padding for PRO badge */}
+                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg p-2 sm:p-2.5 shadow-lg">
+                      <span className="text-white text-[10px] sm:text-xs font-bold leading-none">
                         PRO
                       </span>
                     </div>
@@ -271,26 +288,17 @@ export default function HeroSection() {
               className="mt-8 lg:mt-12 flex flex-row items-center gap-2 sm:gap-3 justify-center lg:justify-start animate-fade-in-up w-full sm:w-auto"
               style={{ animationDelay: "0.5s" }}
             >
+              {/* 🔧 FIX 4: Added scroll={true} */}
               <Link
                 href="#how-it-works"
+                scroll={true}
                 className="flex-1 sm:flex-none items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all duration-200 shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-purple-100 bg-white text-purple-600 hover:border-purple-200 hover:bg-purple-50 active:scale-95 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] flex group"
               >
-                {/* <svg
-                  className="shrink-0 mr-1.5 sm:mr-2 h-3.5 sm:h-4 group-hover:rotate-12 transition-transform"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z"
-                    clipRule="evenodd"
-                  />
-                </svg> */}
                 Learn more
               </Link>
               <Link
                 href="#pricing"
+                scroll={true}
                 className="flex-1 sm:flex-none items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all duration-200 shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] gradient-bg text-white hover:opacity-90 hover:shadow-[0_4px_20px_0px_rgba(139,92,246,0.4)] active:scale-95 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] flex group"
               >
                 Start Minting FREE
