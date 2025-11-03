@@ -293,30 +293,26 @@ export default function HeroSection() {
             <div className="items-center justify-center rounded-full text-xs sm:text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] inline-flex gradient-bg text-white px-3 py-1 animate-fade-in-up">
               🌈 Social Art on Base
             </div>
-
             <h1
               className="gradient-text text-3xl sm:text-4xl lg:text-6xl font-bold mt-4 lg:mt-6 leading-tight animate-fade-in-up"
               style={{ animationDelay: "0.1s" }}
             >
               Mint Your Mood
             </h1>
-
             <p
               className="text-lg sm:text-xl font-semibold text-slate-700 mt-2 animate-fade-in-up"
               style={{ animationDelay: "0.2s" }}
             >
               Turn your vibe into collectible art
             </p>
-
+            // Find this line (around line 180):
             <p
               className="mt-4 lg:mt-6 text-sm sm:text-base text-slate-600 max-w-lg leading-relaxed animate-fade-in-up"
               style={{ animationDelay: "0.3s" }}
             >
-              Every interaction on Farcaster becomes a unique NFT. Like, cast,
-              reply — and watch your mood transform into living onchain art on
-              Base network.
+              Connect your wallet, enter your Farcaster ID, and mint unique mood
+              NFTs based on your social activity. All on Base network.
             </p>
-
             <div
               className="mt-6 grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-md lg:w-auto animate-fade-in-up"
               style={{ animationDelay: "0.4s" }}
@@ -346,7 +342,6 @@ export default function HeroSection() {
                 </div>
               </div>
             </div>
-
             {/* 🔥 CTA Buttons - Horizontal on ALL devices, no arrows */}
             <div
               className="mt-8 lg:mt-12 flex flex-row items-center gap-2 sm:gap-3 justify-center lg:justify-start animate-fade-in-up"
