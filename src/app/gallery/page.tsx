@@ -168,8 +168,8 @@ export default function GalleryPage() {
   const [mintedNFTs, setMintedNFTs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalMinted, setTotalMinted] = useState(0);
+  const [initialLoad, setInitialLoad] = useState(true);
 
-  // Fetch minted NFTs from contract
   useEffect(() => {
     fetchMintedNFTs();
   }, []);
@@ -179,60 +179,70 @@ export default function GalleryPage() {
     return `https://ui-avatars.com/api/?name=${firstLetter}&background=random&size=128&bold=true`;
   };
 
- const fetchMintedNFTs = async (forceRefresh = false) => {
-   try {
-     setLoading(true);
+  const fetchMintedNFTs = async (forceRefresh = false) => {
+    try {
+      if (initialLoad) {
+        setLoading(true);
+      }
 
-     const url = forceRefresh
-       ? "/api/nfts/minted?refresh=true"
-       : "/api/nfts/minted";
+      const url = forceRefresh
+        ? "/api/nfts/minted?refresh=true"
+        : "/api/nfts/minted";
 
-     const response = await fetch(url, {
-       cache: forceRefresh ? "no-store" : "default",
-     });
+      const response = await fetch(url, {
+        cache: forceRefresh ? "no-store" : "force-cache",
+        next: { revalidate: 20 },
+      });
 
-     const data = await response.json();
+      const data = await response.json();
 
-     console.log("📦 API Response:", {
-       success: data.success,
-       count: data.nfts?.length || 0,
-       cached: data.cached,
-       timestamp: data.timestamp,
-     });
+      console.log("📦 API Response:", {
+        success: data.success,
+        count: data.nfts?.length || 0,
+        cached: data.cached,
+        timestamp: data.timestamp,
+      });
 
-     if (data.success && data.nfts) {
-       const nfts = data.nfts.map((nft: MintedNFT) => {
-         const mood = nftMoods.find((m) => m.id === nft.moodId) || nftMoods[0];
+      if (data.success && data.nfts) {
+        const nfts = data.nfts.map((nft: MintedNFT) => {
+          const mood = nftMoods.find((m) => m.id === nft.moodId) || nftMoods[0];
 
-         return {
-           id: nft.id,
-           tokenId: nft.tokenId,
-           mood: mood,
-           moodId: nft.moodId,
-           name: nft.moodName,
-           baseImage: mood.baseImage,
-           category: nft.isHD ? "pro" : "free",
-           author: `@${nft.username}`,
-           username: nft.username,
-           fid: nft.fid,
-           pfpUrl: nft.pfpUrl || getDefaultAvatar(nft.username),
-           owner: nft.owner,
-           isHD: nft.isHD,
-           mintedAt: nft.mintedAt,
-           timeAgo: getTimeAgo(nft.mintedAt),
-         };
-       });
+          return {
+            id: nft.id,
+            tokenId: nft.tokenId,
+            mood: mood,
+            moodId: nft.moodId,
+            name: nft.moodName,
+            baseImage: mood.baseImage,
+            category: nft.isHD ? "pro" : "free",
+            author: `@${nft.username}`,
+            username: nft.username,
+            fid: nft.fid,
+            pfpUrl: nft.pfpUrl || getDefaultAvatar(nft.username),
+            owner: nft.owner,
+            isHD: nft.isHD,
+            mintedAt: nft.mintedAt,
+            timeAgo: getTimeAgo(nft.mintedAt),
+          };
+        });
 
-       console.log(`✅ Displaying ${nfts.length} NFTs`);
-       setMintedNFTs(nfts);
-       setTotalMinted(data.totalMinted);
-     }
-   } catch (error) {
-     console.error("❌ Failed to fetch minted NFTs:", error);
-   } finally {
-     setLoading(false);
-   }
- };
+        console.log(`✅ Displaying ${nfts.length} NFTs`);
+        setMintedNFTs(nfts);
+        setTotalMinted(data.totalMinted);
+      }
+    } catch (error) {
+      console.error("❌ Failed to fetch minted NFTs:", error);
+    } finally {
+      setLoading(false);
+      if (initialLoad) {
+        setInitialLoad(false);
+      }
+    }
+  };
+
+  const handleRefresh = async () => {
+    await fetchMintedNFTs(true);
+  };
 
   const getTimeAgo = (timestamp: string) => {
     const now = new Date().getTime();
@@ -296,7 +306,6 @@ export default function GalleryPage() {
     <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
       <Header />
 
-      {/* Hero Section */}
       <section className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-8 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
           <div className="text-center">
@@ -347,12 +356,33 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* Filter Section */}
       <section className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 border-b border-purple-100/50 py-4 sm:py-6 sticky top-0 z-40 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
           <div className="flex items-center justify-between gap-3">
-            <div className="text-sm sm:text-base font-semibold text-slate-700 flex-shrink-0">
-              {loading ? "Loading..." : `${mintedNFTs.length} Moods`}
+            <div className="flex items-center gap-3">
+              <div className="text-sm sm:text-base font-semibold text-slate-700 flex-shrink-0">
+                {loading ? "Loading..." : `${mintedNFTs.length} Moods`}
+              </div>
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="text-xs sm:text-sm px-3 py-1.5 border border-purple-200 rounded-lg hover:bg-purple-50 transition disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <svg
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Refresh
+              </button>
             </div>
 
             <select
@@ -369,19 +399,29 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* Gallery Grid */}
       <section className="py-8 sm:py-12" id="gallery">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
           {loading ? (
-            <div className="text-center py-20">
-              <div className="inline-block w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-              <p className="mt-4 text-slate-600">Loading minted NFTs...</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+              {[...Array(10)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl sm:rounded-2xl shadow-md overflow-hidden animate-pulse"
+                >
+                  <div className="aspect-square bg-gradient-to-br from-purple-200 to-pink-200" />
+                  <div className="p-3 sm:p-4">
+                    <div className="h-4 bg-slate-200 rounded mb-2" />
+                    <div className="h-3 bg-slate-200 rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : mintedNFTs.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-slate-600 mb-4">No NFTs minted yet</p>
               <Link
                 href="/#pricing"
+                prefetch={false}
                 className="inline-block gradient-bg text-white px-6 py-3 rounded-xl hover:opacity-90 transition font-medium"
               >
                 Be the First to Mint
@@ -413,12 +453,14 @@ export default function GalleryPage() {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <Link
               href="/#pricing"
+              prefetch={false}
               className="items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] bg-white text-purple-600 hover:bg-purple-50 px-5 sm:px-6 py-2.5 sm:py-3 rounded-[0.625rem] flex"
             >
               Start Minting Free
             </Link>
             <Link
               href="/"
+              prefetch={true}
               className="items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all border border-white/30 bg-purple-500/30 text-white hover:bg-purple-400/40 px-5 sm:px-6 py-2.5 sm:py-3 rounded-[0.625rem] flex"
             >
               Back to Home
@@ -540,6 +582,7 @@ export default function GalleryPage() {
                 </a>
                 <Link
                   href="/#pricing"
+                  prefetch={false}
                   className="flex-1 text-center gradient-bg text-white py-3 rounded-xl hover:opacity-90 transition font-medium text-sm"
                 >
                   Mint Yours
