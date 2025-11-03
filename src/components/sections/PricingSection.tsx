@@ -32,25 +32,21 @@ export default function PricingSection() {
   const [error, setError] = useState("");
   const [gradientIndex, setGradientIndex] = useState(0);
   const [localMintError, setLocalMintError] = useState<string>("");
+  const [selectedTier, setSelectedTier] = useState<"free" | "hd">("free");
 
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
     return nftMoods.find((mood) => mood.id === farcasterData.moodId) || null;
   }, [farcasterData]);
 
-  // Parse and shorten error messages
   const parseErrorMessage = (error: string): string => {
     if (!error) return "Please try again";
-
-    // Shorten contract addresses
     if (error.includes("0x")) {
       error = error.replace(
         /0x[a-fA-F0-9]{40,}/g,
         (match) => `${match.slice(0, 6)}...${match.slice(-4)}`
       );
     }
-
-    // Extract key error messages
     if (error.includes("User rejected") || error.includes("user rejected")) {
       return "You cancelled the transaction";
     }
@@ -63,22 +59,17 @@ export default function PricingSection() {
     if (error.includes("already minted")) {
       return "This FID has already minted";
     }
-
-    // Limit length
     if (error.length > 120) {
       return error.substring(0, 120) + "...";
     }
-
     return error;
   };
 
   useEffect(() => {
     if (!currentMood) return;
-
     const interval = setInterval(() => {
       setGradientIndex((prev) => (prev + 1) % currentMood.gradients.length);
     }, 400);
-
     return () => clearInterval(interval);
   }, [currentMood]);
 
@@ -94,13 +85,11 @@ export default function PricingSection() {
     }
   }, [farcasterData, isConnected]);
 
-  // Auto-dismiss error after 5 seconds
   useEffect(() => {
     if (mintError || localMintError) {
       const timer = setTimeout(() => {
         setLocalMintError("");
       }, 5000);
-
       return () => clearTimeout(timer);
     }
   }, [mintError, localMintError]);
@@ -149,9 +138,7 @@ export default function PricingSection() {
       setError("Please verify your Farcaster ID first");
       return;
     }
-
     setLocalMintError("");
-
     try {
       await mintFree({
         fid: farcasterData.fid,
@@ -171,9 +158,7 @@ export default function PricingSection() {
       setError("Please verify your Farcaster ID first");
       return;
     }
-
     setLocalMintError("");
-
     try {
       await mintHD({
         fid: farcasterData.fid,
@@ -216,16 +201,16 @@ export default function PricingSection() {
   return (
     <section
       id="pricing"
-      className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50"
+      className="py-12 sm:py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50"
     >
       <div className="max-w-7xl mx-auto px-4 xl:px-0">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold gradient-text">
+        <div className="text-center mb-8 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text">
             {step === "connect" && "Connect Wallet to Start"}
             {step === "fid" && "Enter Your Farcaster ID"}
             {step === "preview" && "Choose Your Mint Tier"}
           </h2>
-          <p className="mt-4 text-slate-600">
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-600 px-4">
             {step === "connect" &&
               "First, connect your Web3 wallet to mint your mood NFT"}
             {step === "fid" &&
@@ -238,10 +223,10 @@ export default function PricingSection() {
 
         {!isConnected && step === "connect" && (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-12 border-2 border-purple-200 text-center shadow-lg">
-              <div className="w-20 h-20 mx-auto mb-6 bg-purple-100 rounded-full flex items-center justify-center">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 border-2 border-purple-200 text-center shadow-lg">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center">
                 <svg
-                  className="w-10 h-10 text-purple-600"
+                  className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -254,8 +239,10 @@ export default function PricingSection() {
                   />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4">Connect Your Wallet</h3>
-              <p className="text-slate-600 mb-8 max-w-md mx-auto">
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
+                Connect Your Wallet
+              </h3>
+              <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto">
                 Connect your wallet to mint mood NFTs based on your Farcaster
                 activity
               </p>
@@ -263,7 +250,7 @@ export default function PricingSection() {
                 {({ openConnectModal }) => (
                   <button
                     onClick={openConnectModal}
-                    className="inline-flex items-center gradient-bg text-white font-medium px-8 py-4 rounded-xl hover:opacity-90 transition text-lg shadow-lg"
+                    className="inline-flex items-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition text-xs sm:text-sm shadow-lg active:scale-95"
                   >
                     Connect Wallet to Continue
                   </button>
@@ -275,11 +262,11 @@ export default function PricingSection() {
 
         {isConnected && step === "fid" && (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border-2 border-purple-200 shadow-lg">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border-2 border-purple-200 shadow-lg">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-purple-100 rounded-full flex items-center justify-center">
                   <svg
-                    className="w-8 h-8 text-purple-600"
+                    className="w-7 h-7 sm:w-8 sm:h-8 text-purple-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -292,15 +279,15 @@ export default function PricingSection() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-2 gradient-text">
+                <h3 className="text-xl sm:text-2xl font-bold mb-2 gradient-text">
                   Enter Your Farcaster ID
                 </h3>
-                <p className="text-slate-600">
+                <p className="text-sm sm:text-base text-slate-600">
                   We'll analyze your activity to generate a unique mood NFT
                 </p>
               </div>
 
-              <div className="flex gap-3 mb-4">
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
                 <input
                   type="text"
                   placeholder="Enter FID (e.g., 5650)"
@@ -311,12 +298,12 @@ export default function PricingSection() {
                       handleVerifyFID();
                     }
                   }}
-                  className="flex-1 px-4 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-lg"
+                  className="flex-1 px-4 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 text-base sm:text-lg"
                 />
                 <button
                   onClick={handleVerifyFID}
                   disabled={loading || !fid}
-                  className="px-6 py-3 gradient-bg text-white rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] gradient-bg text-white font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-xs sm:text-sm active:scale-95 shadow-lg"
                 >
                   {loading ? "Analyzing..." : "Verify FID"}
                 </button>
@@ -367,10 +354,10 @@ export default function PricingSection() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-blue-900 mb-1">
+                    <h4 className="font-semibold text-blue-900 mb-1 text-sm">
                       How it works
                     </h4>
-                    <p className="text-sm text-blue-700">
+                    <p className="text-xs sm:text-sm text-blue-700">
                       We analyze your Farcaster likes, casts, and engagement to
                       determine your social vibe and generate a unique mood NFT
                       that represents you.
@@ -385,32 +372,32 @@ export default function PricingSection() {
         {isConnected && step === "preview" && (
           <>
             {farcasterData && currentMood && (
-              <div className="max-w-3xl mx-auto mb-8">
+              <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
                 <div
-                  className="rounded-2xl p-6 text-white shadow-xl transition-all duration-500"
+                  className="rounded-2xl p-4 sm:p-6 text-white shadow-xl transition-all duration-500"
                   style={{
                     background: getGradientStyle(
                       currentMood.gradients[gradientIndex]
                     ),
                   }}
                 >
-                  <div className="flex flex-col md:flex-row items-center gap-6">
-                    <div className="relative w-48 h-48 flex-shrink-0">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                    <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex-shrink-0">
                       <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
-                      <div className="relative w-full h-full p-4">
+                      <div className="relative w-full h-full p-3 sm:p-4">
                         <Image
                           src={currentMood.baseImage}
                           alt={currentMood.name}
                           fill
                           className="object-contain drop-shadow-2xl"
-                          sizes="192px"
+                          sizes="(max-width: 640px) 144px, 192px"
                         />
                       </div>
                     </div>
 
-                    <div className="flex-1 text-center md:text-left">
-                      <div className="flex items-center justify-center md:justify-start gap-3 mb-3">
-                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-4 border-white/30">
+                    <div className="flex-1 text-center sm:text-left">
+                      <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
+                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30">
                           <Image
                             src={farcasterData.pfpUrl}
                             alt={farcasterData.displayName}
@@ -420,37 +407,37 @@ export default function PricingSection() {
                           />
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold">
+                          <h3 className="text-base sm:text-lg font-bold">
                             {farcasterData.displayName}
                           </h3>
-                          <p className="text-white/80 text-sm">
+                          <p className="text-white/80 text-xs sm:text-sm">
                             @{farcasterData.username} · FID {farcasterData.fid}
                           </p>
                         </div>
                       </div>
 
-                      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-                        <div className="text-2xl font-bold mb-1">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                        <div className="text-xl sm:text-2xl font-bold mb-1">
                           {currentMood.name}
                         </div>
-                        <div className="text-sm text-white/80 mb-3">
+                        <div className="text-xs sm:text-sm text-white/80 mb-3">
                           {currentMood.description}
                         </div>
-                        <div className="flex items-center justify-center md:justify-start gap-4">
+                        <div className="flex items-center justify-center sm:justify-start gap-3 sm:gap-4 flex-wrap">
                           <div>
                             <div className="text-xs text-white/70">
                               Engagement Score
                             </div>
-                            <div className="text-xl font-bold">
+                            <div className="text-lg sm:text-xl font-bold">
                               {farcasterData.engagementScore.toLocaleString()}
                             </div>
                           </div>
-                          <div className="h-8 w-px bg-white/30"></div>
+                          <div className="h-6 sm:h-8 w-px bg-white/30"></div>
                           <div>
                             <div className="text-xs text-white/70">
                               Category
                             </div>
-                            <div className="text-xl font-bold uppercase">
+                            <div className="text-lg sm:text-xl font-bold uppercase">
                               {currentMood.category}
                             </div>
                           </div>
@@ -462,7 +449,194 @@ export default function PricingSection() {
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* ✨ TAB SWITCH FOR MOBILE */}
+            <div className="max-w-4xl mx-auto mb-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setSelectedTier("free")}
+                    className={`px-4 py-3 rounded-xl font-semibold text-sm transition ${
+                      selectedTier === "free"
+                        ? "gradient-bg text-white shadow-lg"
+                        : "text-slate-600 hover:bg-purple-50"
+                    }`}
+                  >
+                    FREE Edition
+                  </button>
+                  <button
+                    onClick={() => setSelectedTier("hd")}
+                    className={`px-4 py-3 rounded-xl font-semibold text-sm transition relative ${
+                      selectedTier === "hd"
+                        ? "gradient-bg text-white shadow-lg"
+                        : "text-slate-600 hover:bg-purple-50"
+                    }`}
+                  >
+                    HD Premium
+                    <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      HOT
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* MOBILE: Single Card View */}
+            <div className="md:hidden max-w-md mx-auto">
+              {selectedTier === "free" ? (
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
+                  <div className="text-sm font-medium text-purple-600 mb-2">
+                    FREE MINT
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">SD Edition</h3>
+                  <div className="text-4xl font-bold gradient-text mb-4">
+                    FREE
+                  </div>
+                  <p className="text-slate-600 mb-6 text-sm">
+                    Perfect for trying out mood NFTs
+                  </p>
+                  <ul className="space-y-3 mb-6">
+                    {[
+                      "512px resolution NFT",
+                      "AI-generated mood art",
+                      "Minted on Base mainnet",
+                      "Shareable on socials",
+                    ].map((feature, index) => (
+                      <li key={index} className="flex items-start">
+                        <svg
+                          className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          ></path>
+                        </svg>
+                        <span className="text-slate-600 text-sm">
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={handleMintFree}
+                    disabled={
+                      !isConnected ||
+                      (mintType === "free" &&
+                        (uploadingToIPFS || isPending || isConfirming)) ||
+                      isSuccess
+                    }
+                    className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
+                  >
+                    {uploadingToIPFS &&
+                      mintType === "free" &&
+                      "Uploading to IPFS..."}
+                    {isPending &&
+                      mintType === "free" &&
+                      !uploadingToIPFS &&
+                      "Confirm in Wallet..."}
+                    {isConfirming &&
+                      mintType === "free" &&
+                      !uploadingToIPFS &&
+                      "Minting NFT..."}
+                    {isSuccess && mintType === "free" && "Minted Successfully"}
+                    {(!uploadingToIPFS &&
+                      !isPending &&
+                      !isConfirming &&
+                      !isSuccess) ||
+                    mintType !== "free"
+                      ? "Mint Free NFT"
+                      : ""}
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border-2 border-purple-500 relative">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                    MOST POPULAR
+                  </div>
+                  {isDevAddress && (
+                    <div className="absolute -top-3 right-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                      DEV - FREE
+                    </div>
+                  )}
+                  <div className="text-sm font-medium text-purple-600 mb-2 mt-2">
+                    HD PREMIUM
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">HD Edition</h3>
+                  <div className="text-4xl font-bold gradient-text mb-4">
+                    {isDevAddress ? "FREE" : "0.001 ETH"}
+                  </div>
+                  <p className="text-slate-600 mb-6 text-sm">
+                    {isDevAddress
+                      ? "Developer Access"
+                      : "For collectors and believers"}
+                  </p>
+                  <ul className="space-y-3 mb-6">
+                    {[
+                      "2048px high resolution",
+                      "Enhanced AI algorithm",
+                      "Commercial rights included",
+                      "Priority support",
+                    ].map((feature, index) => (
+                      <li key={index} className="flex items-start">
+                        <svg
+                          className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          ></path>
+                        </svg>
+                        <span className="text-slate-600 text-sm">
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={handleMintHD}
+                    disabled={
+                      !isConnected ||
+                      (mintType === "hd" &&
+                        (uploadingToIPFS || isPending || isConfirming)) ||
+                      isSuccess
+                    }
+                    className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
+                  >
+                    {uploadingToIPFS &&
+                      mintType === "hd" &&
+                      "Uploading to IPFS..."}
+                    {isPending &&
+                      mintType === "hd" &&
+                      !uploadingToIPFS &&
+                      "Confirm in Wallet..."}
+                    {isConfirming &&
+                      mintType === "hd" &&
+                      !uploadingToIPFS &&
+                      "Minting NFT..."}
+                    {isSuccess && mintType === "hd" && "Minted Successfully"}
+                    {(!uploadingToIPFS &&
+                      !isPending &&
+                      !isConfirming &&
+                      !isSuccess) ||
+                    mintType !== "hd"
+                      ? "Mint HD NFT"
+                      : ""}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* DESKTOP: Side by Side */}
+            <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
                 <div className="text-sm font-medium text-purple-600 mb-2">
                   FREE MINT
@@ -507,7 +681,7 @@ export default function PricingSection() {
                       (uploadingToIPFS || isPending || isConfirming)) ||
                     isSuccess
                   }
-                  className="block w-full text-center gradient-bg text-white font-medium px-4 py-3 rounded-xl hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
                 >
                   {uploadingToIPFS &&
                     mintType === "free" &&
@@ -585,7 +759,7 @@ export default function PricingSection() {
                       (uploadingToIPFS || isPending || isConfirming)) ||
                     isSuccess
                   }
-                  className="block w-full text-center gradient-bg text-white font-medium px-4 py-3 rounded-xl hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
                 >
                   {uploadingToIPFS &&
                     mintType === "hd" &&
@@ -611,7 +785,7 @@ export default function PricingSection() {
             </div>
 
             {farcasterData && (
-              <div className="text-center mt-8">
+              <div className="text-center mt-6 sm:mt-8">
                 <button
                   onClick={() => {
                     setStep("fid");
@@ -746,7 +920,6 @@ export default function PricingSection() {
               </button>
             </div>
 
-            {/* Auto-dismiss progress bar */}
             <div className="mt-3 h-1 bg-red-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 animate-shrink" />
             </div>
