@@ -1,506 +1,287 @@
+"use client";
+
 import Header from "@/components/layout/Header";
 import Link from "next/link";
+import { useState } from "react";
+
+type FilterType = "all" | "completed" | "current" | "upcoming";
+
+interface Phase {
+  id: string;
+  status: "completed" | "current" | "upcoming";
+  date: string;
+  quarter: string;
+  title: string;
+  description: string;
+}
 
 export default function RoadmapPage() {
+  const [filter, setFilter] = useState<FilterType>("all");
+
+  const phases: Phase[] = [
+    {
+      id: "phase-1",
+      status: "completed",
+      date: "06.15.2025",
+      quarter: "Q2 2025",
+      title: "Foundation & Launch",
+      description:
+        "Successfully launched core platform with free minting, Base network integration, and Farcaster Frames support. Deployed basic mood generation engine and community gallery.",
+    },
+    {
+      id: "phase-2",
+      status: "completed",
+      date: "09.20.2025",
+      quarter: "Q3 2025",
+      title: "Premium Features & Enhancement",
+      description:
+        "Rolled out HD premium minting with 2048px resolution, advanced sentiment analysis algorithms, profile customization, enhanced gallery filters, and social sharing tools.",
+    },
+    {
+      id: "phase-3",
+      status: "current",
+      date: "11.03.2025",
+      quarter: "Q4 2025",
+      title: "Community & Marketplace",
+      description:
+        "Currently building secondary marketplace in beta, implementing creator royalties system, community voting on new moods, collection management tools, and leaderboards with rewards program.",
+    },
+    {
+      id: "phase-4",
+      status: "upcoming",
+      date: "02.15.2026",
+      quarter: "Q1 2026",
+      title: "Advanced Integrations",
+      description:
+        "Planning AI-powered mood recommendations, cross-chain bridge to Ethereum, mobile app for iOS and Android, animated mood NFTs, and developer API access for third-party integrations.",
+    },
+    {
+      id: "phase-5",
+      status: "upcoming",
+      date: "06.30.2026",
+      quarter: "Q2-Q3 2026",
+      title: "Scale & Partnerships",
+      description:
+        "Introducing brand collaboration program, DAO governance system for community decisions, virtual gallery events, educational content hub, and multi-language support for global expansion.",
+    },
+  ];
+
+  const filteredPhases = phases.filter((phase) => {
+    if (filter === "all") return true;
+    return phase.status === filter;
+  });
+
+  const getStatusBadge = (status: Phase["status"]) => {
+    switch (status) {
+      case "completed":
+        return {
+          bg: "bg-green-500",
+          text: "Completed",
+        };
+      case "current":
+        return {
+          bg: "bg-blue-500",
+          text: "In Progress",
+        };
+      case "upcoming":
+        return {
+          bg: "bg-zinc-400",
+          text: "Upcoming",
+        };
+    }
+  };
+
   return (
     <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
       <Header />
 
-      <section className="pt-12 lg:pt-16 pb-12 lg:pb-16">
-        <div className="max-w-7xl mx-auto px-4 xl:px-0 flex flex-col">
-          {/* Header */}
-          <div className="flex flex-col items-center">
-            <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] inline-flex gradient-bg text-white px-2.5 py-1">
+      {/* Hero Section */}
+      <section className="pt-12 sm:pt-16 pb-12 sm:pb-16">
+        <div className="max-w-5xl mx-auto px-4 xl:px-0">
+          <div className="max-w-xl mx-auto text-center lg:text-balance">
+            <p className="text-xs relative font-semibold uppercase tracking-wide text-slate-500">
               Product Roadmap
-            </div>
-            <div className="mt-6 gradient-text text-center text-3xl font-semibold sm:mx-auto sm:w-2/3 md:w-1/2 lg:mt-9 lg:text-4xl lg:leading-tight xl:w-2/3">
-              Building the Future of Social Art on Base
-            </div>
-            <p className="text-sm font-medium text-slate-600 leading-normal lg:leading-normal lg:text-base mt-4 text-center sm:mx-auto sm:w-2/3 md:w-1/2 xl:w-2/5">
-              Follow our journey as we transform social interactions into
-              collectible art. Here's what we're building next.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl mt-4 font-semibold tracking-tight text-slate-900">
+              Product milestones & launches
+            </h2>
+            <p className="text-base mt-4 font-medium text-slate-500">
+              Trace our journey from the inaugural release through every major
+              feature update.
+            </p>
+          </div>
+
+          {/* Filter Buttons - Mobile: Only "All Phases", Desktop: All Options */}
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-8">
+            {/* Mobile: Only All Phases */}
+            <button
+              onClick={() => setFilter("all")}
+              className="md:hidden px-4 py-2 text-xs sm:text-sm font-medium rounded-lg bg-slate-900 text-white shadow-lg"
+            >
+              All Phases
+            </button>
+
+            {/* Desktop: All Filter Options */}
+            <div className="hidden md:flex flex-wrap justify-center gap-2 sm:gap-3">
               <button
-                type="button"
-                className="py-1 px-2.5 text-sm flex items-center justify-center font-medium shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] rounded-full whitespace-nowrap text-white gradient-bg"
+                onClick={() => setFilter("all")}
+                className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                  filter === "all"
+                    ? "bg-slate-900 text-white shadow-lg"
+                    : "bg-white text-slate-700 hover:bg-slate-50 shadow"
+                }`}
               >
                 All Phases
               </button>
               <button
-                type="button"
-                className="py-1 px-2.5 text-sm flex items-center justify-center font-medium shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] rounded-full whitespace-nowrap text-neutral-700 bg-white"
+                onClick={() => setFilter("completed")}
+                className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                  filter === "completed"
+                    ? "bg-green-500 text-white shadow-lg"
+                    : "bg-white text-slate-700 hover:bg-green-50 shadow"
+                }`}
               >
                 Completed
               </button>
               <button
-                type="button"
-                className="py-1 px-2.5 text-sm flex items-center justify-center font-medium shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] rounded-full whitespace-nowrap text-neutral-700 bg-white"
+                onClick={() => setFilter("current")}
+                className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                  filter === "current"
+                    ? "bg-blue-500 text-white shadow-lg"
+                    : "bg-white text-slate-700 hover:bg-blue-50 shadow"
+                }`}
               >
                 In Progress
               </button>
               <button
-                type="button"
-                className="py-1 px-2.5 text-sm flex items-center justify-center font-medium shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] rounded-full whitespace-nowrap text-neutral-700 bg-white"
+                onClick={() => setFilter("upcoming")}
+                className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                  filter === "upcoming"
+                    ? "bg-slate-500 text-white shadow-lg"
+                    : "bg-white text-slate-700 hover:bg-slate-50 shadow"
+                }`}
               >
                 Upcoming
               </button>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Roadmap Grid */}
-          <div className="mt-6 grid gap-y-3 sm:mx-auto sm:w-2/3 md:w-1/2 md:px-4 lg:mx-0 lg:mt-12 lg:w-full lg:grid-cols-2 lg:gap-x-8 lg:gap-y-6 lg:px-8">
-            {/* Phase 1 - Completed */}
-            <article className="grid gap-x-6 gap-y-2 lg:gap-y-0 xl:grid-cols-[15.625rem_auto]">
-              <figure className="relative w-full self-start rounded-2xl shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)]">
-                <div className="h-40 w-full rounded-2xl lg:h-48 bg-gradient-to-br from-green-400 via-emerald-400 to-teal-400 flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+      {/* Timeline */}
+      <section className="pb-16 sm:pb-20">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="relative">
+            {/* Continuous Vertical Line */}
+            <div className="absolute left-[19px] md:left-1/2 top-0 bottom-0 w-0.5 bg-slate-200 -translate-x-1/2"></div>
+
+            {/* Timeline Items */}
+            <div className="space-y-8 relative">
+              {filteredPhases.map((phase, index) => {
+                const badge = getStatusBadge(phase.status);
+                const isEven = index % 2 === 0;
+
+                return (
+                  <div
+                    key={phase.id}
+                    className={`relative flex items-start ${
+                      isEven ? "md:flex-row" : "md:flex-row-reverse"
+                    } flex-row`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-green-500 text-white px-2.5 py-1 absolute right-3 top-3 z-10 xl:hidden">
-                  Completed
-                </div>
-              </figure>
-              <div className="flex flex-col items-start p-4 xl:p-0">
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-green-500 text-white px-2.5 py-1 hidden xl:block">
-                  Completed
-                </div>
-                <div className="xl:mt-2.5">
-                  <h3 className="font-bold text-neutral-700">
-                    Phase 1: Foundation & Launch
-                  </h3>
-                  <ul className="mt-2 space-y-1">
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-green-500 mr-2 flex-shrink-0">
-                        ✓
-                      </span>
-                      <span>Base network integration</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-green-500 mr-2 flex-shrink-0">
-                        ✓
-                      </span>
-                      <span>Farcaster Frames support</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-green-500 mr-2 flex-shrink-0">
-                        ✓
-                      </span>
-                      <span>Free SD minting</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-green-500 mr-2 flex-shrink-0">
-                        ✓
-                      </span>
-                      <span>Basic generative art engine</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-green-500 mr-2 flex-shrink-0">
-                        ✓
-                      </span>
-                      <span>Gallery page</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-2.5 flex grow items-end">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <div className="text-sm font-medium text-slate-600">
-                      Q4 2024
+                    {/* Dot */}
+                    <div className="absolute left-[19px] md:left-1/2 -translate-x-1/2 z-10">
+                      <div
+                        className={`w-3 h-3 rounded-full border-4 ${
+                          phase.status === "completed"
+                            ? "bg-green-500 border-green-200"
+                            : phase.status === "current"
+                            ? "bg-blue-500 border-blue-200 shadow-lg shadow-blue-500/50 animate-pulse"
+                            : "bg-zinc-300 border-zinc-100"
+                        }`}
+                      ></div>
                     </div>
-                    <div className="flex items-center gap-x-1">
-                      <span className="h-1 w-1 rounded-full bg-neutral-200"></span>
-                      <time className="text-sm font-medium text-neutral-500">
-                        Completed
-                      </time>
+
+                    {/* Card */}
+                    <div
+                      className={`flex-1 ml-12 md:ml-0 ${
+                        isEven ? "md:pr-12" : "md:pl-12"
+                      } ${isEven ? "md:text-right" : "md:text-left"}`}
+                    >
+                      <div
+                        className={`inline-block w-full md:max-w-md ${
+                          isEven ? "md:ml-auto" : "md:mr-auto"
+                        }`}
+                      >
+                        <div className="bg-gradient-to-b from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 sm:p-6 shadow hover:shadow-lg transition-shadow">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              <time dateTime={phase.date}>{phase.date}</time>
+                            </p>
+                            <span
+                              className={`${badge.bg} text-white text-[10px] font-bold px-2.5 py-1 rounded-full`}
+                            >
+                              {badge.text}
+                            </span>
+                          </div>
+
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-purple-600 mb-1">
+                            {phase.quarter}
+                          </p>
+
+                          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-slate-900 mb-2">
+                            {phase.title}
+                          </h3>
+
+                          <p className="text-sm text-slate-600 leading-relaxed text-left">
+                            {phase.description}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </article>
+                );
+              })}
+            </div>
+          </div>
 
-            {/* Phase 2 - In Progress */}
-            <article className="grid gap-x-6 gap-y-2 lg:gap-y-0 xl:grid-cols-[15.625rem_auto]">
-              <figure className="relative w-full self-start rounded-2xl shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)]">
-                <div className="h-40 w-full rounded-2xl lg:h-48 bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-400 flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                </div>
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-blue-500 text-white px-2.5 py-1 absolute right-3 top-3 z-10 xl:hidden">
-                  In Progress
-                </div>
-              </figure>
-              <div className="flex flex-col items-start p-4 xl:p-0">
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-blue-500 text-white px-2.5 py-1 hidden xl:block">
-                  In Progress
-                </div>
-                <div className="xl:mt-2.5">
-                  <h3 className="font-bold text-neutral-700">
-                    Phase 2: Enhanced Features
-                  </h3>
-                  <ul className="mt-2 space-y-1">
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-blue-500 mr-2 flex-shrink-0">
-                        →
-                      </span>
-                      <span>HD premium minting</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-blue-500 mr-2 flex-shrink-0">
-                        →
-                      </span>
-                      <span>Advanced mood algorithms</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-blue-500 mr-2 flex-shrink-0">
-                        →
-                      </span>
-                      <span>Profile customization</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-blue-500 mr-2 flex-shrink-0">
-                        →
-                      </span>
-                      <span>Collection management</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-blue-500 mr-2 flex-shrink-0">
-                        →
-                      </span>
-                      <span>Social sharing tools</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-2.5 flex grow items-end">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <div className="text-sm font-medium text-slate-600">
-                      Q1 2025
-                    </div>
-                    <div className="flex items-center gap-x-1">
-                      <span className="h-1 w-1 rounded-full bg-neutral-200"></span>
-                      <time className="text-sm font-medium text-neutral-500">
-                        70% Complete
-                      </time>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            {/* Phase 3 - Upcoming */}
-            <article className="grid gap-x-6 gap-y-2 lg:gap-y-0 xl:grid-cols-[15.625rem_auto]">
-              <figure className="relative w-full self-start rounded-2xl shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)]">
-                <div className="h-40 w-full rounded-2xl lg:h-48 bg-gradient-to-br from-purple-400 via-pink-400 to-rose-400 flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </div>
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-white text-neutral-700 px-2.5 py-1 absolute right-3 top-3 z-10 xl:hidden">
-                  Upcoming
-                </div>
-              </figure>
-              <div className="flex flex-col items-start p-4 xl:p-0">
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-white text-neutral-700 px-2.5 py-1 hidden xl:block">
-                  Upcoming
-                </div>
-                <div className="xl:mt-2.5">
-                  <h3 className="font-bold text-neutral-700">
-                    Phase 3: Community & Marketplace
-                  </h3>
-                  <ul className="mt-2 space-y-1">
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Secondary marketplace</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Creator royalties</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Community voting</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Collaborative moods</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Leaderboards & rewards</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-2.5 flex grow items-end">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <div className="text-sm font-medium text-slate-600">
-                      Q2 2025
-                    </div>
-                    <div className="flex items-center gap-x-1">
-                      <span className="h-1 w-1 rounded-full bg-neutral-200"></span>
-                      <time className="text-sm font-medium text-neutral-500">
-                        Planned
-                      </time>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            {/* Phase 4 - Future */}
-            <article className="grid gap-x-6 gap-y-2 lg:gap-y-0 xl:grid-cols-[15.625rem_auto]">
-              <figure className="relative w-full self-start rounded-2xl shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)]">
-                <div className="h-40 w-full rounded-2xl lg:h-48 bg-gradient-to-br from-amber-400 via-orange-400 to-red-400 flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                    />
-                  </svg>
-                </div>
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-white text-neutral-700 px-2.5 py-1 absolute right-3 top-3 z-10 xl:hidden">
-                  Future
-                </div>
-              </figure>
-              <div className="flex flex-col items-start p-4 xl:p-0">
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-white text-neutral-700 px-2.5 py-1 hidden xl:block">
-                  Future
-                </div>
-                <div className="xl:mt-2.5">
-                  <h3 className="font-bold text-neutral-700">
-                    Phase 4: Advanced Integrations
-                  </h3>
-                  <ul className="mt-2 space-y-1">
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>AI-powered recommendations</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Cross-chain support</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>3D mood avatars</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>AR/VR experiences</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>API for developers</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-2.5 flex grow items-end">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <div className="text-sm font-medium text-slate-600">
-                      Q3 2025
-                    </div>
-                    <div className="flex items-center gap-x-1">
-                      <span className="h-1 w-1 rounded-full bg-neutral-200"></span>
-                      <time className="text-sm font-medium text-neutral-500">
-                        Research Phase
-                      </time>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            {/* Phase 5 - Vision */}
-            <article className="grid gap-x-6 gap-y-2 lg:gap-y-0 xl:grid-cols-[15.625rem_auto]">
-              <figure className="relative w-full self-start rounded-2xl shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)]">
-                <div className="h-40 w-full rounded-2xl lg:h-48 bg-gradient-to-br from-cyan-400 via-sky-400 to-blue-400 flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                    />
-                  </svg>
-                </div>
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-white text-neutral-700 px-2.5 py-1 absolute right-3 top-3 z-10 xl:hidden">
-                  Vision
-                </div>
-              </figure>
-              <div className="flex flex-col items-start p-4 xl:p-0">
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] bg-white text-neutral-700 px-2.5 py-1 hidden xl:block">
-                  Vision
-                </div>
-                <div className="xl:mt-2.5">
-                  <h3 className="font-bold text-neutral-700">
-                    Phase 5: The Metaverse Era
-                  </h3>
-                  <ul className="mt-2 space-y-1">
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Virtual galleries</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Live mood events</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Brand partnerships</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>DAO governance</span>
-                    </li>
-                    <li className="text-sm font-medium text-neutral-500 flex items-start">
-                      <span className="text-slate-400 mr-2 flex-shrink-0">
-                        ○
-                      </span>
-                      <span>Global art festival</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className="mt-2.5 flex grow items-end">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <div className="text-sm font-medium text-slate-600">
-                      2026+
-                    </div>
-                    <div className="flex items-center gap-x-1">
-                      <span className="h-1 w-1 rounded-full bg-neutral-200"></span>
-                      <time className="text-sm font-medium text-neutral-500">
-                        Long-term Vision
-                      </time>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            {/* Community Feedback */}
-            <article className="grid gap-x-6 gap-y-2 lg:gap-y-0 xl:grid-cols-[15.625rem_auto]">
-              <figure className="relative w-full self-start rounded-2xl shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)]">
-                <div className="h-40 w-full rounded-2xl lg:h-48 bg-gradient-to-br from-violet-400 via-purple-400 to-fuchsia-400 flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                    />
-                  </svg>
-                </div>
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] gradient-bg text-white px-2.5 py-1 absolute right-3 top-3 z-10 xl:hidden">
-                  Feedback
-                </div>
-              </figure>
-              <div className="flex flex-col items-start p-4 xl:p-0">
-                <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] gradient-bg text-white px-2.5 py-1 hidden xl:block">
-                  Feedback
-                </div>
-                <div className="xl:mt-2.5">
-                  <h3 className="font-bold text-neutral-700">
-                    Your Ideas Shape Our Future
-                  </h3>
-                  <p className="mt-2 text-sm font-medium text-neutral-500 leading-relaxed">
-                    This roadmap evolves with community feedback. Have ideas?
-                    Join our Farcaster channel or Discord to share your thoughts
-                    and help us build the future of social art.
-                  </p>
-                </div>
-                <div className="mt-2.5 flex grow items-end">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <div className="text-sm font-medium text-slate-600">
-                      Always Listening
-                    </div>
-                    <div className="flex items-center gap-x-1">
-                      <span className="h-1 w-1 rounded-full bg-neutral-200"></span>
-                      <time className="text-sm font-medium text-neutral-500">
-                        Ongoing
-                      </time>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
+          {/* Community Feedback Card */}
+          <div className="mt-16 bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-200 rounded-2xl p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wide text-purple-600 mb-2">
+              Community Driven
+            </p>
+            <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 mb-3">
+              Your Voice Shapes Our Future
+            </h3>
+            <p className="text-sm sm:text-base text-slate-600 mb-6 leading-relaxed">
+              This roadmap evolves with community feedback. Have ideas, feature
+              requests, or suggestions? Join our Farcaster channel to share your
+              thoughts and help us build the future of social art.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="https://warpcast.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-5 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition text-sm font-medium shadow"
+              >
+                Join on Farcaster
+              </a>
+              <Link
+                href="/#pricing"
+                scroll={true}
+                className="inline-flex items-center px-5 py-2.5 border-2 border-slate-900 text-slate-900 rounded-lg hover:bg-slate-50 transition text-sm font-medium"
+              >
+                Start Minting
+              </Link>
+            </div>
+            <p className="text-xs text-slate-500 mt-4">
+              Last updated: November 3, 2025
+            </p>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section - MATCHED WITH CTASection.tsx STYLES */}
       <section className="py-20 bg-gradient-to-br from-purple-600 to-blue-600">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
@@ -513,15 +294,16 @@ export default function RoadmapPage() {
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
               href="/#pricing"
-              className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] bg-white text-purple-600 hover:bg-purple-50 px-4 py-2.5 rounded-[0.625rem] flex"
+              scroll={true}
+              className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] bg-white text-purple-600 hover:bg-purple-50 disabled:bg-slate-50/30 disabled:text-slate-900/20 px-4 py-2.5 rounded-[0.625rem] flex"
             >
               Start Minting FREE
             </Link>
             <Link
-              href="/about"
-              className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-white/30 bg-purple-500/30 text-white hover:bg-purple-400/40 px-4 py-2.5 rounded-[0.625rem] flex"
+              href="/gallery"
+              className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-white/30 bg-purple-500/30 text-white hover:bg-purple-400/40 disabled:bg-slate-900/30 disabled:text-slate-50/70 px-4 py-2.5 rounded-[0.625rem] flex"
             >
-              Learn More
+              View Gallery
             </Link>
           </div>
         </div>
