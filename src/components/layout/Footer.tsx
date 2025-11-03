@@ -9,7 +9,6 @@ export default function Footer() {
           {/* Logo & Tagline */}
           <figure>
             <div className="flex items-center gap-2">
-              {/* 🔥 FIXED: HD Logo Implementation */}
               <div className="relative w-8 h-8 flex-shrink-0">
                 <Image
                   src="/assets/Logo/Muse.png"
@@ -50,12 +49,12 @@ export default function Footer() {
               >
                 Roadmap
               </Link>
-              <Link
+              {/* <Link
                 className="whitespace-nowrap text-sm font-medium text-neutral-500 hover:text-purple-600 transition"
                 href="/#pricing"
               >
                 Pricing
-              </Link>
+              </Link> */}
               <div className="flex flex-wrap items-center gap-1.5">
                 <Link
                   className="whitespace-nowrap text-sm font-medium text-neutral-500 hover:text-purple-600 transition"
@@ -75,14 +74,23 @@ export default function Footer() {
             <div className="text-sm font-bold text-neutral-700">Community</div>
             <div className="flex flex-col items-start gap-y-1.5">
               <a
-                className="flex items-center gap-x-1.5 whitespace-nowrap text-sm font-medium text-neutral-500 hover:text-purple-600 transition"
+                className="flex items-center gap-x-2 whitespace-nowrap text-sm font-medium text-neutral-500 hover:text-purple-600 transition group"
                 href="https://warpcast.com"
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                <div className="relative w-4 h-4 flex-shrink-0 opacity-70 group-hover:opacity-100 transition">
+                  <Image
+                    src="/assets/images/layout/farcaster.png"
+                    alt="Farcaster"
+                    width={16}
+                    height={16}
+                    className="object-contain"
+                  />
+                </div>
                 Farcaster
                 <svg
-                  className="h-3 text-neutral-400"
+                  className="h-3 text-neutral-400 group-hover:text-purple-600 transition"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   fill="currentColor"
@@ -225,12 +233,31 @@ export default function Footer() {
         <div className="flex flex-wrap items-center justify-between gap-4 md:px-4 lg:px-8">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-neutral-700">
-              © <time>2025</time> Muse. Built with 💜 on Base.
+              © <time>2025</time> Muse. Built on Base.
             </span>
           </div>
 
           {/* Social Icons & Logos */}
           <div className="flex items-center gap-4">
+            {/* Farcaster */}
+            <a
+              href="https://warpcast.com"
+              title="Farcaster"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-600 hover:text-purple-600 transition"
+            >
+              <div className="relative w-5 h-5">
+                <Image
+                  src="/assets/images/layout/farcaster.png"
+                  alt="Farcaster"
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
+              </div>
+            </a>
+
             {/* Twitter */}
             <a
               href="https://twitter.com"
@@ -260,7 +287,7 @@ export default function Footer() {
             {/* Divider */}
             <div className="h-5 w-px bg-purple-200"></div>
 
-            {/* 🔥 FIXED: Muse Logo HD */}
+            {/* Muse Logo */}
             <div className="relative w-6 h-6 flex-shrink-0">
               <Image
                 src="/assets/Logo/Muse.png"
@@ -272,7 +299,7 @@ export default function Footer() {
               />
             </div>
 
-            {/* 🔥 FIXED: Base Logo HD */}
+            {/* Base Logo */}
             <div className="relative w-6 h-6 flex-shrink-0">
               <Image
                 src="/assets/images/layout/eth-base.png"
