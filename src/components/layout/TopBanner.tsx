@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export default function TopBanner() {
   const [isVisible, setIsVisible] = useState(true);
@@ -11,23 +12,31 @@ export default function TopBanner() {
     <section className="py-2 hidden md:block">
       <div className="max-w-7xl mx-auto px-4 xl:px-0 flex items-center justify-between gap-x-2">
         <div className="flex w-full grow items-center gap-x-2 justify-self-center md:justify-center">
-          <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] inline-flex gradient-bg text-white px-2 py-0.5">
-            <svg
-              className="h-3 shrink-0 mr-1.5 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z"
-                clipRule="evenodd"
+          <div className="items-center justify-center rounded-full text-sm font-medium whitespace-nowrap shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] inline-flex gradient-bg text-white px-2.5 py-0.5 gap-1.5">
+            {/* 🎨 MUSE LOGO */}
+            <div className="relative w-4 h-4 flex-shrink-0">
+              <Image
+                src="/assets/Logo/Muse.png"
+                alt="Muse"
+                width={16}
+                height={16}
+                className="object-contain"
               />
-            </svg>
-            LIVE ON BASE
+            </div>
+            LIVE ON
+            {/* 🔵 BASE LOGO */}
+            <div className="relative w-4 h-4 flex-shrink-0">
+              <Image
+                src="/assets/images/layout/eth-base.png"
+                alt="Base"
+                width={16}
+                height={16}
+                className="object-contain"
+              />
+            </div>
           </div>
           <div className="text-sm font-medium text-slate-700">
-            🎨 Connect wallet & Enter FID to mint your mood NFT - FREE
+            Connect wallet & Enter FID to mint your mood NFT - FREE
           </div>
         </div>
         <button
