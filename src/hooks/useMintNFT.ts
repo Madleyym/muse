@@ -66,6 +66,7 @@ export function useMintNFT() {
     setUploadingToIPFS(true);
 
     try {
+      // ✅ API will return HTTP gateway URLs now
       const uploadResponse = await fetch("/api/metadata/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -85,7 +86,7 @@ export function useMintNFT() {
       }
 
       const { metadataURI } = await uploadResponse.json();
-      console.log("IPFS complete:", metadataURI);
+      console.log("✅ IPFS complete (HTTP URL):", metadataURI);
 
       setUploadingToIPFS(false);
 
@@ -99,7 +100,7 @@ export function useMintNFT() {
           params.moodName,
           params.farcasterUsername,
           BigInt(params.engagementScore),
-          metadataURI,
+          metadataURI, // ✅ Now HTTP URL (not ipfs://)
         ],
         chainId: 8453,
       });
@@ -115,6 +116,7 @@ export function useMintNFT() {
     setUploadingToIPFS(true);
 
     try {
+      // ✅ API will return HTTP gateway URLs now
       const uploadResponse = await fetch("/api/metadata/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,7 +136,7 @@ export function useMintNFT() {
       }
 
       const { metadataURI } = await uploadResponse.json();
-      console.log("IPFS complete:", metadataURI);
+      console.log("✅ IPFS complete (HTTP URL):", metadataURI);
 
       setUploadingToIPFS(false);
 
@@ -150,7 +152,7 @@ export function useMintNFT() {
           params.moodName,
           params.farcasterUsername,
           BigInt(params.engagementScore),
-          metadataURI,
+          metadataURI, // ✅ Now HTTP URL (not ipfs://)
         ],
         value: mintValue,
         chainId: 8453,
