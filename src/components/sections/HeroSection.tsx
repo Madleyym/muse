@@ -14,7 +14,6 @@ export default function HeroSection() {
   const [featuredGradientIndex, setFeaturedGradientIndex] = useState(0);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [isReady, setIsReady] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
@@ -22,18 +21,20 @@ export default function HeroSection() {
     setIsReady(true);
   }, []);
 
+  // Gradient animation
   useEffect(() => {
-    if (!isReady || isPaused) return;
+    if (!isReady) return;
 
     const interval = setInterval(() => {
       setFeaturedGradientIndex((prev) => (prev + 1) % 10);
     }, 400);
 
     return () => clearInterval(interval);
-  }, [isReady, isPaused]);
+  }, [isReady]);
 
+  // Auto-rotate featured mood
   useEffect(() => {
-    if (!isReady || isPaused) return;
+    if (!isReady) return;
 
     const interval = setInterval(() => {
       setIsTransitioning(true);
@@ -45,8 +46,9 @@ export default function HeroSection() {
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [isReady, isPaused, proMoods.length]);
+  }, [isReady, proMoods.length]);
 
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
@@ -103,38 +105,36 @@ export default function HeroSection() {
     <section className="relative overflow-hidden py-8 sm:py-12 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
         <div className="lg:grid lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:px-8 xl:gap-x-16 xl:px-10">
-          {/* NFT CARD */}
-          <div className="relative w-full h-[420px] sm:h-[480px] lg:h-[600px] flex flex-col gap-3 mb-8 lg:mb-0 lg:order-2">
+          {/* NFT CARD - ORIGINAL SIZE */}
+          <div className="relative w-full max-w-[500px] mx-auto lg:max-w-none mb-8 lg:mb-0 lg:order-2">
             <div
-              className="relative flex-1 rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-500 select-none"
+              className="relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-500 select-none group"
               style={{
-                boxShadow: `0 20px 60px -10px rgba(${
+                boxShadow: `0 10px 40px -5px rgba(${
                   hexToRgb(currentGradientColors.from).r
                 }, ${hexToRgb(currentGradientColors.from).g}, ${
                   hexToRgb(currentGradientColors.from).b
-                }, 0.4), 0 0 0 1px rgba(${
-                  hexToRgb(currentGradientColors.from).r
-                }, ${hexToRgb(currentGradientColors.from).g}, ${
-                  hexToRgb(currentGradientColors.from).b
-                }, 0.1)`,
+                }, 0.3)`,
               }}
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
               onContextMenu={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
             >
+              {/* Glow effect */}
               <div
-                className="absolute -inset-4 blur-3xl opacity-40 pointer-events-none transition-all duration-500"
+                className="absolute -inset-2 blur-2xl opacity-30 pointer-events-none transition-all duration-500"
                 style={{ background: featuredGradient }}
               />
 
+              {/* Background gradient */}
               <div
                 className="absolute inset-0 transition-all duration-500 ease-in-out"
                 style={{ background: featuredGradient }}
               />
 
+              {/* Shimmer overlay */}
               <div className="absolute inset-0 animate-shimmer pointer-events-none opacity-30" />
 
+              {/* NFT Character - ORIGINAL POSITIONING */}
               <div
                 className={`absolute inset-0 flex items-center justify-center pb-20 sm:pb-24 pt-6 px-4 sm:px-6 transition-all duration-300 pointer-events-none ${
                   isTransitioning
@@ -142,7 +142,7 @@ export default function HeroSection() {
                     : "opacity-100 scale-100"
                 }`}
               >
-                <div className="relative w-full h-full max-w-[260px] max-h-[260px] sm:max-w-[300px] sm:max-h-[300px] lg:max-w-[380px] lg:max-h-[380px]">
+                <div className="relative w-full h-full max-w-[260px] max-h-[260px] sm:max-w-[300px] sm:max-h-[300px] lg:max-w-[350px] lg:max-h-[350px] group-hover:scale-105 transition-transform duration-500">
                   <Image
                     src={featuredMood.baseImage}
                     alt={featuredMood.name}
@@ -155,13 +155,15 @@ export default function HeroSection() {
                 </div>
               </div>
 
+              {/* Bottom shadow */}
               <div
-                className="absolute bottom-20 sm:bottom-24 left-0 right-0 h-28 sm:h-36 lg:h-40 opacity-25 blur-3xl pointer-events-none transition-all duration-700"
+                className="absolute bottom-20 sm:bottom-24 left-0 right-0 h-20 sm:h-24 lg:h-28 opacity-20 blur-2xl pointer-events-none transition-all duration-700"
                 style={{
                   background: `linear-gradient(to top, ${currentGradientColors.to}, transparent)`,
                 }}
               />
 
+              {/* Particle effects for Fire & Chaos */}
               {(featuredMood.id === "fire-starter" ||
                 featuredMood.id === "chaos-energy") && (
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -180,7 +182,7 @@ export default function HeroSection() {
                 </div>
               )}
 
-              {/* 🔥 Info Bar - NO BORDER */}
+              {/* Info Bar */}
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 lg:p-6 bg-gradient-to-t from-black/95 via-black/75 to-transparent backdrop-blur-md">
                 <div className="flex items-end justify-between gap-2 sm:gap-3">
                   <div className="flex-1 min-w-0">
@@ -191,99 +193,19 @@ export default function HeroSection() {
                       {featuredMood.description}
                     </p>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                  <div className="flex-shrink-0">
                     <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-lg">
                       <span className="text-white text-[10px] sm:text-xs font-bold">
                         PRO
                       </span>
                     </div>
-                    {/* <button className="bg-white hover:bg-gray-100 transition-colors rounded-lg px-3 sm:px-4 py-1 sm:py-1.5 shadow-md active:scale-95">
-                      <span className="text-purple-600 text-[10px] sm:text-xs font-bold">
-                        CLAIM
-                      </span>
-                    </button> */}
                   </div>
                 </div>
               </div>
 
+              {/* Live indicator */}
               <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
-                <div
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    isPaused
-                      ? "bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] animate-pulse"
-                      : "bg-white/30"
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Carousel */}
-            <div className="relative">
-              <div
-                ref={carouselRef}
-                className="flex gap-2 sm:gap-2.5 overflow-x-auto py-1.5 scrollbar-hide scroll-smooth snap-x snap-mandatory"
-                style={{
-                  scrollbarWidth: "none",
-                  msOverflowStyle: "none",
-                  WebkitOverflowScrolling: "touch",
-                }}
-              >
-                {proMoods.map((mood, index) => {
-                  const isActive = index === featuredIndex;
-                  const gradientStyle = getGradientStyle(mood.gradients[0]);
-
-                  return (
-                    <button
-                      key={mood.id}
-                      onClick={() => {
-                        setFeaturedIndex(index);
-                        setFeaturedGradientIndex(0);
-                      }}
-                      className={`relative flex-shrink-0 snap-center w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 rounded-xl lg:rounded-2xl overflow-hidden transition-all duration-300 shadow-lg active:scale-95 ${
-                        isActive
-                          ? "opacity-100 ring-2 ring-white scale-105 shadow-xl"
-                          : "opacity-70 hover:opacity-90"
-                      }`}
-                    >
-                      <div
-                        className="absolute inset-0"
-                        style={{ background: gradientStyle }}
-                      />
-
-                      <div className="absolute inset-0 flex items-center justify-center p-2 sm:p-3 lg:p-4">
-                        <div className="relative w-full h-full">
-                          <Image
-                            src={mood.baseImage}
-                            alt={mood.name}
-                            fill
-                            className="object-contain drop-shadow-xl"
-                          />
-                        </div>
-                      </div>
-
-                      {isActive && (
-                        <div className="absolute inset-0 bg-white/10 pointer-events-none" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex justify-center gap-1.5 mt-2.5">
-                {proMoods.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setFeaturedIndex(index);
-                      setFeaturedGradientIndex(0);
-                    }}
-                    className={`h-1 rounded-full transition-all duration-300 ${
-                      index === featuredIndex
-                        ? "w-6 sm:w-8 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg"
-                        : "w-1 bg-slate-300 hover:bg-slate-400 hover:w-2"
-                    }`}
-                  />
-                ))}
+                <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] animate-pulse" />
               </div>
             </div>
           </div>
@@ -305,7 +227,6 @@ export default function HeroSection() {
             >
               Turn your vibe into collectible art
             </p>
-            // Find this line (around line 180):
             <p
               className="mt-4 lg:mt-6 text-sm sm:text-base text-slate-600 max-w-lg leading-relaxed animate-fade-in-up"
               style={{ animationDelay: "0.3s" }}
@@ -313,6 +234,8 @@ export default function HeroSection() {
               Connect your wallet, enter your Farcaster ID, and mint unique mood
               NFTs based on your social activity. All on Base network.
             </p>
+
+            {/* Stats */}
             <div
               className="mt-6 grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-md lg:w-auto animate-fade-in-up"
               style={{ animationDelay: "0.4s" }}
@@ -335,21 +258,22 @@ export default function HeroSection() {
               </div>
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold gradient-text">
-                  99+
+                  {proMoods.length}+
                 </div>
                 <div className="text-[10px] sm:text-xs text-slate-500 mt-1 font-medium">
                   Pro Moods
                 </div>
               </div>
             </div>
-            {/* 🔥 CTA Buttons - Horizontal on ALL devices, no arrows */}
+
+            {/* CTA Buttons */}
             <div
-              className="mt-8 lg:mt-12 flex flex-row items-center gap-2 sm:gap-3 justify-center lg:justify-start animate-fade-in-up"
+              className="mt-8 lg:mt-12 flex flex-row items-center gap-2 sm:gap-3 justify-center lg:justify-start animate-fade-in-up w-full sm:w-auto"
               style={{ animationDelay: "0.5s" }}
             >
               <Link
                 href="#how-it-works"
-                className="items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all duration-200 shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-purple-100 bg-white text-purple-600 hover:border-purple-200 hover:bg-purple-50 active:scale-95 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] flex group"
+                className="flex-1 sm:flex-none items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all duration-200 shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-purple-100 bg-white text-purple-600 hover:border-purple-200 hover:bg-purple-50 active:scale-95 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] flex group"
               >
                 <svg
                   className="shrink-0 mr-1.5 sm:mr-2 h-3.5 sm:h-4 group-hover:rotate-12 transition-transform"
@@ -367,7 +291,7 @@ export default function HeroSection() {
               </Link>
               <Link
                 href="#pricing"
-                className="items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all duration-200 shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] gradient-bg text-white hover:opacity-90 hover:shadow-[0_4px_20px_0px_rgba(139,92,246,0.4)] active:scale-95 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] flex group"
+                className="flex-1 sm:flex-none items-center justify-center whitespace-nowrap text-xs sm:text-sm font-medium transition-all duration-200 shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] gradient-bg text-white hover:opacity-90 hover:shadow-[0_4px_20px_0px_rgba(139,92,246,0.4)] active:scale-95 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] flex group"
               >
                 Start Minting FREE
               </Link>
