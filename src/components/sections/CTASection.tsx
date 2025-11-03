@@ -8,12 +8,12 @@ export default function CTASection() {
           Ready to Mint Your Mood?
         </h2>
         <p className="text-xl text-purple-100 mb-8">
-          Join hundreds of Farcaster users turning their vibes into collectible
-          art
+          Connect your wallet, enter your Farcaster ID, and mint your unique
+          mood NFT in seconds
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <Link
-            href="#pricing"
+            href="/#pricing"
             className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] bg-white text-purple-600 hover:bg-purple-50 disabled:bg-slate-50/30 disabled:text-slate-900/20 px-4 py-2.5 rounded-[0.625rem] flex"
           >
             Get Started Free
