@@ -15,6 +15,7 @@ import {
 } from "@rainbow-me/rainbowkit/wallets";
 import "@rainbow-me/rainbowkit/styles.css";
 import { ReactNode, useEffect, useState } from "react";
+import { useConnect, useAccount } from "wagmi";
 
 // Define Base Mainnet chain
 const base = {
@@ -48,7 +49,7 @@ const base = {
   },
 };
 
-// Ethereum Mainnet (optional, for multi-chain support)
+// Ethereum Mainnet
 const mainnet = {
   id: 1,
   name: "Ethereum",
@@ -117,6 +118,61 @@ const queryClient = new QueryClient({
   },
 });
 
+// 🔥 NEW: Auto Connect Component for Mini App
+function AutoConnectMiniApp() {
+  const { connect, connectors } = useConnect();
+  const { isConnected } = useAccount();
+  const [hasAttempted, setHasAttempted] = useState(false);
+
+  useEffect(() => {
+    // Only run once
+    if (hasAttempted || isConnected) return;
+
+    // Check if in Mini App mode
+    const url = new URL(window.location.href);
+    const isMiniApp =
+      url.pathname.startsWith("/miniapp") ||
+      url.searchParams.get("miniApp") === "true" ||
+      url.searchParams.get("fc") === "true" ||
+      document.referrer.includes("warpcast.com");
+
+    if (!isMiniApp) return;
+
+    // 🔥 Auto-connect to first available connector (Coinbase Wallet for Farcaster)
+    const autoConnect = async () => {
+      try {
+        setHasAttempted(true);
+
+        // Try Coinbase Wallet first (used by Farcaster)
+        const coinbaseConnector = connectors.find((connector) =>
+          connector.name.toLowerCase().includes("coinbase")
+        );
+
+        if (coinbaseConnector) {
+          console.log("🎨 Mini App: Auto-connecting to Coinbase Wallet...");
+          await connect({ connector: coinbaseConnector });
+        } else if (connectors[0]) {
+          // Fallback to first connector
+          console.log("🎨 Mini App: Auto-connecting to", connectors[0].name);
+          await connect({ connector: connectors[0] });
+        }
+      } catch (error) {
+        console.log(
+          "🎨 Mini App: Auto-connect failed, user can manually connect:",
+          error
+        );
+      }
+    };
+
+    // Delay slightly to ensure connectors are ready
+    const timer = setTimeout(autoConnect, 500);
+
+    return () => clearTimeout(timer);
+  }, [connect, connectors, isConnected, hasAttempted]);
+
+  return null;
+}
+
 export function Web3Provider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
@@ -132,7 +188,13 @@ export function Web3Provider({ children }: { children: ReactNode }) {
           initialChain={base as any}
           showRecentTransactions={true}
         >
-          {mounted ? children : null}
+          {mounted && (
+            <>
+              {/* 🔥 NEW: Auto-connect in Mini App mode */}
+              <AutoConnectMiniApp />
+              {children}
+            </>
+          )}
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
