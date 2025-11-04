@@ -14,11 +14,10 @@ export default function Header() {
   const { disconnect } = useDisconnect();
   const { farcasterData, hasFID, isMiniApp } = useFarcaster();
 
-  // Remember if user dismissed Mini App info
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const dismissed = localStorage.getItem('miniAppInfoDismissed');
-      if (dismissed === 'true') {
+    if (typeof window !== "undefined") {
+      const dismissed = localStorage.getItem("miniAppInfoDismissed");
+      if (dismissed === "true") {
         setShowMiniAppInfo(false);
       }
     }
@@ -26,8 +25,8 @@ export default function Header() {
 
   const handleDismissMiniAppInfo = () => {
     setShowMiniAppInfo(false);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('miniAppInfoDismissed', 'true');
+    if (typeof window !== "undefined") {
+      localStorage.setItem("miniAppInfoDismissed", "true");
     }
   };
 
@@ -44,10 +43,16 @@ export default function Header() {
 
   return (
     <>
-      {/* HEADER - TANPA FLOATING BADGE */}
       <header className="py-3 pb-0">
         <div className="max-w-7xl mx-auto px-4 xl:px-0">
-          <div className="bg-white/90 backdrop-blur-md flex items-center justify-between gap-x-4 rounded-2xl py-2.5 pl-5 pr-2.5 shadow-[0_2px_10px_0px_rgba(139,92,246,0.2)] border border-purple-100/50 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:justify-stretch lg:gap-x-12 lg:rounded-[1.375rem]">
+          {/* 🔥 FIX: Conditional grid layout based on isMiniApp */}
+          <div
+            className={`bg-white/90 backdrop-blur-md flex items-center justify-between gap-x-4 rounded-2xl py-2.5 pl-5 pr-2.5 shadow-[0_2px_10px_0px_rgba(139,92,246,0.2)] border border-purple-100/50 lg:rounded-[1.375rem] ${
+              !isMiniApp
+                ? "lg:grid lg:grid-cols-[1fr_auto_1fr] lg:justify-stretch lg:gap-x-12"
+                : "lg:flex lg:justify-between"
+            }`}
+          >
             <div className="flex items-center gap-x-10">
               <Link
                 href={isMiniApp ? "/miniapp" : "/"}
@@ -68,9 +73,12 @@ export default function Header() {
                 </div>
                 <span className="font-bold text-xl gradient-text">Muse</span>
               </Link>
-              <span className="hidden h-4 w-[1px] bg-purple-200 lg:block"></span>
+              {!isMiniApp && (
+                <span className="hidden h-4 w-[1px] bg-purple-200 lg:block"></span>
+              )}
             </div>
 
+            {/* Navigation - Only show when NOT Mini App */}
             {!isMiniApp && (
               <nav className="hidden lg:block">
                 <ul className="flex items-center">
@@ -146,8 +154,15 @@ export default function Header() {
               </nav>
             )}
 
-            <div className="flex items-center gap-x-10 justify-self-end">
-              <span className="hidden h-4 w-[1px] bg-purple-200 lg:block"></span>
+            {/* Right section - 🔥 FIX: Remove justify-self-end when Mini App */}
+            <div
+              className={`flex items-center gap-x-10 ${
+                !isMiniApp ? "lg:justify-self-end" : ""
+              }`}
+            >
+              {!isMiniApp && (
+                <span className="hidden h-4 w-[1px] bg-purple-200 lg:block"></span>
+              )}
               <div className="flex items-center gap-x-3 lg:gap-x-2">
                 <div className="hidden lg:flex items-center gap-2">
                   <ConnectButton.Custom>
@@ -206,7 +221,10 @@ export default function Header() {
                                   className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] gradient-bg text-white hover:opacity-90 px-3 py-2 rounded-[0.625rem] flex"
                                 >
                                   {hasFID ? "Mint Now" : "Setup FID"}
-                                  <span className="ml-1 text-purple-200"> - FREE</span>
+                                  <span className="ml-1 text-purple-200">
+                                    {" "}
+                                    - FREE
+                                  </span>
                                 </Link>
 
                                 <button
@@ -228,7 +246,8 @@ export default function Header() {
                                     />
                                   </div>
                                   <span className="text-sm font-medium text-neutral-700">
-                                    {farcasterData?.displayName || account.displayName}
+                                    {farcasterData?.displayName ||
+                                      account.displayName}
                                   </span>
                                 </button>
                               </div>
@@ -265,7 +284,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* 🔥 MOBILE MENU - WITH MINI APP INFO INSIDE */}
+      {/* Mobile Menu - Same as before */}
       {isMobileMenuOpen && (
         <>
           <div
@@ -274,7 +293,6 @@ export default function Header() {
           ></div>
 
           <div className="fixed top-0 right-0 h-full w-80 max-w-[85%] bg-white z-50 shadow-2xl lg:hidden overflow-y-auto">
-            {/* Header with gradient */}
             <div className="gradient-bg p-6 pb-8">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -287,7 +305,6 @@ export default function Header() {
                     />
                   </div>
                   <span className="font-bold text-xl text-white">Muse</span>
-                  {/* 🔥 Mini App Indicator */}
                   {isMiniApp && (
                     <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full text-white font-bold">
                       MINI
@@ -316,7 +333,6 @@ export default function Header() {
                 </button>
               </div>
 
-              {/* 🔥 MINI APP MODE INFO - INSIDE MENU */}
               {isMiniApp && showMiniAppInfo && (
                 <div className="mb-4 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 animate-fade-in">
                   <div className="flex items-start gap-2 mb-3">
@@ -325,7 +341,9 @@ export default function Header() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-white font-bold text-xs">Mini App Mode</span>
+                        <span className="text-white font-bold text-xs">
+                          Mini App Mode
+                        </span>
                         <button
                           onClick={handleDismissMiniAppInfo}
                           className="text-white/70 hover:text-white p-0.5 transition"
@@ -347,12 +365,12 @@ export default function Header() {
                         </button>
                       </div>
                       <p className="text-white/80 text-[10px] leading-relaxed mb-2">
-                        You're viewing the mobile-optimized version. Want the full experience?
+                        You're viewing the mobile-optimized version. Want the
+                        full experience?
                       </p>
                     </div>
                   </div>
 
-                  {/* Open Full Site Button */}
                   <a
                     href="https://muse.write3.fun/"
                     target="_blank"
@@ -377,7 +395,6 @@ export default function Header() {
                 </div>
               )}
 
-              {/* Connected User Info */}
               {isConnected && (
                 <div className="bg-white/20 backdrop-blur-md rounded-xl p-4">
                   <div className="flex items-center gap-3">
@@ -551,6 +568,7 @@ export default function Header() {
               )}
 
               {/* Action Buttons */}
+
               <div className="border-t border-neutral-200 pt-4 space-y-3">
                 <ConnectButton.Custom>
                   {({ account, chain, openConnectModal, mounted }) => {
@@ -595,7 +613,6 @@ export default function Header() {
                 </ConnectButton.Custom>
               </div>
 
-              {/* Footer */}
               <div className="mt-6 pt-4 border-t border-neutral-200">
                 <div className="flex items-center justify-center gap-1.5">
                   <p className="text-xs text-neutral-500">Minted on</p>
