@@ -339,3 +339,37 @@ img {
 .page-transition {
   animation: fade-in 0.3s ease-in-out;
 }
+
+/* Mini App Mode Styles */
+body.miniapp-mode {
+  /* Optimize for mobile frame */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+}
+
+/* Hide elements in Mini App mode */
+.miniapp-hide {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  body.miniapp-mode {
+    /* Optimize spacing for mobile frame */
+    --spacing-multiplier: 0.9;
+  }
+}
+
+/* Mini App Badge */
+.miniapp-badge {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 9999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}

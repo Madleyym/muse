@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Memory optimization
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
+
   webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       fs: false,
@@ -9,16 +15,17 @@ const nextConfig = {
 
     config.externals.push("pino-pretty", "lokijs", "encoding");
 
-    // Fix for Coinbase Wallet SDK di SSR
     if (isServer) {
       config.resolve.alias = {
         ...config.resolve.alias,
         "@coinbase/wallet-sdk": false,
       };
+      config.optimization.minimize = false;
     }
 
     return config;
   },
+
   images: {
     remotePatterns: [
       // Farcaster CDNs
@@ -34,7 +41,16 @@ const nextConfig = {
         protocol: "https",
         hostname: "wrpcd.net",
       },
-      // OpenSea (seadn.io causing error)
+      // IPFS Gateways
+      {
+        protocol: "https",
+        hostname: "gateway.pinata.cloud",
+      },
+      {
+        protocol: "https",
+        hostname: "ipfs.io",
+      },
+      // OpenSea
       {
         protocol: "https",
         hostname: "i.seadn.io",
@@ -43,7 +59,7 @@ const nextConfig = {
         protocol: "https",
         hostname: "openseauserdata.com",
       },
-      // Imgur (common for Farcaster)
+      // Others
       {
         protocol: "https",
         hostname: "i.imgur.com",
@@ -52,36 +68,46 @@ const nextConfig = {
         protocol: "https",
         hostname: "imgur.com",
       },
-      // Twitter/X
       {
         protocol: "https",
         hostname: "pbs.twimg.com",
       },
-      // UI Avatars (fallback)
       {
         protocol: "https",
         hostname: "ui-avatars.com",
       },
-      // Your own domain
       {
         protocol: "https",
         hostname: "muse.write3.fun",
       },
-      // Legacy domains support
-      {
-        protocol: "https",
-        hostname: "tailkits.com",
-      },
-      // Wildcard for any HTTPS image (most flexible)
       {
         protocol: "https",
         hostname: "**",
       },
     ],
-    unoptimized: true, // Skip optimization for external images
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60,
+    unoptimized: true,
   },
+
+  // 🔥 NEW: Mini App redirect
+  async redirects() {
+    return [
+      {
+        source: "/.well-known/farcaster.json",
+        destination: "/api/farcaster/manifest",
+        permanent: false,
+      },
+    ];
+  },
+
   transpilePackages: ["@rainbow-me/rainbowkit"],
   reactStrictMode: true,
+
+  env: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID,
+  },
 };
 
 module.exports = nextConfig;
