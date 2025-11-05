@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useWalletClient, usePublicClient } from "wagmi";
-import { parseEther } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  custom,
+  http,
+  parseEther,
+} from "viem";
+import { base } from "viem/chains";
 import { MUSE_NFT_CONTRACT } from "@/config/contracts";
+import { useFrameWallet } from "./useFrameWallet";
 
 export interface MintParams {
   fid: number;
@@ -22,8 +29,7 @@ export function useMintNFTMiniApp() {
   const [hash, setHash] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
+  const { address, isConnected, provider } = useFrameWallet();
 
   const mintFree = async (params: MintParams) => {
     setMintType("free");
@@ -31,6 +37,15 @@ export function useMintNFTMiniApp() {
     setError(null);
 
     try {
+      // ✅ Check wallet connection
+      if (!isConnected || !address) {
+        throw new Error("Wallet not connected");
+      }
+
+      if (!provider) {
+        throw new Error("Wallet provider not found");
+      }
+
       // 1️⃣ Upload metadata to IPFS
       console.log("[MiniApp] Uploading to IPFS...");
       const uploadResponse = await fetch("/api/metadata/upload", {
@@ -56,13 +71,25 @@ export function useMintNFTMiniApp() {
 
       setUploadingToIPFS(false);
 
-      // 2️⃣ Mint from user's wallet (CLIENT-SIDE)
-      if (!walletClient) {
-        throw new Error("Wallet not connected");
-      }
-
-      console.log("[MiniApp] 🔄 Requesting transaction...");
+      // 2️⃣ Create wallet client from Frame provider
+      console.log("[MiniApp] 🔄 Preparing transaction...");
       setIsPending(true);
+
+      const walletClient = createWalletClient({
+        account: address,
+        chain: base,
+        transport: custom(provider),
+      });
+
+      const publicClient = createPublicClient({
+        chain: base,
+        transport: http(
+          process.env.NEXT_PUBLIC_BASE_RPC || "https://mainnet.base.org"
+        ),
+      });
+
+      // 3️⃣ Send transaction
+      console.log("[MiniApp] 📝 Sending transaction...");
 
       const txHash = await walletClient.writeContract({
         address: MUSE_NFT_CONTRACT.address,
@@ -76,22 +103,20 @@ export function useMintNFTMiniApp() {
           BigInt(params.engagementScore),
           metadataURI,
         ],
-        chain: walletClient.chain,
       });
 
       console.log("[MiniApp] ✅ Transaction sent:", txHash);
       setHash(txHash);
       setIsPending(false);
 
-      // 3️⃣ Wait for confirmation
+      // 4️⃣ Wait for confirmation
       console.log("[MiniApp] ⏳ Waiting for confirmation...");
       setIsConfirming(true);
 
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({
-          hash: txHash,
-        });
-      }
+      await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations: 1,
+      });
 
       setIsConfirming(false);
       setIsSuccess(true);
@@ -113,6 +138,15 @@ export function useMintNFTMiniApp() {
     setError(null);
 
     try {
+      // ✅ Check wallet connection
+      if (!isConnected || !address) {
+        throw new Error("Wallet not connected");
+      }
+
+      if (!provider) {
+        throw new Error("Wallet provider not found");
+      }
+
       // 1️⃣ Upload metadata to IPFS
       console.log("[MiniApp] Uploading to IPFS...");
       const uploadResponse = await fetch("/api/metadata/upload", {
@@ -138,13 +172,25 @@ export function useMintNFTMiniApp() {
 
       setUploadingToIPFS(false);
 
-      // 2️⃣ Mint from user's wallet (CLIENT-SIDE)
-      if (!walletClient) {
-        throw new Error("Wallet not connected");
-      }
-
-      console.log("[MiniApp] 🔄 Requesting transaction...");
+      // 2️⃣ Create wallet client from Frame provider
+      console.log("[MiniApp] 🔄 Preparing transaction...");
       setIsPending(true);
+
+      const walletClient = createWalletClient({
+        account: address,
+        chain: base,
+        transport: custom(provider),
+      });
+
+      const publicClient = createPublicClient({
+        chain: base,
+        transport: http(
+          process.env.NEXT_PUBLIC_BASE_RPC || "https://mainnet.base.org"
+        ),
+      });
+
+      // 3️⃣ Send transaction
+      console.log("[MiniApp] 📝 Sending transaction...");
 
       const txHash = await walletClient.writeContract({
         address: MUSE_NFT_CONTRACT.address,
@@ -158,23 +204,21 @@ export function useMintNFTMiniApp() {
           BigInt(params.engagementScore),
           metadataURI,
         ],
-        value: parseEther("0.001"), // User bayar sendiri
-        chain: walletClient.chain,
+        value: parseEther("0.001"), // User bayar 0.001 ETH
       });
 
       console.log("[MiniApp] ✅ Transaction sent:", txHash);
       setHash(txHash);
       setIsPending(false);
 
-      // 3️⃣ Wait for confirmation
+      // 4️⃣ Wait for confirmation
       console.log("[MiniApp] ⏳ Waiting for confirmation...");
       setIsConfirming(true);
 
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({
-          hash: txHash,
-        });
-      }
+      await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations: 1,
+      });
 
       setIsConfirming(false);
       setIsSuccess(true);
@@ -198,7 +242,7 @@ export function useMintNFTMiniApp() {
     isConfirming,
     isSuccess,
     uploadingToIPFS,
-    isDevAddress: false, // Miniapp tidak perlu check dev address
+    isDevAddress: false,
     isCheckingDev: false,
     error,
     hash,
