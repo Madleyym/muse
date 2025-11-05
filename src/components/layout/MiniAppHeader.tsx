@@ -11,6 +11,7 @@ export default function MiniAppHeader() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { farcasterData, hasFID } = useFarcaster();
+  const [pfpError, setPfpError] = useState(false);
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -23,9 +24,13 @@ export default function MiniAppHeader() {
     };
   }, [isSidebarOpen]);
 
+  const handlePfpError = () => {
+    console.error("Failed to load profile picture");
+    setPfpError(true);
+  };
+
   return (
     <>
-      {/* ✅ MINI APP HEADER - Simplified */}
       <header className="py-3 pb-0 sticky top-0 z-40 bg-white/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 xl:px-0">
           <div className="bg-white/90 backdrop-blur-md flex items-center justify-between gap-x-4 rounded-2xl py-2.5 pl-5 pr-2.5 shadow-[0_2px_10px_0px_rgba(139,92,246,0.2)] border border-purple-100/50 lg:rounded-[1.375rem]">
@@ -57,20 +62,29 @@ export default function MiniAppHeader() {
             <div className="flex items-center gap-x-3">
               {isConnected && farcasterData ? (
                 <>
-                  {/* ✅ Desktop: Show profile info inline */}
+                  {/* Desktop: Profile inline */}
                   <div
                     className="hidden md:flex items-center gap-2 px-3 py-2 border border-purple-200 bg-white hover:bg-purple-50 rounded-[0.625rem] transition cursor-pointer"
                     onClick={() => setIsSidebarOpen(true)}
                   >
-                    <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300 flex-shrink-0">
-                      <Image
-                        src={farcasterData.pfpUrl}
-                        alt={farcasterData.displayName}
-                        fill
-                        sizes="24px"
-                        className="object-cover"
-                        quality={100}
-                      />
+                    {/* Profile Photo */}
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300 flex-shrink-0 bg-purple-100">
+                      {!pfpError && farcasterData.pfpUrl ? (
+                        <Image
+                          src={farcasterData.pfpUrl}
+                          alt={farcasterData.displayName}
+                          fill
+                          sizes="24px"
+                          className="object-cover"
+                          quality={100}
+                          onError={handlePfpError}
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
+                          {farcasterData.displayName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                     </div>
                     <span className="text-sm font-medium text-neutral-700 truncate max-w-[100px]">
                       {farcasterData.displayName}
@@ -90,29 +104,35 @@ export default function MiniAppHeader() {
                     </svg>
                   </div>
 
-                  {/* ✅ Mobile: Show only profile photo */}
+                  {/* Mobile: Profile photo only */}
                   <button
                     onClick={() => setIsSidebarOpen(true)}
-                    className="md:hidden flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 border-purple-300 hover:border-purple-500 transition flex-shrink-0"
+                    className="md:hidden flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 border-purple-300 hover:border-purple-500 transition flex-shrink-0 bg-purple-100"
                   >
-                    <div className="relative w-full h-full">
+                    {!pfpError && farcasterData.pfpUrl ? (
                       <Image
                         src={farcasterData.pfpUrl}
                         alt={farcasterData.displayName}
-                        fill
-                        sizes="40px"
-                        className="object-cover"
+                        width={40}
+                        height={40}
+                        className="object-cover w-full h-full"
                         quality={100}
+                        onError={handlePfpError}
+                        unoptimized
                       />
-                    </div>
+                    ) : (
+                      <span className="text-white font-bold text-lg">
+                        {farcasterData.displayName.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </button>
                 </>
               ) : (
-                // ✅ Loading state
+                // Loading state
                 <div className="w-10 h-10 rounded-full bg-purple-200 animate-pulse flex-shrink-0"></div>
               )}
 
-              {/* ✅ Hamburger menu for mobile */}
+              {/* Hamburger menu */}
               <button
                 type="button"
                 aria-label="Open menu"
@@ -137,16 +157,14 @@ export default function MiniAppHeader() {
         </div>
       </header>
 
-      {/* ✅ SIDEBAR - User Profile & Menu */}
+      {/* SIDEBAR */}
       {isSidebarOpen && (
         <>
-          {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
             onClick={() => setIsSidebarOpen(false)}
           ></div>
 
-          {/* Sidebar */}
           <div className="fixed top-0 right-0 h-full w-80 max-w-[85%] bg-white z-50 shadow-2xl overflow-y-auto">
             {/* Header */}
             <div className="gradient-bg p-6 pb-8">
@@ -187,22 +205,30 @@ export default function MiniAppHeader() {
                 </button>
               </div>
 
-              {/* ✅ User Profile Card */}
+              {/* User Profile Card */}
               {isConnected && farcasterData ? (
                 <div className="bg-white/20 backdrop-blur-md rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     {/* Profile Photo */}
-                    <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/50 flex-shrink-0">
-                      <Image
-                        src={farcasterData.pfpUrl}
-                        alt={farcasterData.displayName}
-                        fill
-                        className="object-cover"
-                        quality={100}
-                      />
+                    <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/50 flex-shrink-0 bg-white/10">
+                      {!pfpError && farcasterData.pfpUrl ? (
+                        <Image
+                          src={farcasterData.pfpUrl}
+                          alt={farcasterData.displayName}
+                          fill
+                          className="object-cover"
+                          quality={100}
+                          onError={handlePfpError}
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-xl">
+                          {farcasterData.displayName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Profile Info */}
+                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-white text-base truncate">
                         {farcasterData.displayName}
@@ -268,7 +294,7 @@ export default function MiniAppHeader() {
                 </button>
               </div>
 
-              {/* Info */}
+              {/* Footer Info */}
               <div className="mt-6 pt-4 border-t border-neutral-200">
                 <div className="flex items-center justify-center gap-1.5">
                   <p className="text-xs text-neutral-500">Minted on</p>
@@ -288,31 +314,6 @@ export default function MiniAppHeader() {
                   </div>
                 </div>
               </div>
-
-              {/* Dev Info */}
-              {process.env.NODE_ENV === "development" && (
-                <div className="mt-4 pt-4 border-t border-neutral-200">
-                  <details className="text-xs text-neutral-600">
-                    <summary className="cursor-pointer font-semibold mb-2">
-                      📱 Debug Info
-                    </summary>
-                    <div className="bg-neutral-50 p-2 rounded text-[10px] font-mono space-y-1">
-                      <p>
-                        <span className="font-bold">FID:</span>{" "}
-                        {farcasterData?.fid}
-                      </p>
-                      <p>
-                        <span className="font-bold">Username:</span>{" "}
-                        {farcasterData?.username}
-                      </p>
-                      <p>
-                        <span className="font-bold">Address:</span>{" "}
-                        {address?.slice(0, 10)}...
-                      </p>
-                    </div>
-                  </details>
-                </div>
-              )}
             </div>
           </div>
         </>

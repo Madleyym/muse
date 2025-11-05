@@ -2,6 +2,7 @@
 
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { useMintNFTWebsite } from "./useMintNFT.website";
+import { useMintNFTMiniApp } from "./useMintNFT.miniapp";
 
 const defaultReturn = {
   mintFree: async () => console.warn("Minting not available"),
@@ -20,14 +21,20 @@ const defaultReturn = {
 export function useMintNFT() {
   const { isMiniApp, ready } = useFarcaster();
 
-  // ✅ CALL HOOK FIRST - ALWAYS
+  // ✅ WEBSITE: Pakai website hook (dengan RainbowKit)
   const websiteHook = useMintNFTWebsite();
 
-  // ✅ THEN check condition
-  if (isMiniApp || !ready) {
+  // ✅ MINIAPP: Pakai miniapp hook (tanpa RainbowKit)
+  const miniappHook = useMintNFTMiniApp();
+
+  // ✅ Return appropriate hook
+  if (!ready) {
     return defaultReturn;
   }
 
-  // ✅ Return hook result
+  if (isMiniApp) {
+    return miniappHook;
+  }
+
   return websiteHook;
 }
