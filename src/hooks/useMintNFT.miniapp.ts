@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useWalletClient, usePublicClient } from "wagmi";
+import { parseEther } from "viem";
+import { MUSE_NFT_CONTRACT } from "@/config/contracts";
 
 export interface MintParams {
   fid: number;
@@ -19,6 +22,9 @@ export function useMintNFTMiniApp() {
   const [hash, setHash] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
+  const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
+
   const mintFree = async (params: MintParams) => {
     setMintType("free");
     setUploadingToIPFS(true);
@@ -26,6 +32,7 @@ export function useMintNFTMiniApp() {
 
     try {
       // 1️⃣ Upload metadata to IPFS
+      console.log("[MiniApp] Uploading to IPFS...");
       const uploadResponse = await fetch("/api/metadata/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,47 +52,57 @@ export function useMintNFTMiniApp() {
       }
 
       const { metadataURI } = await uploadResponse.json();
+      console.log("[MiniApp] ✅ IPFS complete:", metadataURI);
+
       setUploadingToIPFS(false);
 
-      // 2️⃣ Call mint API (miniapp version)
-      setIsPending(true);
-
-      const mintResponse = await fetch("/api/miniapp/mint", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fid: params.fid,
-          moodId: params.moodId,
-          moodName: params.moodName,
-          farcasterUsername: params.farcasterUsername,
-          engagementScore: params.engagementScore,
-          metadataURI: metadataURI,
-          tier: "free",
-        }),
-      });
-
-      if (!mintResponse.ok) {
-        const errorData = await mintResponse.json();
-        throw new Error(errorData.error || "Failed to mint NFT");
+      // 2️⃣ Mint from user's wallet (CLIENT-SIDE)
+      if (!walletClient) {
+        throw new Error("Wallet not connected");
       }
 
-      const { hash: txHash } = await mintResponse.json();
+      console.log("[MiniApp] 🔄 Requesting transaction...");
+      setIsPending(true);
+
+      const txHash = await walletClient.writeContract({
+        address: MUSE_NFT_CONTRACT.address,
+        abi: MUSE_NFT_CONTRACT.abi,
+        functionName: "mintFree",
+        args: [
+          BigInt(params.fid),
+          params.moodId,
+          params.moodName,
+          params.farcasterUsername,
+          BigInt(params.engagementScore),
+          metadataURI,
+        ],
+        chain: walletClient.chain,
+      });
+
+      console.log("[MiniApp] ✅ Transaction sent:", txHash);
+      setHash(txHash);
       setIsPending(false);
-      setIsConfirming(true);
 
       // 3️⃣ Wait for confirmation
-      setHash(txHash);
-      setIsSuccess(true);
-      setIsConfirming(false);
+      console.log("[MiniApp] ⏳ Waiting for confirmation...");
+      setIsConfirming(true);
 
-      console.log("[MiniApp] ✅ Mint Free successful:", txHash);
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+      }
+
+      setIsConfirming(false);
+      setIsSuccess(true);
+      console.log("[MiniApp] 🎉 Mint Free successful!");
     } catch (err: any) {
+      console.error("[MiniApp] ❌ Mint Free error:", err);
       setUploadingToIPFS(false);
       setIsPending(false);
       setIsConfirming(false);
       const errorObj = new Error(err.message || "Failed to mint NFT");
       setError(errorObj);
-      console.error("[MiniApp] ❌ Mint Free error:", err);
       throw errorObj;
     }
   };
@@ -97,6 +114,7 @@ export function useMintNFTMiniApp() {
 
     try {
       // 1️⃣ Upload metadata to IPFS
+      console.log("[MiniApp] Uploading to IPFS...");
       const uploadResponse = await fetch("/api/metadata/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -116,47 +134,58 @@ export function useMintNFTMiniApp() {
       }
 
       const { metadataURI } = await uploadResponse.json();
+      console.log("[MiniApp] ✅ IPFS complete:", metadataURI);
+
       setUploadingToIPFS(false);
 
-      // 2️⃣ Call mint API (miniapp version)
-      setIsPending(true);
-
-      const mintResponse = await fetch("/api/miniapp/mint", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fid: params.fid,
-          moodId: params.moodId,
-          moodName: params.moodName,
-          farcasterUsername: params.farcasterUsername,
-          engagementScore: params.engagementScore,
-          metadataURI: metadataURI,
-          tier: "hd",
-        }),
-      });
-
-      if (!mintResponse.ok) {
-        const errorData = await mintResponse.json();
-        throw new Error(errorData.error || "Failed to mint NFT");
+      // 2️⃣ Mint from user's wallet (CLIENT-SIDE)
+      if (!walletClient) {
+        throw new Error("Wallet not connected");
       }
 
-      const { hash: txHash } = await mintResponse.json();
+      console.log("[MiniApp] 🔄 Requesting transaction...");
+      setIsPending(true);
+
+      const txHash = await walletClient.writeContract({
+        address: MUSE_NFT_CONTRACT.address,
+        abi: MUSE_NFT_CONTRACT.abi,
+        functionName: "mintHD",
+        args: [
+          BigInt(params.fid),
+          params.moodId,
+          params.moodName,
+          params.farcasterUsername,
+          BigInt(params.engagementScore),
+          metadataURI,
+        ],
+        value: parseEther("0.001"), // User bayar sendiri
+        chain: walletClient.chain,
+      });
+
+      console.log("[MiniApp] ✅ Transaction sent:", txHash);
+      setHash(txHash);
       setIsPending(false);
-      setIsConfirming(true);
 
       // 3️⃣ Wait for confirmation
-      setHash(txHash);
-      setIsSuccess(true);
-      setIsConfirming(false);
+      console.log("[MiniApp] ⏳ Waiting for confirmation...");
+      setIsConfirming(true);
 
-      console.log("[MiniApp] ✅ Mint HD successful:", txHash);
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+        });
+      }
+
+      setIsConfirming(false);
+      setIsSuccess(true);
+      console.log("[MiniApp] 🎉 Mint HD successful!");
     } catch (err: any) {
+      console.error("[MiniApp] ❌ Mint HD error:", err);
       setUploadingToIPFS(false);
       setIsPending(false);
       setIsConfirming(false);
       const errorObj = new Error(err.message || "Failed to mint NFT");
       setError(errorObj);
-      console.error("[MiniApp] ❌ Mint HD error:", err);
       throw errorObj;
     }
   };
