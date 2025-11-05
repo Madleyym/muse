@@ -7,6 +7,7 @@ import { injected } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
+import { FarcasterAutoConnect } from "./FarcasterAutoConnect";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +18,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// 🔥 Create config with explicit injected connector first (untuk auto-connect)
 const config = createConfig({
   chains: [base],
   connectors: [injected()],
@@ -35,7 +35,6 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Don't render anything with wagmi hooks until mounted
   if (!mounted) {
     return null;
   }
@@ -44,6 +43,8 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider modalSize="compact" initialChain={base}>
+          {/* 🔥 FarcasterAutoConnect HARUS sebelum children */}
+          <FarcasterAutoConnect />
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>

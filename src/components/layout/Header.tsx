@@ -6,12 +6,9 @@ import { useState, useEffect } from "react";
 import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useFarcaster } from "@/contexts/FarcasterContext";
-import { useAutoConnectWallet } from "@/hooks/useAutoConnectWallet";
 
 export default function Header() {
-  // 🔥 Trigger auto-connect di mini app
-  useAutoConnectWallet();
-
+ 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMiniAppInfo, setShowMiniAppInfo] = useState(true);
   const { address, isConnected } = useAccount();

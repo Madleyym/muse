@@ -1,38 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAutoConnectWallet } from "./useAutoConnectWallet";
 
+/**
+ * Hook untuk initialize Farcaster SDK dan hide splash screen
+ * Auto-connect wallet sudah di-handle oleh FarcasterAutoConnect component
+ */
 export function useFarcasterSDK() {
   const [isReady, setIsReady] = useState(false);
-
-  // 🔥 Trigger auto-connect saat SDK siap
-  useAutoConnectWallet();
+  const [farcasterContext, setFarcasterContext] = useState<any>(null);
 
   useEffect(() => {
     const initializeSDK = async () => {
       try {
-        // 🔥 Import official SDK
         const { sdk } = await import("@farcaster/miniapp-sdk");
 
         if (typeof window !== "undefined") {
-          console.log("✅ Farcaster SDK available, calling ready()...");
+          console.log("✅ Farcaster SDK loaded");
 
-          // Call ready() to hide splash screen
+          // Get Farcaster context (user info)
+          const context = await sdk.context;
+          console.log("👤 Farcaster Context:", context);
+          setFarcasterContext(context);
+
+          // Hide splash screen
           await sdk.actions.ready();
+          console.log("✅ Mini app splash screen hidden");
+
           setIsReady(true);
-          console.log("✅ Mini app ready! Splash screen hidden.");
-          console.log("🔗 Auto-connect should trigger now...");
         }
       } catch (error) {
-        // SDK not available in web mode - OK!
-        console.log("ℹ️ Not in mini app (web mode):", error);
-        setIsReady(true); // Set ready anyway untuk web
+        console.log("ℹ️ Not in Farcaster mini app (web mode)");
+        setIsReady(true);
       }
     };
 
     initializeSDK();
   }, []);
 
-  return { isReady };
+  return { isReady, farcasterContext };
 }
