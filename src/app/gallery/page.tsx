@@ -170,15 +170,26 @@ export default function GalleryPage() {
   const [totalMinted, setTotalMinted] = useState(0);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  useEffect(() => {
-    fetchMintedNFTs();
-  }, []);
-
   const getDefaultAvatar = (username: string) => {
     const firstLetter = username.charAt(0).toUpperCase();
     return `https://ui-avatars.com/api/?name=${firstLetter}&background=random&size=128&bold=true`;
   };
 
+  const getTimeAgo = (timestamp: string) => {
+    const now = new Date().getTime();
+    const minted = new Date(timestamp).getTime();
+    const diff = now - minted;
+
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
+
+  // ✅ ONLY ONE fetchMintedNFTs function
   const fetchMintedNFTs = async (forceRefresh = false) => {
     try {
       if (initialLoad) {
@@ -240,24 +251,17 @@ export default function GalleryPage() {
     }
   };
 
+  // ✅ ONLY ONE useEffect for fetch
+  useEffect(() => {
+    fetchMintedNFTs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleRefresh = async () => {
     await fetchMintedNFTs(true);
   };
 
-  const getTimeAgo = (timestamp: string) => {
-    const now = new Date().getTime();
-    const minted = new Date(timestamp).getTime();
-    const diff = now - minted;
-
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
-  };
-
+  // ✅ Gradient animation effect
   useEffect(() => {
     const interval = setInterval(() => {
       setGlobalGradientIndex((prev) => (prev + 1) % 10);

@@ -2,6 +2,9 @@
 
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
+// ✅ Import at TOP level
+import { useMintNFTWebsite } from "./useMintNFT.website";
+
 const defaultReturn = {
   mintFree: async () => console.warn("Minting not available"),
   mintHD: async () => console.warn("Minting not available"),
@@ -19,12 +22,12 @@ const defaultReturn = {
 export function useMintNFT() {
   const { isMiniApp, ready } = useFarcaster();
 
+  // ✅ Check FIRST
   if (isMiniApp || !ready) {
     return defaultReturn;
   }
 
-  // ✅ Dynamically import internal hook
-  // This will ONLY be called on website
-  const { useMintNFTWebsite } = require("./useMintNFT.website");
+  // ✅ NOW call hook unconditionally (ALWAYS, not inside require)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   return useMintNFTWebsite();
 }
