@@ -65,31 +65,23 @@ export default function MiniAppHeader() {
                   >
                     <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300 flex-shrink-0 bg-purple-100">
                       {!pfpError && farcasterData.pfpUrl ? (
-                        <>
-                          {console.log(
-                            "🖼️ Loading image:",
-                            farcasterData.pfpUrl
-                          )}
-                          <Image
-                            src={farcasterData.pfpUrl}
-                            alt={farcasterData.displayName}
-                            fill
-                            sizes="24px"
-                            className="object-cover"
-                            quality={100}
-                            onError={(e) => {
-                              console.error("❌ Image load error:", {
-                                src: farcasterData.pfpUrl,
-                                error: e,
-                              });
-                              handlePfpError();
-                            }}
-                            onLoad={() => {
-                              console.log("✅ Image loaded successfully!");
-                            }}
-                            unoptimized
-                          />
-                        </>
+                        <Image
+                          src={farcasterData.pfpUrl}
+                          alt={farcasterData.displayName}
+                          fill
+                          sizes="24px"
+                          className="object-cover"
+                          quality={100}
+                          priority
+                          onError={() => {
+                            console.error(
+                              "❌ Image failed:",
+                              farcasterData.pfpUrl
+                            );
+                            handlePfpError();
+                          }}
+                          unoptimized
+                        />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
                           {farcasterData.displayName.charAt(0).toUpperCase()}
