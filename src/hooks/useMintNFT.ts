@@ -1,8 +1,6 @@
 "use client";
 
 import { useFarcaster } from "@/contexts/FarcasterContext";
-
-// ✅ Import at TOP level
 import { useMintNFTWebsite } from "./useMintNFT.website";
 
 const defaultReturn = {
@@ -22,12 +20,14 @@ const defaultReturn = {
 export function useMintNFT() {
   const { isMiniApp, ready } = useFarcaster();
 
-  // ✅ Check FIRST
+  // ✅ CALL HOOK FIRST - ALWAYS
+  const websiteHook = useMintNFTWebsite();
+
+  // ✅ THEN check condition
   if (isMiniApp || !ready) {
     return defaultReturn;
   }
 
-  // ✅ NOW call hook unconditionally (ALWAYS, not inside require)
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  return useMintNFTWebsite();
+  // ✅ Return hook result
+  return websiteHook;
 }
