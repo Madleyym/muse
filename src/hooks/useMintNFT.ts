@@ -7,6 +7,10 @@ import { useMintNFTMiniApp } from "./useMintNFT.miniapp";
 const defaultReturn = {
   mintFree: async () => console.warn("Minting not available"),
   mintHD: async () => console.warn("Minting not available"),
+  checkIfAlreadyMinted: async () => {
+    console.warn("Check minted not available");
+    return false;
+  }, // ✅ ADDED
   mintType: null,
   isPending: false,
   isConfirming: false,

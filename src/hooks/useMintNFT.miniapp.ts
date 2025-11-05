@@ -31,13 +31,49 @@ export function useMintNFTMiniApp() {
 
   const { address, isConnected, provider } = useFrameWallet();
 
+  // ✅ CHECK IF FID ALREADY MINTED
+  const checkIfAlreadyMinted = async (fid: number): Promise<boolean> => {
+    try {
+      console.log("[MiniApp] Checking if FID", fid, "already minted...");
+
+      const publicClient = createPublicClient({
+        chain: base,
+        transport: http(
+          process.env.NEXT_PUBLIC_BASE_RPC || "https://mainnet.base.org"
+        ),
+      });
+
+      const hasMinted = await publicClient.readContract({
+        address: MUSE_NFT_CONTRACT.address,
+        abi: MUSE_NFT_CONTRACT.abi,
+        functionName: "hasFIDMinted",
+        args: [BigInt(fid)],
+      });
+
+      console.log("[MiniApp] FID", fid, "minted status:", hasMinted);
+      return hasMinted as boolean;
+    } catch (error: any) {
+      console.error("[MiniApp] Check minted error:", error);
+      return false;
+    }
+  };
+
   const mintFree = async (params: MintParams) => {
     setMintType("free");
-    setUploadingToIPFS(true);
     setError(null);
 
     try {
-      // ✅ Check wallet connection
+      // ✅ 1. CHECK IF ALREADY MINTED
+      console.log("[MiniApp] Step 1: Checking if FID already minted...");
+      const alreadyMinted = await checkIfAlreadyMinted(params.fid);
+
+      if (alreadyMinted) {
+        throw new Error(
+          "This FID has already minted an NFT. Each FID can only mint once."
+        );
+      }
+
+      // ✅ 2. CHECK WALLET CONNECTION
       if (!isConnected || !address) {
         throw new Error("Wallet not connected");
       }
@@ -46,8 +82,10 @@ export function useMintNFTMiniApp() {
         throw new Error("Wallet provider not found");
       }
 
-      // 1️⃣ Upload metadata to IPFS
-      console.log("[MiniApp] Uploading to IPFS...");
+      // ✅ 3. UPLOAD TO IPFS
+      setUploadingToIPFS(true);
+      console.log("[MiniApp] Step 2: Uploading to IPFS...");
+
       const uploadResponse = await fetch("/api/metadata/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,8 +109,8 @@ export function useMintNFTMiniApp() {
 
       setUploadingToIPFS(false);
 
-      // 2️⃣ Create wallet client from Frame provider
-      console.log("[MiniApp] 🔄 Preparing transaction...");
+      // ✅ 4. PREPARE TRANSACTION
+      console.log("[MiniApp] Step 3: Preparing transaction...");
       setIsPending(true);
 
       const walletClient = createWalletClient({
@@ -88,8 +126,8 @@ export function useMintNFTMiniApp() {
         ),
       });
 
-      // 3️⃣ Send transaction
-      console.log("[MiniApp] 📝 Sending transaction...");
+      // ✅ 5. SEND TRANSACTION
+      console.log("[MiniApp] Step 4: Sending transaction...");
 
       const txHash = await walletClient.writeContract({
         address: MUSE_NFT_CONTRACT.address,
@@ -109,8 +147,8 @@ export function useMintNFTMiniApp() {
       setHash(txHash);
       setIsPending(false);
 
-      // 4️⃣ Wait for confirmation
-      console.log("[MiniApp] ⏳ Waiting for confirmation...");
+      // ✅ 6. WAIT FOR CONFIRMATION
+      console.log("[MiniApp] Step 5: Waiting for confirmation...");
       setIsConfirming(true);
 
       await publicClient.waitForTransactionReceipt({
@@ -126,7 +164,19 @@ export function useMintNFTMiniApp() {
       setUploadingToIPFS(false);
       setIsPending(false);
       setIsConfirming(false);
-      const errorObj = new Error(err.message || "Failed to mint NFT");
+
+      let errorMessage = err.message || "Failed to mint NFT";
+
+      if (
+        errorMessage.includes("User rejected") ||
+        errorMessage.includes("user rejected")
+      ) {
+        errorMessage = "Transaction cancelled by user";
+      } else if (errorMessage.includes("insufficient funds")) {
+        errorMessage = "Insufficient ETH balance for gas fees";
+      }
+
+      const errorObj = new Error(errorMessage);
       setError(errorObj);
       throw errorObj;
     }
@@ -134,11 +184,20 @@ export function useMintNFTMiniApp() {
 
   const mintHD = async (params: MintParams) => {
     setMintType("hd");
-    setUploadingToIPFS(true);
     setError(null);
 
     try {
-      // ✅ Check wallet connection
+      // ✅ 1. CHECK IF ALREADY MINTED
+      console.log("[MiniApp] Step 1: Checking if FID already minted...");
+      const alreadyMinted = await checkIfAlreadyMinted(params.fid);
+
+      if (alreadyMinted) {
+        throw new Error(
+          "This FID has already minted an NFT. Each FID can only mint once."
+        );
+      }
+
+      // ✅ 2. CHECK WALLET CONNECTION
       if (!isConnected || !address) {
         throw new Error("Wallet not connected");
       }
@@ -147,8 +206,10 @@ export function useMintNFTMiniApp() {
         throw new Error("Wallet provider not found");
       }
 
-      // 1️⃣ Upload metadata to IPFS
-      console.log("[MiniApp] Uploading to IPFS...");
+      // ✅ 3. UPLOAD TO IPFS
+      setUploadingToIPFS(true);
+      console.log("[MiniApp] Step 2: Uploading to IPFS...");
+
       const uploadResponse = await fetch("/api/metadata/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -172,8 +233,8 @@ export function useMintNFTMiniApp() {
 
       setUploadingToIPFS(false);
 
-      // 2️⃣ Create wallet client from Frame provider
-      console.log("[MiniApp] 🔄 Preparing transaction...");
+      // ✅ 4. PREPARE TRANSACTION
+      console.log("[MiniApp] Step 3: Preparing transaction...");
       setIsPending(true);
 
       const walletClient = createWalletClient({
@@ -189,8 +250,8 @@ export function useMintNFTMiniApp() {
         ),
       });
 
-      // 3️⃣ Send transaction
-      console.log("[MiniApp] 📝 Sending transaction...");
+      // ✅ 5. SEND TRANSACTION
+      console.log("[MiniApp] Step 4: Sending transaction...");
 
       const txHash = await walletClient.writeContract({
         address: MUSE_NFT_CONTRACT.address,
@@ -204,15 +265,15 @@ export function useMintNFTMiniApp() {
           BigInt(params.engagementScore),
           metadataURI,
         ],
-        value: parseEther("0.001"), // User bayar 0.001 ETH
+        value: parseEther("0.001"),
       });
 
       console.log("[MiniApp] ✅ Transaction sent:", txHash);
       setHash(txHash);
       setIsPending(false);
 
-      // 4️⃣ Wait for confirmation
-      console.log("[MiniApp] ⏳ Waiting for confirmation...");
+      // ✅ 6. WAIT FOR CONFIRMATION
+      console.log("[MiniApp] Step 5: Waiting for confirmation...");
       setIsConfirming(true);
 
       await publicClient.waitForTransactionReceipt({
@@ -228,7 +289,19 @@ export function useMintNFTMiniApp() {
       setUploadingToIPFS(false);
       setIsPending(false);
       setIsConfirming(false);
-      const errorObj = new Error(err.message || "Failed to mint NFT");
+
+      let errorMessage = err.message || "Failed to mint NFT";
+
+      if (
+        errorMessage.includes("User rejected") ||
+        errorMessage.includes("user rejected")
+      ) {
+        errorMessage = "Transaction cancelled by user";
+      } else if (errorMessage.includes("insufficient funds")) {
+        errorMessage = "Insufficient ETH balance for gas fees";
+      }
+
+      const errorObj = new Error(errorMessage);
       setError(errorObj);
       throw errorObj;
     }
@@ -237,6 +310,7 @@ export function useMintNFTMiniApp() {
   return {
     mintFree,
     mintHD,
+    checkIfAlreadyMinted,
     mintType,
     isPending,
     isConfirming,

@@ -9,10 +9,8 @@ import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { useFrameWallet } from "@/hooks/useFrameWallet";
 import { getTransactionUrl } from "@/config/contracts";
 
-// Helper function to validate image URL
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
-
   try {
     const parsed = new URL(url);
     return parsed.protocol === "https:";
@@ -29,6 +27,7 @@ export default function PricingMiniApp() {
   const {
     mintFree,
     mintHD,
+    checkIfAlreadyMinted,
     mintType,
     isPending,
     isConfirming,
@@ -46,12 +45,12 @@ export default function PricingMiniApp() {
   const [pfpError, setPfpError] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [hasMinted, setHasMinted] = useState(false);
+  const [checkingMinted, setCheckingMinted] = useState(false);
 
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
-
     const found = nftMoods.find((mood) => mood.id === farcasterData.moodId);
-
     if (!found) {
       console.error(
         "[MiniApp] ❌ Mood not found for ID:",
@@ -62,82 +61,86 @@ export default function PricingMiniApp() {
         nftMoods.map((m) => m.id)
       );
     }
-
     return found || null;
   }, [farcasterData]);
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
-  // ✅ Show success notification when mint succeeds
+  useEffect(() => {
+    const checkMinted = async () => {
+      if (!farcasterData?.fid || !checkIfAlreadyMinted) return;
+      setCheckingMinted(true);
+      try {
+        console.log(
+          "[MiniApp] Checking mint status for FID:",
+          farcasterData.fid
+        );
+        const minted = await checkIfAlreadyMinted(farcasterData.fid);
+        setHasMinted(minted);
+        if (minted) {
+          console.log("[MiniApp] ⚠️ FID already minted");
+        }
+      } catch (error: any) {
+        console.error("[MiniApp] Check minted error:", error);
+      } finally {
+        setCheckingMinted(false);
+      }
+    };
+    checkMinted();
+  }, [farcasterData?.fid, checkIfAlreadyMinted]);
+
   useEffect(() => {
     if (isSuccess && hash) {
       setShowSuccessNotification(true);
     }
   }, [isSuccess, hash]);
 
-  // ✅ Show error notification when mint fails
   useEffect(() => {
     if (mintError || localMintError) {
       setShowErrorNotification(true);
-
-      // Auto-hide after 5 seconds
       const timer = setTimeout(() => {
         setShowErrorNotification(false);
         setLocalMintError("");
       }, 5000);
-
       return () => clearTimeout(timer);
     }
   }, [mintError, localMintError]);
 
-  // ✅ AUTO-DETECT MOOD (with 15s fetch timeout)
   useEffect(() => {
     const detectMood = async () => {
       if (!sdkReady || !sdkUser) {
         console.log("[MiniApp] SDK not ready or no user");
         return;
       }
-
       if (farcasterData?.fid) {
         console.log("[MiniApp] Mood already detected");
         setIsDetectingMood(false);
         return;
       }
-
       try {
         setIsDetectingMood(true);
         console.log("[MiniApp] 🔍 Detecting mood for FID:", sdkUser.fid);
-
-        // ✅ 15s timeout for API call
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
-
         try {
           const response = await fetch(
             `/api/farcaster/verify?fid=${sdkUser.fid}`,
             { signal: controller.signal }
           );
-
           clearTimeout(timeoutId);
-
           if (response.ok) {
             const data = await response.json();
-
             console.log("[MiniApp] 📦 API Response:", {
               success: data.success,
               mood: data.activity?.suggestedMood,
               moodId: data.activity?.suggestedMoodId,
               score: data.activity?.engagementScore,
             });
-
             if (data.success && data.activity) {
               const pfpUrl = data.user.pfpUrl || sdkUser.pfpUrl || "";
-
-              // ✅ VALIDATE MOOD EXISTS
               const moodExists = nftMoods.find(
                 (m) => m.id === data.activity.suggestedMoodId
               );
-
               if (!moodExists) {
                 console.error(
                   "[MiniApp] ❌ Invalid moodId from API:",
@@ -147,11 +150,9 @@ export default function PricingMiniApp() {
                   "[MiniApp] Available moods:",
                   nftMoods.map((m) => m.id)
                 );
-                // Use fallback
                 data.activity.suggestedMood = "Creative Mind";
                 data.activity.suggestedMoodId = "creative-mind";
               }
-
               setFarcasterData({
                 fid: data.user.fid,
                 username: data.user.username,
@@ -161,7 +162,6 @@ export default function PricingMiniApp() {
                 moodId: data.activity.suggestedMoodId,
                 engagementScore: data.activity.engagementScore,
               });
-
               console.log(
                 "[MiniApp] ✅ Mood detected:",
                 data.activity.suggestedMood
@@ -176,8 +176,6 @@ export default function PricingMiniApp() {
         } catch (fetchError: any) {
           console.warn("[MiniApp] API fetch failed:", fetchError.message);
         }
-
-        // ✅ FALLBACK: Use default mood if API fails
         console.warn("[MiniApp] Using fallback mood");
         setFarcasterData({
           fid: sdkUser.fid,
@@ -190,8 +188,6 @@ export default function PricingMiniApp() {
         });
       } catch (error: any) {
         console.error("[MiniApp] ❌ Mood detection error:", error);
-
-        // ✅ EMERGENCY FALLBACK
         if (sdkUser) {
           setFarcasterData({
             fid: sdkUser.fid,
@@ -207,17 +203,14 @@ export default function PricingMiniApp() {
         setIsDetectingMood(false);
       }
     };
-
     detectMood();
   }, [sdkReady, sdkUser, farcasterData?.fid, setFarcasterData]);
 
-  // ✅ UI SAFETY TIMEOUT (15s max for loading screen)
   useEffect(() => {
     if (isDetectingMood) {
       const timeout = setTimeout(() => {
         console.warn("[MiniApp] ⏰ UI timeout (15s) - forcing fallback");
         setIsDetectingMood(false);
-
         if (!farcasterData && sdkUser) {
           console.log("[MiniApp] Setting default mood due to UI timeout");
           setFarcasterData({
@@ -231,12 +224,10 @@ export default function PricingMiniApp() {
           });
         }
       }, 15000);
-
       return () => clearTimeout(timeout);
     }
   }, [isDetectingMood, farcasterData, sdkUser, setFarcasterData]);
 
-  // Animate gradient
   useEffect(() => {
     if (!currentMood) return;
     const interval = setInterval(() => {
@@ -245,7 +236,6 @@ export default function PricingMiniApp() {
     return () => clearInterval(interval);
   }, [currentMood]);
 
-  // Reset PFP error when URL changes
   useEffect(() => {
     setPfpError(false);
   }, [farcasterData?.pfpUrl]);
@@ -255,12 +245,10 @@ export default function PricingMiniApp() {
     setPfpError(true);
   };
 
-  // ✅ Handle close success notification
   const handleCloseSuccess = () => {
     setShowSuccessNotification(false);
   };
 
-  // ✅ Handle close error notification
   const handleCloseError = () => {
     setShowErrorNotification(false);
     setLocalMintError("");
@@ -285,7 +273,6 @@ export default function PricingMiniApp() {
     const fromRgb = hexToRgb(gradient.from);
     const toRgb = hexToRgb(gradient.to);
     const viaRgb = gradient.via ? hexToRgb(gradient.via) : null;
-
     return viaRgb
       ? `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${viaRgb.r},${viaRgb.g},${viaRgb.b}) 50%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`
       : `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`;
@@ -296,12 +283,10 @@ export default function PricingMiniApp() {
       setLocalMintError("User data not found");
       return;
     }
-
     if (!isConnected) {
       setLocalMintError("Please connect your wallet first");
       return;
     }
-
     setLocalMintError("");
     setShowErrorNotification(false);
     try {
@@ -323,12 +308,10 @@ export default function PricingMiniApp() {
       setLocalMintError("User data not found");
       return;
     }
-
     if (!isConnected) {
       setLocalMintError("Please connect your wallet first");
       return;
     }
-
     setLocalMintError("");
     setShowErrorNotification(false);
     try {
@@ -347,7 +330,6 @@ export default function PricingMiniApp() {
 
   const FallbackAvatar = () => {
     const initial = farcasterData?.displayName?.charAt(0).toUpperCase() || "?";
-
     return (
       <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
         {initial}
@@ -355,7 +337,6 @@ export default function PricingMiniApp() {
     );
   };
 
-  // ✅ LOADING STATE
   if (!sdkReady || isDetectingMood) {
     return (
       <section
@@ -371,7 +352,6 @@ export default function PricingMiniApp() {
               Analyzing your Farcaster activity
             </p>
           </div>
-
           <div className="max-w-2xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 border-2 border-purple-200 text-center shadow-lg">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center animate-pulse">
@@ -409,7 +389,6 @@ export default function PricingMiniApp() {
     );
   }
 
-  // ✅ MAIN CONTENT
   return (
     <section
       id="pricing"
@@ -430,7 +409,6 @@ export default function PricingMiniApp() {
           )}
         </div>
 
-        {/* Profile Card */}
         {farcasterData && currentMood && (
           <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
             <div
@@ -454,7 +432,6 @@ export default function PricingMiniApp() {
                     />
                   </div>
                 </div>
-
                 <div className="flex-1 text-center sm:text-left">
                   <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
                     <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
@@ -481,7 +458,6 @@ export default function PricingMiniApp() {
                       </p>
                     </div>
                   </div>
-
                   <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 sm:p-4">
                     <div className="text-xl sm:text-2xl font-bold mb-1">
                       {currentMood.name}
@@ -513,8 +489,40 @@ export default function PricingMiniApp() {
           </div>
         )}
 
-        {/* Warning if wallet not connected */}
-        {!isConnected && (
+        {hasMinted && !checkingMinted && (
+          <div className="max-w-2xl mx-auto mb-6">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-orange-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-orange-900 mb-2">
+                    Already Minted!
+                  </h3>
+                  <p className="text-sm text-orange-800 mb-3">
+                    This FID has already minted an NFT. Each FID can only mint
+                    once to ensure fairness.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isConnected && !hasMinted && (
           <div className="max-w-2xl mx-auto mb-6">
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
               <p className="text-sm text-yellow-800 font-medium">
@@ -527,7 +535,6 @@ export default function PricingMiniApp() {
           </div>
         )}
 
-        {/* Mobile Tier Selector */}
         <div className="max-w-4xl mx-auto mb-6">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
             <div className="grid grid-cols-2 gap-2">
@@ -558,7 +565,6 @@ export default function PricingMiniApp() {
           </div>
         </div>
 
-        {/* Mobile Pricing Cards */}
         <div className="md:hidden max-w-md mx-auto">
           {selectedTier === "free" ? (
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
@@ -598,6 +604,8 @@ export default function PricingMiniApp() {
               <button
                 onClick={handleMintFree}
                 disabled={
+                  checkingMinted ||
+                  hasMinted ||
                   !isConnected ||
                   (mintType === "free" &&
                     (uploadingToIPFS || isPending || isConfirming)) ||
@@ -605,30 +613,47 @@ export default function PricingMiniApp() {
                 }
                 className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
               >
-                {!isConnected && "Connect Wallet First"}
-                {isConnected &&
+                {checkingMinted && "Checking..."}
+                {!checkingMinted && hasMinted && "Already Minted"}
+                {!checkingMinted &&
+                  !hasMinted &&
+                  !isConnected &&
+                  "Connect Wallet First"}
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
                   uploadingToIPFS &&
                   mintType === "free" &&
                   "Uploading..."}
-                {isConnected &&
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
                   isPending &&
                   mintType === "free" &&
                   !uploadingToIPFS &&
                   "Confirming..."}
-                {isConnected &&
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
                   isConfirming &&
                   mintType === "free" &&
                   !uploadingToIPFS &&
                   "Minting..."}
-                {isConnected && isSuccess && mintType === "free" && "Minted!"}
-                {isConnected &&
-                ((!uploadingToIPFS &&
-                  !isPending &&
-                  !isConfirming &&
-                  !isSuccess) ||
-                  mintType !== "free")
-                  ? "Mint Free NFT"
-                  : ""}
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
+                  isSuccess &&
+                  mintType === "free" &&
+                  "Minted!"}
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
+                  ((!uploadingToIPFS &&
+                    !isPending &&
+                    !isConfirming &&
+                    !isSuccess) ||
+                    mintType !== "free") &&
+                  "Mint Free NFT"}
               </button>
             </div>
           ) : (
@@ -679,6 +704,8 @@ export default function PricingMiniApp() {
               <button
                 onClick={handleMintHD}
                 disabled={
+                  checkingMinted ||
+                  hasMinted ||
                   !isConnected ||
                   (mintType === "hd" &&
                     (uploadingToIPFS || isPending || isConfirming)) ||
@@ -686,38 +713,53 @@ export default function PricingMiniApp() {
                 }
                 className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
               >
-                {!isConnected && "Connect Wallet First"}
-                {isConnected &&
+                {checkingMinted && "Checking..."}
+                {!checkingMinted && hasMinted && "Already Minted"}
+                {!checkingMinted &&
+                  !hasMinted &&
+                  !isConnected &&
+                  "Connect Wallet First"}
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
                   uploadingToIPFS &&
                   mintType === "hd" &&
                   "Uploading..."}
-                {isConnected &&
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
                   isPending &&
                   mintType === "hd" &&
                   !uploadingToIPFS &&
                   "Confirming..."}
-                {isConnected &&
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
                   isConfirming &&
                   mintType === "hd" &&
                   !uploadingToIPFS &&
                   "Minting..."}
-                {isConnected && isSuccess && mintType === "hd" && "Minted!"}
-                {isConnected &&
-                ((!uploadingToIPFS &&
-                  !isPending &&
-                  !isConfirming &&
-                  !isSuccess) ||
-                  mintType !== "hd")
-                  ? "Mint HD NFT"
-                  : ""}
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
+                  isSuccess &&
+                  mintType === "hd" &&
+                  "Minted!"}
+                {!checkingMinted &&
+                  !hasMinted &&
+                  isConnected &&
+                  ((!uploadingToIPFS &&
+                    !isPending &&
+                    !isConfirming &&
+                    !isSuccess) ||
+                    mintType !== "hd") &&
+                  "Mint HD NFT"}
               </button>
             </div>
           )}
         </div>
 
-        {/* Desktop Pricing Cards */}
         <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* FREE Card */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
             <div className="text-sm font-medium text-purple-600 mb-2">
               FREE MINT
@@ -755,6 +797,8 @@ export default function PricingMiniApp() {
             <button
               onClick={handleMintFree}
               disabled={
+                checkingMinted ||
+                hasMinted ||
                 !isConnected ||
                 (mintType === "free" &&
                   (uploadingToIPFS || isPending || isConfirming)) ||
@@ -762,34 +806,50 @@ export default function PricingMiniApp() {
               }
               className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
             >
-              {!isConnected && "Connect Wallet First"}
-              {isConnected &&
+              {checkingMinted && "Checking..."}
+              {!checkingMinted && hasMinted && "Already Minted"}
+              {!checkingMinted &&
+                !hasMinted &&
+                !isConnected &&
+                "Connect Wallet First"}
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
                 uploadingToIPFS &&
                 mintType === "free" &&
                 "Uploading..."}
-              {isConnected &&
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
                 isPending &&
                 mintType === "free" &&
                 !uploadingToIPFS &&
                 "Confirming..."}
-              {isConnected &&
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
                 isConfirming &&
                 mintType === "free" &&
                 !uploadingToIPFS &&
                 "Minting..."}
-              {isConnected && isSuccess && mintType === "free" && "Minted!"}
-              {isConnected &&
-              ((!uploadingToIPFS &&
-                !isPending &&
-                !isConfirming &&
-                !isSuccess) ||
-                mintType !== "free")
-                ? "Mint Free NFT"
-                : ""}
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
+                isSuccess &&
+                mintType === "free" &&
+                "Minted!"}
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
+                ((!uploadingToIPFS &&
+                  !isPending &&
+                  !isConfirming &&
+                  !isSuccess) ||
+                  mintType !== "free") &&
+                "Mint Free NFT"}
             </button>
           </div>
 
-          {/* HD Card */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-purple-500 hover:border-purple-600 hover:shadow-2xl transition-all relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
               MOST POPULAR
@@ -839,6 +899,8 @@ export default function PricingMiniApp() {
             <button
               onClick={handleMintHD}
               disabled={
+                checkingMinted ||
+                hasMinted ||
                 !isConnected ||
                 (mintType === "hd" &&
                   (uploadingToIPFS || isPending || isConfirming)) ||
@@ -846,35 +908,51 @@ export default function PricingMiniApp() {
               }
               className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
             >
-              {!isConnected && "Connect Wallet First"}
-              {isConnected &&
+              {checkingMinted && "Checking..."}
+              {!checkingMinted && hasMinted && "Already Minted"}
+              {!checkingMinted &&
+                !hasMinted &&
+                !isConnected &&
+                "Connect Wallet First"}
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
                 uploadingToIPFS &&
                 mintType === "hd" &&
                 "Uploading..."}
-              {isConnected &&
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
                 isPending &&
                 mintType === "hd" &&
                 !uploadingToIPFS &&
                 "Confirming..."}
-              {isConnected &&
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
                 isConfirming &&
                 mintType === "hd" &&
                 !uploadingToIPFS &&
                 "Minting..."}
-              {isConnected && isSuccess && mintType === "hd" && "Minted!"}
-              {isConnected &&
-              ((!uploadingToIPFS &&
-                !isPending &&
-                !isConfirming &&
-                !isSuccess) ||
-                mintType !== "hd")
-                ? "Mint HD NFT"
-                : ""}
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
+                isSuccess &&
+                mintType === "hd" &&
+                "Minted!"}
+              {!checkingMinted &&
+                !hasMinted &&
+                isConnected &&
+                ((!uploadingToIPFS &&
+                  !isPending &&
+                  !isConfirming &&
+                  !isSuccess) ||
+                  mintType !== "hd") &&
+                "Mint HD NFT"}
             </button>
           </div>
         </div>
 
-        {/* ✅ SUCCESS NOTIFICATION - FIXED */}
         {showSuccessNotification && isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -893,7 +971,6 @@ export default function PricingMiniApp() {
                   />
                 </svg>
               </div>
-
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-green-900 text-sm mb-0.5">
                   Minted Successfully! 🎉
@@ -901,7 +978,6 @@ export default function PricingMiniApp() {
                 <p className="text-xs text-slate-500 mb-2 truncate">
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
-
                 <div className="flex gap-2">
                   <a
                     href={getTransactionUrl(hash)}
@@ -919,7 +995,6 @@ export default function PricingMiniApp() {
                   </button>
                 </div>
               </div>
-
               <button
                 onClick={handleCloseSuccess}
                 className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition -mt-1 cursor-pointer"
@@ -941,14 +1016,12 @@ export default function PricingMiniApp() {
                 </svg>
               </button>
             </div>
-
             <div className="mt-2 h-0.5 bg-green-100 rounded-full overflow-hidden">
               <div className="h-full bg-green-500 animate-shrink-slow" />
             </div>
           </div>
         )}
 
-        {/* ✅ ERROR NOTIFICATION - FIXED */}
         {showErrorNotification && (mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -996,7 +1069,6 @@ export default function PricingMiniApp() {
                 </svg>
               </button>
             </div>
-
             <div className="mt-3 h-1 bg-red-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 animate-shrink" />
             </div>
