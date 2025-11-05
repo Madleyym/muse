@@ -44,6 +44,8 @@ export default function PricingMiniApp() {
   const [localMintError, setLocalMintError] = useState<string>("");
   const [isDetectingMood, setIsDetectingMood] = useState(true);
   const [pfpError, setPfpError] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [showErrorNotification, setShowErrorNotification] = useState(false);
 
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
@@ -65,6 +67,28 @@ export default function PricingMiniApp() {
   }, [farcasterData]);
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
+
+  // ✅ Show success notification when mint succeeds
+  useEffect(() => {
+    if (isSuccess && hash) {
+      setShowSuccessNotification(true);
+    }
+  }, [isSuccess, hash]);
+
+  // ✅ Show error notification when mint fails
+  useEffect(() => {
+    if (mintError || localMintError) {
+      setShowErrorNotification(true);
+
+      // Auto-hide after 5 seconds
+      const timer = setTimeout(() => {
+        setShowErrorNotification(false);
+        setLocalMintError("");
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [mintError, localMintError]);
 
   // ✅ AUTO-DETECT MOOD (with 15s fetch timeout)
   useEffect(() => {
@@ -221,16 +245,6 @@ export default function PricingMiniApp() {
     return () => clearInterval(interval);
   }, [currentMood]);
 
-  // Auto-clear mint error
-  useEffect(() => {
-    if (mintError || localMintError) {
-      const timer = setTimeout(() => {
-        setLocalMintError("");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [mintError, localMintError]);
-
   // Reset PFP error when URL changes
   useEffect(() => {
     setPfpError(false);
@@ -239,6 +253,17 @@ export default function PricingMiniApp() {
   const handlePfpError = () => {
     console.error("[MiniApp] Failed to load PFP:", farcasterData?.pfpUrl);
     setPfpError(true);
+  };
+
+  // ✅ Handle close success notification
+  const handleCloseSuccess = () => {
+    setShowSuccessNotification(false);
+  };
+
+  // ✅ Handle close error notification
+  const handleCloseError = () => {
+    setShowErrorNotification(false);
+    setLocalMintError("");
   };
 
   const hexToRgb = (hex: string) => {
@@ -278,6 +303,7 @@ export default function PricingMiniApp() {
     }
 
     setLocalMintError("");
+    setShowErrorNotification(false);
     try {
       await mintFree({
         fid: farcasterData.fid,
@@ -304,6 +330,7 @@ export default function PricingMiniApp() {
     }
 
     setLocalMintError("");
+    setShowErrorNotification(false);
     try {
       await mintHD({
         fid: farcasterData.fid,
@@ -847,8 +874,8 @@ export default function PricingMiniApp() {
           </div>
         </div>
 
-        {/* Success Notification */}
-        {isSuccess && hash && (
+        {/* ✅ SUCCESS NOTIFICATION - FIXED */}
+        {showSuccessNotification && isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -866,13 +893,15 @@ export default function PricingMiniApp() {
                   />
                 </svg>
               </div>
+
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-green-900 text-sm mb-0.5">
-                  Minted Successfully
+                  Minted Successfully! 🎉
                 </h4>
                 <p className="text-xs text-slate-500 mb-2 truncate">
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
+
                 <div className="flex gap-2">
                   <a
                     href={getTransactionUrl(hash)}
@@ -882,14 +911,45 @@ export default function PricingMiniApp() {
                   >
                     View on Basescan
                   </a>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="flex-1 text-center border border-slate-300 text-slate-700 text-xs py-1.5 px-2 rounded-md hover:bg-slate-50 transition font-medium"
+                  >
+                    Mint Again
+                  </button>
                 </div>
               </div>
+
+              <button
+                onClick={handleCloseSuccess}
+                className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition -mt-1 cursor-pointer"
+                aria-label="Close notification"
+                type="button"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-2 h-0.5 bg-green-100 rounded-full overflow-hidden">
+              <div className="h-full bg-green-500 animate-shrink-slow" />
             </div>
           </div>
         )}
 
-        {/* Error Notification - FIXED */}
-        {(mintError || localMintError) && (
+        {/* ✅ ERROR NOTIFICATION - FIXED */}
+        {showErrorNotification && (mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -915,17 +975,10 @@ export default function PricingMiniApp() {
                   {mintError?.message || localMintError || "Unknown error"}
                 </p>
               </div>
-              {/* ✅ FIXED: Add onClick handler */}
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setLocalMintError("");
-                  // ✅ Also reload page to clear error state
-                  window.location.reload();
-                }}
+                onClick={handleCloseError}
                 className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                aria-label="Close"
+                aria-label="Close notification"
                 type="button"
               >
                 <svg
@@ -942,6 +995,10 @@ export default function PricingMiniApp() {
                   />
                 </svg>
               </button>
+            </div>
+
+            <div className="mt-3 h-1 bg-red-100 rounded-full overflow-hidden">
+              <div className="h-full bg-red-500 animate-shrink" />
             </div>
           </div>
         )}
