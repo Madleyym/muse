@@ -463,34 +463,24 @@ export default function PricingMiniApp() {
                 </div>
               </div>
 
-              {/* Image + Mood Name (Horizontal) */}
-              <div className="flex items-center gap-3 mb-3">
-                {/* Left: Image */}
-                <div className="relative w-24 h-24 flex-shrink-0">
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-xl"></div>
-                  <div className="relative w-full h-full p-2">
+              {/* ✅ BIG IMAGE - Center, Full Width */}
+              <div className="mb-3.5 flex justify-center">
+                <div className="relative w-36 h-36">
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
+                  <div className="relative w-full h-full p-3">
                     <Image
                       src={currentMood.baseImage}
                       alt={currentMood.name}
                       fill
                       className="object-contain drop-shadow-2xl"
-                      sizes="96px"
+                      sizes="144px"
                       priority
                     />
                   </div>
                 </div>
-
-                {/* Right: Mood Name - ✅ FIXED SIZE */}
-                <div className="flex-1 min-w-0">
-                  <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg h-24 flex items-center justify-center">
-                    <h2 className="text-base font-bold leading-tight text-center px-1">
-                      {currentMood.name}
-                    </h2>
-                  </div>
-                </div>
               </div>
 
-              {/* Description (Full Width Below Image) */}
+              {/* Description (Full Width) */}
               <div className="mb-3.5">
                 <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg">
                   <p className="text-[11px] text-white/90 leading-relaxed text-center line-clamp-3">
@@ -499,7 +489,7 @@ export default function PricingMiniApp() {
                 </div>
               </div>
 
-              {/* Bottom: Stats Grid - ✅ FIXED SIZES */}
+              {/* Bottom: Stats Grid */}
               <div className="grid grid-cols-2 gap-2.5">
                 {/* Engagement Score */}
                 <div className="bg-white/20 backdrop-blur-md rounded-xl px-2.5 py-2 border border-white/30 shadow-lg text-center">
@@ -528,10 +518,10 @@ export default function PricingMiniApp() {
         {hasMinted && !checkingMinted && (
           <div className="max-w-md mx-auto mb-4 px-4">
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-4 shadow-lg">
-              <h3 className="text-base font-bold text-orange-900 mb-1 leading-tight text-center">
+              <h3 className="text-base font-bold text-orange-900 mb-1 leading-tight">
                 Already Minted!
               </h3>
-              <p className="text-xs text-orange-800 leading-snug text-center">
+              <p className="text-xs text-orange-800 leading-snug">
                 This FID already minted — only one mint allowed.
               </p>
             </div>
