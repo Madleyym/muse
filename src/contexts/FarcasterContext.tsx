@@ -49,24 +49,20 @@ export function useFarcaster() {
   return useContext(FarcasterContext);
 }
 
+// Global flag to prevent multiple auto-connect attempts
+let autoConnectAttempted = false;
+
 function AutoConnectInFarcaster() {
-  const { connect, connectors, isPending } = useConnect();
+  const { connect, connectors } = useConnect();
   const { isConnected, isConnecting } = useAccount();
   const { isMiniApp, ready } = useFarcaster();
-  const [hasTriggered, setHasTriggered] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    console.log("[AutoConnect] Checking conditions:", {
-      ready,
-      isMiniApp,
-      isConnected,
-      isConnecting,
-      isPending,
-      hasTriggered,
-      connectorsCount: connectors.length,
-      retryCount,
-    });
+    // Skip if already attempted
+    if (autoConnectAttempted) {
+      console.log("[AutoConnect] Already attempted, skipping...");
+      return;
+    }
 
     // Skip if already connected
     if (isConnected) {
@@ -76,25 +72,17 @@ function AutoConnectInFarcaster() {
 
     // Skip if not ready or not miniapp
     if (!ready || !isMiniApp) {
-      console.log("[AutoConnect] Not ready or not miniapp");
       return;
     }
 
     // Skip if already connecting
-    if (isConnecting || isPending) {
+    if (isConnecting) {
       console.log("[AutoConnect] Already connecting");
       return;
     }
 
-    // Skip if already tried and failed multiple times
-    if (hasTriggered && retryCount >= 3) {
-      console.log("[AutoConnect] Max retry reached");
-      return;
-    }
-
-    setHasTriggered(true);
-
-    console.log("[Farcaster Mini App] Attempting auto-connect...");
+    console.log("[AutoConnect] Starting auto-connect process...");
+    autoConnectAttempted = true;
 
     const timer = setTimeout(async () => {
       try {
@@ -107,7 +95,7 @@ function AutoConnectInFarcaster() {
           }))
         );
 
-        // Find injected connector (Farcaster native wallet)
+        // Find injected connector
         const injectedConnector = connectors.find(
           (c) => c.id === "injected" || c.type === "injected"
         );
@@ -115,55 +103,37 @@ function AutoConnectInFarcaster() {
         if (!injectedConnector) {
           console.error("[Farcaster] Injected connector not found!");
 
-          // Retry with first available connector
+          // Try fallback
           if (connectors.length > 0) {
             const fallbackConnector = connectors[0];
-            console.log("[Farcaster] Using fallback connector:", {
-              id: fallbackConnector.id,
-              type: fallbackConnector.type,
-              name: fallbackConnector.name,
-            });
-
+            console.log(
+              "[Farcaster] Using fallback connector:",
+              fallbackConnector.name
+            );
             await connect({ connector: fallbackConnector });
             console.log("[Farcaster] Connected with fallback!");
             return;
           }
 
-          // Reset and retry
-          setHasTriggered(false);
-          setRetryCount((prev) => prev + 1);
+          console.error("[Farcaster] No connectors available");
           return;
         }
 
         console.log("[Farcaster] Found injected connector, connecting...");
-
         await connect({ connector: injectedConnector });
-
         console.log("[Farcaster] Successfully connected!");
       } catch (error: any) {
         console.error(
           "[Farcaster] Auto-connect error:",
           error?.message || error
         );
-
-        // Reset and allow retry
-        setHasTriggered(false);
-        setRetryCount((prev) => prev + 1);
+        // Allow retry on next mount if failed
+        autoConnectAttempted = false;
       }
-    }, 1000); // Increased delay to 1s
+    }, 1500); // Increased to 1.5s for stability
 
     return () => clearTimeout(timer);
-  }, [
-    ready,
-    isMiniApp,
-    isConnected,
-    isConnecting,
-    isPending,
-    connect,
-    connectors,
-    hasTriggered,
-    retryCount,
-  ]);
+  }, [ready, isMiniApp, isConnected, isConnecting, connect, connectors]);
 
   return null;
 }
@@ -226,21 +196,13 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         environment: finalEnvironment,
         isMiniApp: finalIsMiniApp,
         isWarpcast: detectedIsWarpcast,
-        isIframe,
-        url: url.pathname,
-        userAgent: navigator.userAgent.substring(0, 50),
       });
 
       setReady(true);
     };
 
     detectEnvironment();
-
-    const handlePopState = () => detectEnvironment();
-    window.addEventListener("popstate", handlePopState);
-
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, []); // ✅ Empty deps - run once only
 
   return (
     <FarcasterContext.Provider

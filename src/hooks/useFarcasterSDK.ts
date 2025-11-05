@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { validatePfpUrl } from "@/lib/farcaster";
 
@@ -14,6 +14,10 @@ export interface FarcasterSDKContext {
   client: any;
 }
 
+// ✅ Global flag to prevent duplicate initialization across all instances
+let sdkInitialized = false;
+let sdkInitializing = false;
+
 export function useFarcasterSDK() {
   const [isReady, setIsReady] = useState(false);
   const [sdkContext, setSdkContext] = useState<FarcasterSDKContext | null>(
@@ -22,22 +26,36 @@ export function useFarcasterSDK() {
   const [error, setError] = useState<string | null>(null);
   const { setFarcasterData, isMiniApp } = useFarcaster();
 
-  // Prevent duplicate initialization
-  const initialized = useRef(false);
-
   useEffect(() => {
-    // Skip if already initialized
-    if (initialized.current) {
-      console.log("[Farcaster SDK] Already initialized, skipping...");
+    // Skip if already initialized or initializing
+    if (sdkInitialized || sdkInitializing) {
+      console.log(
+        "[Farcaster SDK] Already initialized/initializing, skipping..."
+      );
+      setIsReady(true);
+      return;
+    }
+
+    // Skip if not in miniapp
+    if (!isMiniApp) {
+      setIsReady(true);
       return;
     }
 
     const initializeSDK = async () => {
+      // Double check before proceeding
+      if (sdkInitialized || sdkInitializing) {
+        return;
+      }
+
+      sdkInitializing = true;
+
       try {
         const { sdk } = await import("@farcaster/miniapp-sdk");
 
         if (typeof window === "undefined") {
           setIsReady(true);
+          sdkInitializing = false;
           return;
         }
 
@@ -97,7 +115,8 @@ export function useFarcasterSDK() {
         }
 
         setIsReady(true);
-        initialized.current = true; // Mark as initialized
+        sdkInitialized = true; // Mark as fully initialized
+        sdkInitializing = false;
       } catch (error: any) {
         const errorMsg = error?.message || "Failed to initialize Farcaster SDK";
         console.log(
@@ -106,14 +125,11 @@ export function useFarcasterSDK() {
         );
         setError(errorMsg);
         setIsReady(true);
+        sdkInitializing = false;
       }
     };
 
-    if (isMiniApp) {
-      initializeSDK();
-    } else {
-      setIsReady(true);
-    }
+    initializeSDK();
   }, [isMiniApp, setFarcasterData]);
 
   return {
