@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import sdk from "@farcaster/miniapp-sdk";
+import sdk from "@farcaster/frame-sdk";
 
 interface FarcasterSDKUser {
   fid: number;
@@ -10,11 +10,6 @@ interface FarcasterSDKUser {
   pfpUrl?: string;
 }
 
-// ✅ Keep global flag for safety
-let sdkInitialized = false;
-let initAttempts = 0;
-const MAX_ATTEMPTS = 1;
-
 export function useFarcasterSDK() {
   const [isReady, setIsReady] = useState(false);
   const [user, setUser] = useState<FarcasterSDKUser | null>(null);
@@ -22,21 +17,20 @@ export function useFarcasterSDK() {
 
   useEffect(() => {
     let mounted = true;
+    let initAttempted = false;
 
     const initSDK = async () => {
-      // ✅ Prevent multiple inits
-      if (sdkInitialized || initAttempts >= MAX_ATTEMPTS) {
-        console.log("[Farcaster SDK] Already initialized, skipping...");
-        setIsReady(true);
+      if (initAttempted) {
+        console.log("[Farcaster SDK] Already attempted initialization");
         return;
       }
 
-      initAttempts++;
+      initAttempted = true;
 
       try {
         console.log("[Farcaster SDK] Starting initialization...");
 
-        // Add timeout for SDK init (3s max)
+        // Add timeout for SDK init
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error("SDK init timeout")), 3000)
         );
@@ -68,15 +62,14 @@ export function useFarcasterSDK() {
 
         setUser(userData);
         setIsReady(true);
-        sdkInitialized = true; // ✅ Mark as initialized
       } catch (err: any) {
         console.error("[Farcaster SDK] ❌ Init failed:", err.message);
 
-        // ✅ CRITICAL: Still set isReady to true
-        // This prevents app from hanging indefinitely
+        // ✅ IMPORTANT: Still set isReady to true so app doesn't hang
+        // Just set user to null
         if (mounted) {
           setError(err.message);
-          setIsReady(true); // ✅ Allow app to proceed
+          setIsReady(true); // ✅ Allow app to proceed with null user
           setUser(null);
         }
       }
@@ -85,14 +78,12 @@ export function useFarcasterSDK() {
     // Only init in browser
     if (typeof window !== "undefined") {
       initSDK();
-    } else {
-      setIsReady(true);
     }
 
     return () => {
       mounted = false;
     };
-  }, []); // ✅ Empty deps - only run once
+  }, []);
 
   return {
     isReady,
