@@ -1,141 +1,102 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useFarcaster } from "@/contexts/FarcasterContext";
-import { validatePfpUrl } from "@/lib/farcaster";
+import { useState, useEffect } from "react";
+import sdk from "@farcaster/miniapp-sdk";
 
-export interface FarcasterSDKContext {
-  user: {
-    fid: number;
-    username: string;
-    displayName: string;
-    pfpUrl: string;
-  };
-  client: any;
+interface FarcasterSDKUser {
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
 }
 
-// ✅ Global flag to prevent duplicate initialization across all instances
+// ✅ Keep global flag for safety
 let sdkInitialized = false;
-let sdkInitializing = false;
+let initAttempts = 0;
+const MAX_ATTEMPTS = 1;
 
 export function useFarcasterSDK() {
   const [isReady, setIsReady] = useState(false);
-  const [sdkContext, setSdkContext] = useState<FarcasterSDKContext | null>(
-    null
-  );
+  const [user, setUser] = useState<FarcasterSDKUser | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { setFarcasterData, isMiniApp } = useFarcaster();
 
   useEffect(() => {
-    // Skip if already initialized or initializing
-    if (sdkInitialized || sdkInitializing) {
-      console.log(
-        "[Farcaster SDK] Already initialized/initializing, skipping..."
-      );
-      setIsReady(true);
-      return;
-    }
+    let mounted = true;
 
-    // Skip if not in miniapp
-    if (!isMiniApp) {
-      setIsReady(true);
-      return;
-    }
-
-    const initializeSDK = async () => {
-      // Double check before proceeding
-      if (sdkInitialized || sdkInitializing) {
+    const initSDK = async () => {
+      // ✅ Prevent multiple inits
+      if (sdkInitialized || initAttempts >= MAX_ATTEMPTS) {
+        console.log("[Farcaster SDK] Already initialized, skipping...");
+        setIsReady(true);
         return;
       }
 
-      sdkInitializing = true;
+      initAttempts++;
 
       try {
-        const { sdk } = await import("@farcaster/miniapp-sdk");
+        console.log("[Farcaster SDK] Starting initialization...");
 
-        if (typeof window === "undefined") {
-          setIsReady(true);
-          sdkInitializing = false;
-          return;
-        }
-
-        console.log("[Farcaster] SDK loaded successfully");
-
-        // Get Farcaster context
-        const context = await sdk.context;
-        console.log("[Farcaster] SDK Context:", context);
-
-        if (context?.user) {
-          const { fid, username, displayName, pfpUrl } = context.user;
-
-          // Validate PFP URL
-          const validPfpUrl = validatePfpUrl(pfpUrl);
-
-          console.log("[Farcaster] PFP URL from SDK:", {
-            original: pfpUrl,
-            validated: validPfpUrl,
-            isValid: !!validPfpUrl,
-          });
-
-          const userData = {
-            fid,
-            username: username || "",
-            displayName: displayName || username || `User ${fid}`,
-            pfpUrl: validPfpUrl,
-          };
-
-          console.log("[Farcaster] User Data Extracted:", userData);
-
-          // Store to context
-          setSdkContext({
-            user: userData,
-            client: context.client,
-          });
-
-          // Update FarcasterContext
-          setFarcasterData({
-            fid,
-            username: userData.username,
-            displayName: userData.displayName,
-            pfpUrl: userData.pfpUrl,
-            mood: "",
-            moodId: "",
-            engagementScore: 0,
-          });
-
-          console.log("[Farcaster] User profile stored in context");
-        } else {
-          console.warn("[Farcaster] No user context found in SDK");
-        }
-
-        // Hide splash screen (only once)
-        if (typeof sdk.actions?.ready === "function") {
-          await sdk.actions.ready();
-          console.log("[Farcaster] Mini app splash screen hidden");
-        }
-
-        setIsReady(true);
-        sdkInitialized = true; // Mark as fully initialized
-        sdkInitializing = false;
-      } catch (error: any) {
-        const errorMsg = error?.message || "Failed to initialize Farcaster SDK";
-        console.log(
-          "[Farcaster] Not in Farcaster mini app (web mode):",
-          errorMsg
+        // Add timeout for SDK init (3s max)
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("SDK init timeout")), 3000)
         );
-        setError(errorMsg);
+
+        const initPromise = sdk.actions.ready();
+
+        await Promise.race([initPromise, timeoutPromise]);
+
+        if (!mounted) return;
+
+        console.log("[Farcaster SDK] ✅ SDK ready");
+
+        // Get context
+        const context = await sdk.context;
+        console.log("[Farcaster SDK] Context:", context);
+
+        if (!context || !context.user) {
+          throw new Error("No user in SDK context");
+        }
+
+        const userData = {
+          fid: context.user.fid,
+          username: context.user.username || undefined,
+          displayName: context.user.displayName || undefined,
+          pfpUrl: context.user.pfpUrl || undefined,
+        };
+
+        console.log("[Farcaster SDK] ✅ User data extracted:", userData);
+
+        setUser(userData);
         setIsReady(true);
-        sdkInitializing = false;
+        sdkInitialized = true; // ✅ Mark as initialized
+      } catch (err: any) {
+        console.error("[Farcaster SDK] ❌ Init failed:", err.message);
+
+        // ✅ CRITICAL: Still set isReady to true
+        // This prevents app from hanging indefinitely
+        if (mounted) {
+          setError(err.message);
+          setIsReady(true); // ✅ Allow app to proceed
+          setUser(null);
+        }
       }
     };
 
-    initializeSDK();
-  }, [isMiniApp, setFarcasterData]);
+    // Only init in browser
+    if (typeof window !== "undefined") {
+      initSDK();
+    } else {
+      setIsReady(true);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, []); // ✅ Empty deps - only run once
 
   return {
     isReady,
-    sdkContext,
+    user,
     error,
-    user: sdkContext?.user || null,
   };
 }
