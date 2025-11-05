@@ -25,7 +25,7 @@ export interface FarcasterContextType {
   isMiniApp: boolean;
   isWarpcast: boolean;
   environment: "web" | "miniapp" | "warpcast";
-  ready: boolean; // 🔥 ADD THIS
+  ready: boolean;
 }
 
 const FarcasterContext = createContext<FarcasterContextType>({
@@ -35,7 +35,7 @@ const FarcasterContext = createContext<FarcasterContextType>({
   isMiniApp: false,
   isWarpcast: false,
   environment: "web",
-  ready: false, // 🔥 ADD THIS
+  ready: false,
 });
 
 export function useFarcaster() {
@@ -51,14 +51,13 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [environment, setEnvironment] = useState<
     "web" | "miniapp" | "warpcast"
   >("web");
-  const [ready, setReady] = useState(false); // 🔥 ADD THIS
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const url = new URL(window.location.href);
 
-    // 🔥 Detect Warpcast
     const fromWarpcast = document.referrer.includes("warpcast.com");
     const hasWarpcastUA = navigator.userAgent.includes("Warpcast");
     const isIframe = window.self !== window.top;
@@ -67,10 +66,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     const detectedIsWarpcast =
       fromWarpcast || hasWarpcastUA || isIframe || warpcastParam;
 
-    // 🔥 Detect Mini App Route
     const isMiniAppRoute = url.pathname.startsWith("/miniapp");
 
-    // 🔥 Determine environment
     let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
     let finalIsMiniApp = false;
 
@@ -82,29 +79,19 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       finalIsMiniApp = true;
     }
 
-    // 🔥 Update states
     setEnvironment(finalEnvironment);
     setIsMiniApp(finalIsMiniApp);
     setIsWarpcast(detectedIsWarpcast);
 
-    // 🔥 Add CSS class for styling
     document.body.classList.remove("web-mode", "miniapp-mode", "warpcast-mode");
     document.body.classList.add(`${finalEnvironment}-mode`);
 
-    // 🔥 Set ready
     setReady(true);
 
     console.log("🔥 Farcaster Environment:", {
       environment: finalEnvironment,
       isMiniApp: finalIsMiniApp,
       isWarpcast: detectedIsWarpcast,
-      details: {
-        fromWarpcast,
-        hasWarpcastUA,
-        isIframe,
-        warpcastParam,
-        isMiniAppRoute,
-      },
     });
   }, []);
 
@@ -117,7 +104,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         isMiniApp,
         isWarpcast,
         environment,
-        ready, // 🔥 PROVIDE THIS
+        ready,
       }}
     >
       {children}

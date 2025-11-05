@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Muse - Mint Your Mood NFT",
   description: "Turn your Farcaster vibe into collectible art on Base",
-  metadataBase: new URL("https://muse.write3.fun"), // 🔥 ADD
+  metadataBase: new URL("https://muse.write3.fun"),
   keywords: ["NFT", "Farcaster", "mood", "Base", "mint", "social"],
   authors: [{ name: "Muse" }],
   creator: "Muse",
@@ -21,7 +21,6 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    // 🔥 ADD
     title: "Muse - Mint Your Mood NFT",
     description: "Turn your Farcaster vibe into collectible art on Base",
     url: "https://muse.write3.fun",
@@ -52,14 +51,16 @@ export default function RootLayout({
         <link rel="canonical" href="https://muse.write3.fun" />
       </head>
       <body className={inter.className}>
+        {/* 🔥 WagmiProvider FIRST - before everything */}
         <Web3Provider>
-          <NavigationProgress>
-            <FarcasterProvider>
+          {/* 🔥 Then FarcasterProvider */}
+          <FarcasterProvider>
+            <NavigationProgress>
               <TopBanner />
               <div className="page-transition">{children}</div>
               <Footer />
-            </FarcasterProvider>
-          </NavigationProgress>
+            </NavigationProgress>
+          </FarcasterProvider>
         </Web3Provider>
       </body>
     </html>

@@ -8,21 +8,16 @@ import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { useEffect } from "react";
 
 export default function MiniAppPage() {
-  const { environment, ready } = useFarcaster();
-  const { isReady: sdkReady, isInMiniApp } = useFarcasterSDK(); // 🔥 USE THIS
+  const { environment } = useFarcaster();
+  const { isReady: sdkReady } = useFarcasterSDK();
 
   useEffect(() => {
     if (sdkReady) {
-      console.log("📱 MiniApp Status:", {
-        environment,
-        inMiniApp: isInMiniApp,
-        ready: sdkReady,
-      });
+      console.log("📱 MiniApp fully loaded:", environment);
     }
-  }, [sdkReady, environment, isInMiniApp]);
+  }, [sdkReady, environment]);
 
-  // Show loading only while initializing
-  if (!ready || !sdkReady) {
+  if (!sdkReady) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
         <div className="text-center">
@@ -42,10 +37,9 @@ export default function MiniAppPage() {
         transition-all duration-300
       `}
     >
-      {/* Dev indicator */}
       {process.env.NODE_ENV === "development" && (
         <div className="fixed top-4 right-4 px-3 py-1 bg-black text-white text-xs rounded-full z-50">
-          {environment.toUpperCase()} {isInMiniApp ? "✅" : "🌐"}
+          {environment.toUpperCase()}
         </div>
       )}
 
