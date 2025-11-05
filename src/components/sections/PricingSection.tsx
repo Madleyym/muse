@@ -1097,6 +1097,7 @@ function WebsiteSection() {
         {/* Step 3: Preview & Mint */}
         {isConnected && step === "preview" && (
           <>
+            // ✅ Di dalam MiniAppSection, saat render profile:
             {farcasterData && currentMood && (
               <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
                 <div
@@ -1108,6 +1109,7 @@ function WebsiteSection() {
                   }}
                 >
                   <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                    {/* Image */}
                     <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex-shrink-0">
                       <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
                       <div className="relative w-full h-full p-3 sm:p-4">
@@ -1121,17 +1123,37 @@ function WebsiteSection() {
                       </div>
                     </div>
 
+                    {/* Info */}
                     <div className="flex-1 text-center sm:text-left">
                       <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
-                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30">
-                          <Image
-                            src={farcasterData.pfpUrl}
-                            alt={farcasterData.displayName}
-                            fill
-                            className="object-cover"
-                            sizes="48px"
-                            unoptimized
-                          />
+                        {/* ✅ Profile Photo dengan error handling */}
+                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
+                          {farcasterData.pfpUrl ? (
+                            <Image
+                              src={farcasterData.pfpUrl}
+                              alt={farcasterData.displayName}
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                              unoptimized
+                              onError={(e) => {
+                                console.error(
+                                  "❌ Failed to load PFP:",
+                                  farcasterData.pfpUrl
+                                );
+                                // Ganti dengan fallback
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                          ) : null}
+                          {!farcasterData.pfpUrl && (
+                            <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
+                              {farcasterData.displayName
+                                .charAt(0)
+                                .toUpperCase()}
+                            </div>
+                          )}
                         </div>
                         <div>
                           <h3 className="text-base sm:text-lg font-bold">
@@ -1175,7 +1197,6 @@ function WebsiteSection() {
                 </div>
               </div>
             )}
-
             <div className="max-w-4xl mx-auto mb-6">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
                 <div className="grid grid-cols-2 gap-2">
@@ -1205,7 +1226,6 @@ function WebsiteSection() {
                 </div>
               </div>
             </div>
-
             <div className="md:hidden max-w-md mx-auto">
               {selectedTier === "free" ? (
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
@@ -1359,7 +1379,6 @@ function WebsiteSection() {
                 </div>
               )}
             </div>
-
             <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
                 <div className="text-sm font-medium text-purple-600 mb-2">
@@ -1507,7 +1526,6 @@ function WebsiteSection() {
                 </button>
               </div>
             </div>
-
             {farcasterData && (
               <div className="text-center mt-6 sm:mt-8">
                 <button

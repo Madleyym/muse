@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       metadataURI,
       tier,
     } = await request.json();
-
+    
     // Validate
     if (!fid || !moodId || !tier) {
       return NextResponse.json(

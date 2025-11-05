@@ -13,9 +13,6 @@ export interface FarcasterSDKContext {
   client: any;
 }
 
-/**
- * Hook untuk initialize Farcaster SDK dan extract user data
- */
 export function useFarcasterSDK() {
   const [isReady, setIsReady] = useState(false);
   const [sdkContext, setSdkContext] = useState<FarcasterSDKContext | null>(
@@ -36,19 +33,21 @@ export function useFarcasterSDK() {
 
         console.log("✅ Farcaster SDK loaded");
 
-        // ✅ Get Farcaster context (user info dari SDK)
+        // Get Farcaster context (user info dari SDK)
         const context = await sdk.context;
         console.log("👤 Farcaster SDK Context:", context);
 
         if (context?.user) {
           const { fid, username, displayName, pfpUrl } = context.user;
 
+          console.log("🖼️ PFP URL dari SDK:", pfpUrl); // ✅ DEBUG
+
           // ✅ Extract user data
           const userData = {
             fid,
             username: username || "",
             displayName: displayName || username || `User ${fid}`,
-            pfpUrl: pfpUrl || "/assets/images/layout/connected.png",
+            pfpUrl: pfpUrl || "/assets/images/layout/connected.png", // ✅ FALLBACK
           };
 
           console.log("📱 User Data Extracted:", userData);
@@ -70,7 +69,9 @@ export function useFarcasterSDK() {
             engagementScore: 0,
           });
 
-          console.log("✅ User profile stored in context");
+          console.log("✅ User profile stored in context:", userData);
+        } else {
+          console.warn("⚠️ No user context found in SDK");
         }
 
         // ✅ Hide splash screen
