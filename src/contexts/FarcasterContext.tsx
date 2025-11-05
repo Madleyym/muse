@@ -28,6 +28,8 @@ export interface FarcasterContextType {
   environment: "web" | "miniapp" | "warpcast";
   ready: boolean;
   isAutoConnecting: boolean;
+  isConnecting: boolean;
+  connectionError: string | null;
 }
 
 const FarcasterContext = createContext<FarcasterContextType>({
@@ -39,6 +41,8 @@ const FarcasterContext = createContext<FarcasterContextType>({
   environment: "web",
   ready: false,
   isAutoConnecting: false,
+  isConnecting: false,
+  connectionError: null,
 });
 
 export function useFarcaster() {
@@ -113,7 +117,7 @@ function AutoConnectInFarcaster() {
         // ✅ Allow retry by resetting hasTriggered
         setHasTriggered(false);
       }
-    }, 800); // ✅ Increase delay sedikit
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [
@@ -143,6 +147,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   >("web");
   const [ready, setReady] = useState(false);
   const [isAutoConnecting, setIsAutoConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  const { isConnecting } = useAccount();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -220,6 +227,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         environment,
         ready,
         isAutoConnecting,
+        isConnecting,
+        connectionError,
       }}
     >
       {/* ✅ Auto-connect component */}

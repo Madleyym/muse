@@ -1,42 +1,105 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useFarcaster } from "@/contexts/FarcasterContext";
+
+export interface FarcasterSDKContext {
+  user: {
+    fid: number;
+    username: string;
+    displayName: string;
+    pfpUrl: string;
+  };
+  client: any;
+}
 
 /**
- * Hook untuk initialize Farcaster SDK dan hide splash screen
- * Auto-connect wallet sudah di-handle oleh FarcasterAutoConnect component
+ * Hook untuk initialize Farcaster SDK dan extract user data
  */
 export function useFarcasterSDK() {
   const [isReady, setIsReady] = useState(false);
-  const [farcasterContext, setFarcasterContext] = useState<any>(null);
+  const [sdkContext, setSdkContext] = useState<FarcasterSDKContext | null>(
+    null
+  );
+  const [error, setError] = useState<string | null>(null);
+  const { setFarcasterData, isMiniApp } = useFarcaster();
 
   useEffect(() => {
     const initializeSDK = async () => {
       try {
         const { sdk } = await import("@farcaster/miniapp-sdk");
 
-        if (typeof window !== "undefined") {
-          console.log("✅ Farcaster SDK loaded");
+        if (typeof window === "undefined") {
+          setIsReady(true);
+          return;
+        }
 
-          // Get Farcaster context (user info)
-          const context = await sdk.context;
-          console.log("👤 Farcaster Context:", context);
-          setFarcasterContext(context);
+        console.log("✅ Farcaster SDK loaded");
 
-          // Hide splash screen
+        // ✅ Get Farcaster context (user info dari SDK)
+        const context = await sdk.context;
+        console.log("👤 Farcaster SDK Context:", context);
+
+        if (context?.user) {
+          const { fid, username, displayName, pfpUrl } = context.user;
+
+          // ✅ Extract user data
+          const userData = {
+            fid,
+            username: username || "",
+            displayName: displayName || username || `User ${fid}`,
+            pfpUrl: pfpUrl || "/assets/images/layout/connected.png",
+          };
+
+          console.log("📱 User Data Extracted:", userData);
+
+          // ✅ Store ke context
+          setSdkContext({
+            user: userData,
+            client: context.client,
+          });
+
+          // ✅ Update FarcasterContext dengan user data
+          setFarcasterData({
+            fid,
+            username: userData.username,
+            displayName: userData.displayName,
+            pfpUrl: userData.pfpUrl,
+            mood: "", // Will be set later after mood detection
+            moodId: "",
+            engagementScore: 0,
+          });
+
+          console.log("✅ User profile stored in context");
+        }
+
+        // ✅ Hide splash screen
+        if (typeof sdk.actions?.ready === "function") {
           await sdk.actions.ready();
           console.log("✅ Mini app splash screen hidden");
-
-          setIsReady(true);
         }
-      } catch (error) {
-        console.log("ℹ️ Not in Farcaster mini app (web mode)");
+
+        setIsReady(true);
+      } catch (error: any) {
+        const errorMsg = error?.message || "Failed to initialize Farcaster SDK";
+        console.log("ℹ️ Not in Farcaster mini app (web mode):", errorMsg);
+        setError(errorMsg);
         setIsReady(true);
       }
     };
 
-    initializeSDK();
-  }, []);
+    // ✅ Only initialize in miniapp
+    if (isMiniApp) {
+      initializeSDK();
+    } else {
+      setIsReady(true);
+    }
+  }, [isMiniApp, setFarcasterData]);
 
-  return { isReady, farcasterContext };
+  return {
+    isReady,
+    sdkContext,
+    error,
+    user: sdkContext?.user || null,
+  };
 }
