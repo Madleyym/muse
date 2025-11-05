@@ -428,73 +428,87 @@ export default function PricingMiniApp() {
 
         {farcasterData && currentMood && (
           <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
+            {/* ✅ NEW: Horizontal Layout */}
             <div
-              className="rounded-2xl p-4 sm:p-6 text-white shadow-xl transition-all duration-500"
+              className="rounded-3xl p-5 sm:p-6 text-white shadow-2xl transition-all duration-500 border-4 border-white/20"
               style={{
                 background: getGradientStyle(
                   currentMood.gradients[gradientIndex]
                 ),
               }}
             >
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex-shrink-0">
+              {/* ✅ Profile Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border-3 border-white/40 bg-white/20 shadow-lg flex-shrink-0">
+                  {hasValidPfp && farcasterData.pfpUrl ? (
+                    <Image
+                      src={farcasterData.pfpUrl}
+                      alt={farcasterData.displayName}
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                      unoptimized
+                      onError={handlePfpError}
+                    />
+                  ) : (
+                    <FallbackAvatar />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold">
+                    {farcasterData.displayName}
+                  </h3>
+                  <p className="text-white/80 text-sm">
+                    @{farcasterData.username} · FID {farcasterData.fid}
+                  </p>
+                </div>
+              </div>
+
+              {/* ✅ Horizontal Content: Image + Info */}
+              <div className="flex items-center gap-4 sm:gap-6">
+                {/* Left: Mood Image */}
+                <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0">
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
-                  <div className="relative w-full h-full p-3 sm:p-4">
+                  <div className="relative w-full h-full p-3">
                     <Image
                       src={currentMood.baseImage}
                       alt={currentMood.name}
                       fill
                       className="object-contain drop-shadow-2xl"
-                      sizes="(max-width: 640px) 144px, 192px"
+                      sizes="(max-width: 640px) 128px, 160px"
+                      priority
                     />
                   </div>
                 </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
-                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
-                      {hasValidPfp && farcasterData.pfpUrl ? (
-                        <Image
-                          src={farcasterData.pfpUrl}
-                          alt={farcasterData.displayName}
-                          fill
-                          className="object-cover"
-                          sizes="48px"
-                          unoptimized
-                          onError={handlePfpError}
-                        />
-                      ) : (
-                        <FallbackAvatar />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold">
-                        {farcasterData.displayName}
-                      </h3>
-                      <p className="text-white/80 text-xs sm:text-sm">
-                        @{farcasterData.username} · FID {farcasterData.fid}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 sm:p-4">
-                    <div className="text-xl sm:text-2xl font-bold mb-1">
+
+                {/* Right: Mood Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border-2 border-white/30 shadow-xl">
+                    {/* Mood Name */}
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-2 leading-tight">
                       {currentMood.name}
-                    </div>
-                    <div className="text-xs sm:text-sm text-white/80 mb-3">
+                    </h2>
+
+                    {/* Description */}
+                    <p className="text-sm text-white/90 mb-3 leading-relaxed line-clamp-2">
                       {currentMood.description}
-                    </div>
-                    <div className="flex items-center justify-center sm:justify-start gap-3 sm:gap-4 flex-wrap">
-                      <div>
-                        <div className="text-xs text-white/70">
+                    </p>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5 border border-white/30">
+                        <div className="text-[10px] text-white/70 mb-0.5 uppercase tracking-wide">
                           Engagement Score
                         </div>
-                        <div className="text-lg sm:text-xl font-bold">
+                        <div className="text-xl font-bold">
                           {farcasterData.engagementScore.toLocaleString()}
                         </div>
                       </div>
-                      <div className="h-6 sm:h-8 w-px bg-white/30"></div>
-                      <div>
-                        <div className="text-xs text-white/70">Category</div>
-                        <div className="text-lg sm:text-xl font-bold uppercase">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5 border border-white/30">
+                        <div className="text-[10px] text-white/70 mb-0.5 uppercase tracking-wide">
+                          Category
+                        </div>
+                        <div className="text-xl font-bold uppercase">
                           {currentMood.category}
                         </div>
                       </div>
