@@ -49,23 +49,22 @@ export function useFarcaster() {
   return useContext(FarcasterContext);
 }
 
-// ✅ COMPONENT untuk auto-connect
+{
+  /* ✅ AUTO-CONNECT COMPONENT - FIXED */
+}
 function AutoConnectInFarcaster() {
   const { connect, connectors, isPending } = useConnect();
   const { isConnected, isConnecting } = useAccount();
-  const { isMiniApp, isWarpcast, ready } = useFarcaster();
+  const { isMiniApp, ready } = useFarcaster();
   const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
-    // ❌ Don't proceed jika:
-    // - Belum ready
-    // - Tidak di mini app
-    // - Sudah connected
-    // - Sudah pernah trigger
+    {
+      /* ✅ Conditions untuk auto-connect */
+    }
     if (
       !ready ||
       !isMiniApp ||
-      !isWarpcast ||
       isConnected ||
       isConnecting ||
       isPending ||
@@ -74,17 +73,20 @@ function AutoConnectInFarcaster() {
       return;
     }
 
-    // ✅ Mark as triggered untuk hindari double-connect
     setHasTriggered(true);
 
     console.log(
       "[Farcaster Mini App] ⏳ Attempting auto-connect to native wallet..."
     );
 
-    // ✅ Delay sebentar biar semua siap
+    {
+      /* ✅ Delay untuk memastikan semua state siap */
+    }
     const timer = setTimeout(async () => {
       try {
-        // ✅ Cari connector yang correct
+        {
+          /* ✅ Cari injected connector (Farcaster native wallet) */
+        }
         const injectedConnector = connectors.find(
           (c) => c.id === "injected" || c.type === "injected"
         );
@@ -99,13 +101,16 @@ function AutoConnectInFarcaster() {
               name: c.name,
             }))
           );
+          setHasTriggered(false);
           return;
         }
 
         console.log("[Farcaster] ✅ Found Farcaster native wallet (injected)");
-        console.log("[Farcaster] 🔌 Connecting...");
+        console.log("[Farcaster] 🔌 Connecting with injected connector...");
 
-        // ✅ Connect ke wallet
+        {
+          /* ✅ Trigger connect */
+        }
         await connect({ connector: injectedConnector });
 
         console.log("[Farcaster] ✅ Successfully connected to Farcaster!");
@@ -114,7 +119,9 @@ function AutoConnectInFarcaster() {
           "[Farcaster] ❌ Auto-connect error:",
           error?.message || error
         );
-        // ✅ Allow retry by resetting hasTriggered
+        {
+          /* ✅ Allow retry */
+        }
         setHasTriggered(false);
       }
     }, 800);
@@ -123,7 +130,6 @@ function AutoConnectInFarcaster() {
   }, [
     ready,
     isMiniApp,
-    isWarpcast,
     isConnected,
     isConnecting,
     isPending,
@@ -135,7 +141,9 @@ function AutoConnectInFarcaster() {
   return null;
 }
 
-// ✅ PROVIDER
+{
+  /* ✅ FARCASTER PROVIDER */
+}
 export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [farcasterData, setFarcasterData] = useState<FarcasterData | null>(
     null
@@ -157,13 +165,17 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     const detectEnvironment = () => {
       const url = new URL(window.location.href);
 
-      // ✅ Multiple ways to detect Farcaster/Warpcast
+      {
+        /* ✅ Multiple detection methods untuk Farcaster/Warpcast */
+      }
       const fromWarpcast = document.referrer.includes("warpcast.com");
       const hasWarpcastUA = navigator.userAgent.includes("Warpcast");
       const isIframe = window.self !== window.top;
       const warpcastParam = url.searchParams.get("fc") === "true";
 
-      // ✅ Check mini app route
+      {
+        /* ✅ Check mini app route */
+      }
       const isMiniAppRoute =
         url.pathname.startsWith("/miniapp") ||
         url.searchParams.has("frameContext");
@@ -180,13 +192,17 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         finalEnvironment = "miniapp";
       }
 
-      // ✅ Update states
+      {
+        /* ✅ Update states */
+      }
       setEnvironment(finalEnvironment);
       setIsMiniApp(finalIsMiniApp);
       setIsWarpcast(detectedIsWarpcast);
       setIsAutoConnecting(finalIsMiniApp);
 
-      // ✅ Add body class untuk styling
+      {
+        /* ✅ Add body class untuk styling */
+      }
       document.body.classList.remove(
         "web-mode",
         "miniapp-mode",
@@ -206,10 +222,14 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       setReady(true);
     };
 
-    // ✅ Detect immediately
+    {
+      /* ✅ Detect immediately */
+    }
     detectEnvironment();
 
-    // ✅ Also detect on URL change (for SPA)
+    {
+      /* ✅ Also detect on URL change (for SPA) */
+    }
     const handlePopState = () => detectEnvironment();
     window.addEventListener("popstate", handlePopState);
 
@@ -231,7 +251,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         connectionError,
       }}
     >
-      {/* ✅ Auto-connect component */}
+      {/* ✅ Auto-connect component - render di sini */}
       <AutoConnectInFarcaster />
       {children}
     </FarcasterContext.Provider>

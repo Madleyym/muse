@@ -25,7 +25,7 @@ export default function MiniAppHeader() {
   }, [isSidebarOpen]);
 
   const handlePfpError = () => {
-    console.error("Failed to load profile picture");
+    console.error("Failed to load profile picture:", farcasterData?.pfpUrl);
     setPfpError(true);
   };
 
@@ -34,7 +34,6 @@ export default function MiniAppHeader() {
       <header className="py-3 pb-0 sticky top-0 z-40 bg-white/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 xl:px-0">
           <div className="bg-white/90 backdrop-blur-md flex items-center justify-between gap-x-4 rounded-2xl py-2.5 pl-5 pr-2.5 shadow-[0_2px_10px_0px_rgba(139,92,246,0.2)] border border-purple-100/50 lg:rounded-[1.375rem]">
-            {/* Logo */}
             <Link
               href="/miniapp"
               title="Home"
@@ -55,19 +54,15 @@ export default function MiniAppHeader() {
               <span className="font-bold text-xl gradient-text">Muse</span>
             </Link>
 
-            {/* Spacer */}
             <div className="flex-1"></div>
 
-            {/* Profile & Menu */}
             <div className="flex items-center gap-x-3">
               {isConnected && farcasterData ? (
                 <>
-                  {/* Desktop: Profile inline */}
                   <div
                     className="hidden md:flex items-center gap-2 px-3 py-2 border border-purple-200 bg-white hover:bg-purple-50 rounded-[0.625rem] transition cursor-pointer"
                     onClick={() => setIsSidebarOpen(true)}
                   >
-                    {/* Profile Photo */}
                     <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300 flex-shrink-0 bg-purple-100">
                       {!pfpError && farcasterData.pfpUrl ? (
                         <Image
@@ -104,7 +99,6 @@ export default function MiniAppHeader() {
                     </svg>
                   </div>
 
-                  {/* Mobile: Profile photo only */}
                   <button
                     onClick={() => setIsSidebarOpen(true)}
                     className="md:hidden flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 border-purple-300 hover:border-purple-500 transition flex-shrink-0 bg-purple-100"
@@ -128,11 +122,9 @@ export default function MiniAppHeader() {
                   </button>
                 </>
               ) : (
-                // Loading state
                 <div className="w-10 h-10 rounded-full bg-purple-200 animate-pulse flex-shrink-0"></div>
               )}
 
-              {/* Hamburger menu */}
               <button
                 type="button"
                 aria-label="Open menu"
@@ -157,7 +149,6 @@ export default function MiniAppHeader() {
         </div>
       </header>
 
-      {/* SIDEBAR */}
       {isSidebarOpen && (
         <>
           <div
@@ -166,7 +157,6 @@ export default function MiniAppHeader() {
           ></div>
 
           <div className="fixed top-0 right-0 h-full w-80 max-w-[85%] bg-white z-50 shadow-2xl overflow-y-auto">
-            {/* Header */}
             <div className="gradient-bg p-6 pb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
@@ -205,11 +195,9 @@ export default function MiniAppHeader() {
                 </button>
               </div>
 
-              {/* User Profile Card */}
               {isConnected && farcasterData ? (
                 <div className="bg-white/20 backdrop-blur-md rounded-xl p-4">
                   <div className="flex items-center gap-3">
-                    {/* Profile Photo */}
                     <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/50 flex-shrink-0 bg-white/10">
                       {!pfpError && farcasterData.pfpUrl ? (
                         <Image
@@ -228,7 +216,6 @@ export default function MiniAppHeader() {
                       )}
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-white text-base truncate">
                         {farcasterData.displayName}
@@ -240,7 +227,6 @@ export default function MiniAppHeader() {
                         FID: {farcasterData.fid}
                       </div>
 
-                      {/* Mood Badge */}
                       {farcasterData.mood && (
                         <div className="text-xs text-white font-semibold mt-2 bg-white/20 rounded px-2 py-0.5 inline-block">
                           🎭 {farcasterData.mood}
@@ -256,11 +242,8 @@ export default function MiniAppHeader() {
               )}
             </div>
 
-            {/* Content */}
             <div className="px-4 py-4">
-              {/* Action Buttons */}
               <div className="space-y-3">
-                {/* Mint Button */}
                 <Link
                   href="#pricing"
                   scroll={true}
@@ -270,7 +253,6 @@ export default function MiniAppHeader() {
                   {hasFID ? "🎨 Mint Now - FREE" : "⚙️ Setup FID - FREE"}
                 </Link>
 
-                {/* Wallet Info */}
                 {address && (
                   <div className="bg-purple-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-neutral-600 mb-1">
@@ -282,7 +264,6 @@ export default function MiniAppHeader() {
                   </div>
                 )}
 
-                {/* Disconnect Button */}
                 <button
                   onClick={() => {
                     disconnect();
@@ -294,7 +275,6 @@ export default function MiniAppHeader() {
                 </button>
               </div>
 
-              {/* Footer Info */}
               <div className="mt-6 pt-4 border-t border-neutral-200">
                 <div className="flex items-center justify-center gap-1.5">
                   <p className="text-xs text-neutral-500">Minted on</p>
