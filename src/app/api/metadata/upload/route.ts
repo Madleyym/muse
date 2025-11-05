@@ -13,7 +13,14 @@ export async function POST(request: Request) {
 
     console.log("📤 Upload request:", { fid, moodId, isHD, imageUrl });
 
+    // ✅ Validation
     if (!fid || !moodId || !moodName || !username) {
+      console.error("❌ Missing required fields:", {
+        fid: !!fid,
+        moodId: !!moodId,
+        moodName: !!moodName,
+        username: !!username,
+      });
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -22,10 +29,11 @@ export async function POST(request: Request) {
 
     const moodData = nftMoods.find((mood) => mood.id === moodId);
     if (!moodData) {
+      console.error("❌ Mood not found:", moodId);
       return NextResponse.json({ error: "Mood not found" }, { status: 404 });
     }
 
-    // Read static image
+    // ✅ Read static image
     let imageBuffer: Buffer;
     try {
       const imagePath = path.join(
@@ -45,7 +53,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upload static image to IPFS
+    // ✅ Upload static image to IPFS
     console.log("📤 Uploading image to Pinata...");
     const formData = new FormData();
     const blob = new Blob([new Uint8Array(imageBuffer)], { type: "image/png" });
@@ -78,12 +86,10 @@ export async function POST(request: Request) {
     }
 
     const imageData = await imageUploadResponse.json();
-
-    // 🔥 FIX 1: Use HTTP gateway instead of ipfs://
     const imageIPFS = `https://gateway.pinata.cloud/ipfs/${imageData.IpfsHash}`;
     console.log("✅ Image uploaded to IPFS:", imageIPFS);
 
-    // Create metadata with gradient colors in attributes
+    // ✅ Create metadata
     const metadata = {
       name: `${moodName} #${fid}`,
       description: `${
@@ -91,7 +97,7 @@ export async function POST(request: Request) {
       }\n\nMinted by @${username} with ${engagementScore.toLocaleString()} engagement score on Farcaster.\n\nThis mood features ${
         moodData.gradients.length
       } unique gradient color combinations that represent your social energy.`,
-      image: imageIPFS, // ✅ Now uses HTTP URL
+      image: imageIPFS,
       external_url: `https://muse.write3.fun/nft/${fid}`,
       attributes: [
         { trait_type: "Mood", value: moodName },
@@ -110,7 +116,6 @@ export async function POST(request: Request) {
         { trait_type: "Minted On", value: "Base" },
         { trait_type: "Network", value: "Base Mainnet" },
       ],
-      // Add gradient data for future use
       properties: {
         gradients: moodData.gradients,
         blockchain: "Base",
@@ -118,7 +123,7 @@ export async function POST(request: Request) {
       },
     };
 
-    // Upload metadata to IPFS
+    // ✅ Upload metadata to IPFS
     console.log("📤 Uploading metadata to Pinata...");
     const metadataUploadResponse = await fetch(
       "https://api.pinata.cloud/pinning/pinJSONToIPFS",
@@ -147,16 +152,16 @@ export async function POST(request: Request) {
     }
 
     const metadataData = await metadataUploadResponse.json();
-
-    // 🔥 FIX 2: Use HTTP gateway for metadata URI too
     const metadataURI = `https://gateway.pinata.cloud/ipfs/${metadataData.IpfsHash}`;
+
     console.log("✅ Metadata uploaded to IPFS:", metadataURI);
 
+    // ✅ IMPORTANT: Return metadataURI (not imageIPFS separately)
     return NextResponse.json({
       success: true,
-      imageIPFS,
-      metadataURI, // ✅ Now uses HTTP URL
-      metadata,
+      metadataURI, // ✅ This is what hooks expect
+      imageIPFS, // Optional for debugging
+      metadata, // Optional for debugging
     });
   } catch (error: any) {
     console.error("❌ Upload error:", error);

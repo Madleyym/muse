@@ -10,10 +10,10 @@ import { useMintNFT } from "@/hooks/useMintNFT";
 import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { getTransactionUrl } from "@/config/contracts";
 
-// Helper function to validate image URL
+// ✅ Helper function to validate image URL
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
-  
+
   try {
     const parsed = new URL(url);
     return parsed.protocol === "https:";
@@ -22,7 +22,9 @@ const isValidImageUrl = (url: string | undefined | null): boolean => {
   }
 };
 
-// MiniApp Component
+// ==========================================
+// MINI APP COMPONENT
+// ==========================================
 function MiniAppSection() {
   const { isConnected } = useAccount();
   const { farcasterData, setFarcasterData } = useFarcaster();
@@ -73,7 +75,7 @@ function MiniAppSection() {
         setIsDetectingMood(true);
         console.log("[MiniApp] Detecting mood for FID:", sdkUser.fid);
 
-        // ✅ ADD TIMEOUT (10 seconds max)
+        // Add timeout (10 seconds max)
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -101,14 +103,14 @@ function MiniAppSection() {
 
           console.log("[MiniApp] Mood detected:", data.activity.suggestedMood);
         } else {
-          // ✅ FALLBACK: Use default mood if API fails
+          // Fallback: Use default mood if API fails
           console.warn("[MiniApp] API failed, using default mood");
           setFarcasterData({
             fid: sdkUser.fid,
             username: sdkUser.username || "",
             displayName: sdkUser.displayName || "",
             pfpUrl: sdkUser.pfpUrl || "",
-            mood: "Creative Mind", // Default mood
+            mood: "Creative Mind",
             moodId: "creative-mind",
             engagementScore: 0,
           });
@@ -116,13 +118,13 @@ function MiniAppSection() {
       } catch (error: any) {
         console.error("[MiniApp] Failed to detect mood:", error);
 
-        // ✅ FALLBACK: Use default mood on error/timeout
+        // Fallback: Use default mood on error/timeout
         setFarcasterData({
           fid: sdkUser.fid,
           username: sdkUser.username || "",
           displayName: sdkUser.displayName || "",
           pfpUrl: sdkUser.pfpUrl || "",
-          mood: "Creative Mind", // Default mood
+          mood: "Creative Mind",
           moodId: "creative-mind",
           engagementScore: 0,
         });
@@ -133,6 +135,30 @@ function MiniAppSection() {
 
     detectMood();
   }, [sdkReady, sdkUser, farcasterData?.fid, setFarcasterData]);
+
+  // Add timeout for loading screen
+  useEffect(() => {
+    if (isDetectingMood) {
+      const timeout = setTimeout(() => {
+        console.warn("[MiniApp] Mood detection timeout, forcing skip");
+        setIsDetectingMood(false);
+
+        if (!farcasterData && sdkUser) {
+          setFarcasterData({
+            fid: sdkUser.fid,
+            username: sdkUser.username || "",
+            displayName: sdkUser.displayName || "",
+            pfpUrl: sdkUser.pfpUrl || "",
+            mood: "Creative Mind",
+            moodId: "creative-mind",
+            engagementScore: 0,
+          });
+        }
+      }, 12000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isDetectingMood, farcasterData, sdkUser, setFarcasterData]);
 
   // Animate gradient
   useEffect(() => {
@@ -251,7 +277,7 @@ function MiniAppSection() {
     );
   };
 
-  // ✅ Loading state - ONLY while SDK is initializing or detecting mood
+  // Loading state - ONLY while SDK is initializing or detecting mood
   if (!sdkReady || isDetectingMood) {
     return (
       <section
@@ -305,7 +331,7 @@ function MiniAppSection() {
     );
   }
 
-  // ✅ Main content - Show even if wallet not connected
+  // Main content - Show even if wallet not connected
   return (
     <section
       id="pricing"
@@ -326,7 +352,7 @@ function MiniAppSection() {
           )}
         </div>
 
-        {/* ✅ Profile Card - Show even without wallet connection */}
+        {/* Profile Card - Show even without wallet connection */}
         {farcasterData && currentMood && (
           <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
             <div
@@ -409,7 +435,7 @@ function MiniAppSection() {
           </div>
         )}
 
-        {/* ✅ Warning if wallet not connected */}
+        {/* Warning if wallet not connected */}
         {!isConnected && (
           <div className="max-w-2xl mx-auto mb-6">
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
@@ -517,12 +543,12 @@ function MiniAppSection() {
                   !uploadingToIPFS &&
                   "Minting..."}
                 {isConnected && isSuccess && mintType === "free" && "Minted!"}
-                {(isConnected &&
-                  !uploadingToIPFS &&
+                {isConnected &&
+                ((!uploadingToIPFS &&
                   !isPending &&
                   !isConfirming &&
                   !isSuccess) ||
-                mintType !== "free"
+                  mintType !== "free")
                   ? "Mint Free NFT"
                   : ""}
               </button>
@@ -598,12 +624,12 @@ function MiniAppSection() {
                   !uploadingToIPFS &&
                   "Minting..."}
                 {isConnected && isSuccess && mintType === "hd" && "Minted!"}
-                {(isConnected &&
-                  !uploadingToIPFS &&
+                {isConnected &&
+                ((!uploadingToIPFS &&
                   !isPending &&
                   !isConfirming &&
                   !isSuccess) ||
-                mintType !== "hd"
+                  mintType !== "hd")
                   ? "Mint HD NFT"
                   : ""}
               </button>
@@ -864,6 +890,9 @@ function MiniAppSection() {
   );
 }
 
+// ==========================================
+// WEBSITE COMPONENT
+// ==========================================
 function WebsiteSection() {
   const { isConnected } = useAccount();
   const { farcasterData, setFarcasterData } = useFarcaster();
@@ -888,11 +917,36 @@ function WebsiteSection() {
   const [gradientIndex, setGradientIndex] = useState(0);
   const [localMintError, setLocalMintError] = useState<string>("");
   const [selectedTier, setSelectedTier] = useState<"free" | "hd">("free");
+  const [pfpError, setPfpError] = useState(false);
 
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
     return nftMoods.find((mood) => mood.id === farcasterData.moodId) || null;
   }, [farcasterData]);
+
+  const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
+
+  useEffect(() => {
+    setPfpError(false);
+  }, [farcasterData?.pfpUrl]);
+
+  const handlePfpError = () => {
+    console.error(
+      "[WebsiteSection] Failed to load PFP:",
+      farcasterData?.pfpUrl
+    );
+    setPfpError(true);
+  };
+
+  const FallbackAvatar = () => {
+    const initial = farcasterData?.displayName?.charAt(0).toUpperCase() || "?";
+
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
+        {initial}
+      </div>
+    );
+  };
 
   const parseErrorMessage = (error: string): string => {
     if (!error) return "Please try again";
@@ -970,11 +1024,22 @@ function WebsiteSection() {
         return;
       }
 
+      const validPfpUrl = isValidImageUrl(data.user.pfpUrl)
+        ? data.user.pfpUrl
+        : "";
+
+      console.log("[WebsiteSection] FID verified:", {
+        fid: data.user.fid,
+        pfpOriginal: data.user.pfpUrl,
+        pfpValidated: validPfpUrl,
+        isValid: !!validPfpUrl,
+      });
+
       setFarcasterData({
         fid: data.user.fid,
         username: data.user.username,
         displayName: data.user.displayName,
-        pfpUrl: data.user.pfpUrl,
+        pfpUrl: validPfpUrl,
         mood: data.activity.suggestedMood,
         moodId: data.activity.suggestedMoodId,
         engagementScore: data.activity.engagementScore,
@@ -1242,15 +1307,20 @@ function WebsiteSection() {
 
                     <div className="flex-1 text-center sm:text-left">
                       <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
-                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30">
-                          <Image
-                            src={farcasterData.pfpUrl}
-                            alt={farcasterData.displayName}
-                            fill
-                            className="object-cover"
-                            sizes="48px"
-                            unoptimized
-                          />
+                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
+                          {hasValidPfp && farcasterData.pfpUrl ? (
+                            <Image
+                              src={farcasterData.pfpUrl}
+                              alt={farcasterData.displayName}
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                              unoptimized
+                              onError={handlePfpError}
+                            />
+                          ) : (
+                            <FallbackAvatar />
+                          )}
                         </div>
                         <div>
                           <h3 className="text-base sm:text-lg font-bold">
@@ -1387,13 +1457,12 @@ function WebsiteSection() {
                       !uploadingToIPFS &&
                       "Minting NFT..."}
                     {isSuccess && mintType === "free" && "Minted Successfully"}
-                    {(!uploadingToIPFS &&
+                    {((!uploadingToIPFS &&
                       !isPending &&
                       !isConfirming &&
                       !isSuccess) ||
-                    mintType !== "free"
-                      ? "Mint Free NFT"
-                      : ""}
+                      mintType !== "free") &&
+                      "Mint Free NFT"}
                   </button>
                 </div>
               ) : (
@@ -1467,13 +1536,12 @@ function WebsiteSection() {
                       !uploadingToIPFS &&
                       "Minting NFT..."}
                     {isSuccess && mintType === "hd" && "Minted Successfully"}
-                    {(!uploadingToIPFS &&
+                    {((!uploadingToIPFS &&
                       !isPending &&
                       !isConfirming &&
                       !isSuccess) ||
-                    mintType !== "hd"
-                      ? "Mint HD NFT"
-                      : ""}
+                      mintType !== "hd") &&
+                      "Mint HD NFT"}
                   </button>
                 </div>
               )}
@@ -1538,13 +1606,12 @@ function WebsiteSection() {
                     !uploadingToIPFS &&
                     "Minting NFT..."}
                   {isSuccess && mintType === "free" && "Minted Successfully"}
-                  {(!uploadingToIPFS &&
+                  {((!uploadingToIPFS &&
                     !isPending &&
                     !isConfirming &&
                     !isSuccess) ||
-                  mintType !== "free"
-                    ? "Mint Free NFT"
-                    : ""}
+                    mintType !== "free") &&
+                    "Mint Free NFT"}
                 </button>
               </div>
 
@@ -1616,13 +1683,12 @@ function WebsiteSection() {
                     !uploadingToIPFS &&
                     "Minting NFT..."}
                   {isSuccess && mintType === "hd" && "Minted Successfully"}
-                  {(!uploadingToIPFS &&
+                  {((!uploadingToIPFS &&
                     !isPending &&
                     !isConfirming &&
                     !isSuccess) ||
-                  mintType !== "hd"
-                    ? "Mint HD NFT"
-                    : ""}
+                    mintType !== "hd") &&
+                    "Mint HD NFT"}
                 </button>
               </div>
             </div>
@@ -1773,6 +1839,9 @@ function WebsiteSection() {
   );
 }
 
+// ==========================================
+// MAIN EXPORT
+// ==========================================
 export default function PricingSection() {
   const { isMiniApp } = useFarcaster();
 
