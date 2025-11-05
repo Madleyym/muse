@@ -27,7 +27,6 @@ function isDevWallet(address: string | undefined): boolean {
   return DEV_ADDRESSES.includes(address.toLowerCase());
 }
 
-// DEFAULT return value untuk mini app atau saat RainbowKit belum ready
 const defaultReturn = {
   mintFree: async () => console.warn("Minting not available"),
   mintHD: async () => console.warn("Minting not available"),
@@ -42,15 +41,8 @@ const defaultReturn = {
   hash: null,
 };
 
-export function useMintNFT() {
-  const { isMiniApp, ready } = useFarcaster();
-
-  // ✅ RETURN EARLY BEFORE calling any wagmi hooks
-  if (isMiniApp || !ready) {
-    return defaultReturn;
-  }
-
-  // ✅ HANYA call wagmi hooks SETELAH check di atas
+// Internal hook - ONLY called when we KNOW we're in website mode
+function useMintNFTInternal() {
   const [mintType, setMintType] = useState<"free" | "hd" | null>(null);
   const [uploadingToIPFS, setUploadingToIPFS] = useState(false);
 
@@ -202,4 +194,19 @@ export function useMintNFT() {
     error,
     hash,
   };
+}
+
+// Main hook - WRAPPER
+export function useMintNFT() {
+  const { isMiniApp, ready } = useFarcaster();
+
+  // ✅ ALL hooks ALWAYS called
+  const internalHook = useMintNFTInternal();
+
+  // ✅ THEN check condition
+  if (isMiniApp || !ready) {
+    return defaultReturn;
+  }
+
+  return internalHook;
 }
