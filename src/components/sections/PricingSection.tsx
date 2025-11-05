@@ -10,13 +10,17 @@ import { useMintNFT } from "@/hooks/useMintNFT";
 import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { getTransactionUrl } from "@/config/contracts";
 
-// ✅ MINI APP COMPONENT - Auto-detect mood and show minting
+{
+  /* ✅ MINI APP COMPONENT - Auto-detect mood and show minting */
+}
 function MiniAppSection() {
   const { isConnected } = useAccount();
   const { farcasterData, setFarcasterData } = useFarcaster();
   const { isReady: sdkReady, user: sdkUser } = useFarcasterSDK();
 
-  // ✅ Safe to call hooks here (inside component, not conditional)
+  {
+    /* ✅ Safe to call hooks here (inside component, not conditional) */
+  }
   const {
     mintFree,
     mintHD,
@@ -35,18 +39,21 @@ function MiniAppSection() {
   const [localMintError, setLocalMintError] = useState<string>("");
   const [isDetectingMood, setIsDetectingMood] = useState(true);
 
-  // ✅ Get current mood NFT
+  {
+    /* ✅ Get current mood NFT */
+  }
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
     return nftMoods.find((mood) => mood.id === farcasterData.moodId) || null;
   }, [farcasterData]);
 
-  // ✅ Auto-detect mood when miniapp loads
+  {
+    /* ✅ Auto-detect mood when miniapp loads */
+  }
   useEffect(() => {
     const detectMood = async () => {
       if (!sdkReady || !sdkUser || !isConnected) return;
 
-      // If farcasterData already set by SDK, use it
       if (farcasterData?.fid) {
         setIsDetectingMood(false);
         return;
@@ -55,18 +62,25 @@ function MiniAppSection() {
       try {
         setIsDetectingMood(true);
 
-        // ✅ Call API to detect mood based on FID
+        {
+          /* ✅ Call API to detect mood based on FID */
+        }
         const response = await fetch(
           `/api/farcaster/verify?fid=${sdkUser.fid}`
         );
         const data = await response.json();
 
         if (response.ok && data.success) {
+          const pfpUrl =
+            data.user.pfpUrl ||
+            sdkUser.pfpUrl ||
+            "/assets/images/layout/connected.png";
+
           setFarcasterData({
             fid: data.user.fid,
             username: data.user.username,
             displayName: data.user.displayName,
-            pfpUrl: data.user.pfpUrl,
+            pfpUrl: pfpUrl,
             mood: data.activity.suggestedMood,
             moodId: data.activity.suggestedMoodId,
             engagementScore: data.activity.engagementScore,
@@ -87,7 +101,9 @@ function MiniAppSection() {
     detectMood();
   }, [sdkReady, sdkUser, isConnected, farcasterData?.fid, setFarcasterData]);
 
-  // ✅ Animate gradient
+  {
+    /* ✅ Animate gradient */
+  }
   useEffect(() => {
     if (!currentMood) return;
     const interval = setInterval(() => {
@@ -96,7 +112,9 @@ function MiniAppSection() {
     return () => clearInterval(interval);
   }, [currentMood]);
 
-  // ✅ Auto-clear mint error
+  {
+    /* ✅ Auto-clear mint error */
+  }
   useEffect(() => {
     if (mintError || localMintError) {
       const timer = setTimeout(() => {
@@ -171,7 +189,6 @@ function MiniAppSection() {
     }
   };
 
-  // ✅ Loading state
   if (!sdkReady || !isConnected || isDetectingMood) {
     return (
       <section
@@ -205,11 +222,11 @@ function MiniAppSection() {
                     strokeWidth="2"
                     fill="none"
                     opacity="0.25"
-                  ></circle>
+                  />
                   <path
                     fill="currentColor"
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
+                  />
                 </svg>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
@@ -229,7 +246,6 @@ function MiniAppSection() {
     );
   }
 
-  // ✅ Ready to mint
   return (
     <section
       id="pricing"
@@ -250,7 +266,6 @@ function MiniAppSection() {
           )}
         </div>
 
-        {/* ✅ NFT Preview */}
         {farcasterData && currentMood && (
           <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
             <div
@@ -262,7 +277,6 @@ function MiniAppSection() {
               }}
             >
               <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                {/* Image */}
                 <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex-shrink-0">
                   <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
                   <div className="relative w-full h-full p-3 sm:p-4">
@@ -276,18 +290,32 @@ function MiniAppSection() {
                   </div>
                 </div>
 
-                {/* Info */}
                 <div className="flex-1 text-center sm:text-left">
                   <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
-                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30">
-                      <Image
-                        src={farcasterData.pfpUrl}
-                        alt={farcasterData.displayName}
-                        fill
-                        className="object-cover"
-                        sizes="48px"
-                        unoptimized
-                      />
+                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
+                      {farcasterData.pfpUrl ? (
+                        <Image
+                          src={farcasterData.pfpUrl}
+                          alt={farcasterData.displayName}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                          unoptimized
+                          onError={(e) => {
+                            console.error(
+                              "Failed to load PFP:",
+                              farcasterData.pfpUrl
+                            );
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
+                      ) : null}
+                      {!farcasterData.pfpUrl && (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
+                          {farcasterData.displayName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <h3 className="text-base sm:text-lg font-bold">
@@ -330,7 +358,6 @@ function MiniAppSection() {
           </div>
         )}
 
-        {/* ✅ Tier Selector - Mobile */}
         <div className="max-w-4xl mx-auto mb-6">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
             <div className="grid grid-cols-2 gap-2">
@@ -361,7 +388,6 @@ function MiniAppSection() {
           </div>
         </div>
 
-        {/* ✅ Mint Cards - Mobile */}
         <div className="md:hidden max-w-md mx-auto">
           {selectedTier === "free" ? (
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
@@ -392,7 +418,7 @@ function MiniAppSection() {
                         strokeLinejoin="round"
                         strokeWidth="2"
                         d="M5 13l4 4L19 7"
-                      ></path>
+                      />
                     </svg>
                     <span className="text-slate-600 text-sm">{feature}</span>
                   </li>
@@ -466,7 +492,7 @@ function MiniAppSection() {
                         strokeLinejoin="round"
                         strokeWidth="2"
                         d="M5 13l4 4L19 7"
-                      ></path>
+                      />
                     </svg>
                     <span className="text-slate-600 text-sm">{feature}</span>
                   </li>
@@ -504,7 +530,6 @@ function MiniAppSection() {
           )}
         </div>
 
-        {/* ✅ Mint Cards - Desktop */}
         <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
             <div className="text-sm font-medium text-purple-600 mb-2">
@@ -534,7 +559,7 @@ function MiniAppSection() {
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M5 13l4 4L19 7"
-                    ></path>
+                    />
                   </svg>
                   <span className="text-slate-600">{feature}</span>
                 </li>
@@ -610,7 +635,7 @@ function MiniAppSection() {
                       strokeLinejoin="round"
                       strokeWidth="2"
                       d="M5 13l4 4L19 7"
-                    ></path>
+                    />
                   </svg>
                   <span className="text-slate-600">{feature}</span>
                 </li>
@@ -647,7 +672,6 @@ function MiniAppSection() {
           </div>
         </div>
 
-        {/* ✅ Success Toast */}
         {isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -688,7 +712,6 @@ function MiniAppSection() {
           </div>
         )}
 
-        {/* ✅ Error Toast */}
         {(mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -741,7 +764,6 @@ function MiniAppSection() {
   );
 }
 
-// ✅ WEBSITE COMPONENT - Full flow dengan FID input
 function WebsiteSection() {
   const { isConnected } = useAccount();
   const { farcasterData, setFarcasterData } = useFarcaster();
@@ -954,7 +976,6 @@ function WebsiteSection() {
           </p>
         </div>
 
-        {/* Step 1: Connect Wallet */}
         {!isConnected && step === "connect" && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 border-2 border-purple-200 text-center shadow-lg">
@@ -985,7 +1006,6 @@ function WebsiteSection() {
           </div>
         )}
 
-        {/* Step 2: Enter FID */}
         {isConnected && step === "fid" && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border-2 border-purple-200 shadow-lg">
@@ -1094,10 +1114,8 @@ function WebsiteSection() {
           </div>
         )}
 
-        {/* Step 3: Preview & Mint */}
         {isConnected && step === "preview" && (
           <>
-            // ✅ Di dalam MiniAppSection, saat render profile:
             {farcasterData && currentMood && (
               <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
                 <div
@@ -1109,7 +1127,6 @@ function WebsiteSection() {
                   }}
                 >
                   <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                    {/* Image */}
                     <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex-shrink-0">
                       <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
                       <div className="relative w-full h-full p-3 sm:p-4">
@@ -1123,37 +1140,17 @@ function WebsiteSection() {
                       </div>
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 text-center sm:text-left">
                       <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
-                        {/* ✅ Profile Photo dengan error handling */}
-                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
-                          {farcasterData.pfpUrl ? (
-                            <Image
-                              src={farcasterData.pfpUrl}
-                              alt={farcasterData.displayName}
-                              fill
-                              className="object-cover"
-                              sizes="48px"
-                              unoptimized
-                              onError={(e) => {
-                                console.error(
-                                  "❌ Failed to load PFP:",
-                                  farcasterData.pfpUrl
-                                );
-                                // Ganti dengan fallback
-                                (e.target as HTMLImageElement).style.display =
-                                  "none";
-                              }}
-                            />
-                          ) : null}
-                          {!farcasterData.pfpUrl && (
-                            <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
-                              {farcasterData.displayName
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-                          )}
+                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30">
+                          <Image
+                            src={farcasterData.pfpUrl}
+                            alt={farcasterData.displayName}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                            unoptimized
+                          />
                         </div>
                         <div>
                           <h3 className="text-base sm:text-lg font-bold">
@@ -1197,6 +1194,7 @@ function WebsiteSection() {
                 </div>
               </div>
             )}
+
             <div className="max-w-4xl mx-auto mb-6">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
                 <div className="grid grid-cols-2 gap-2">
@@ -1226,6 +1224,7 @@ function WebsiteSection() {
                 </div>
               </div>
             </div>
+
             <div className="md:hidden max-w-md mx-auto">
               {selectedTier === "free" ? (
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
@@ -1258,7 +1257,7 @@ function WebsiteSection() {
                             strokeLinejoin="round"
                             strokeWidth="2"
                             d="M5 13l4 4L19 7"
-                          ></path>
+                          />
                         </svg>
                         <span className="text-slate-600 text-sm">
                           {feature}
@@ -1338,7 +1337,7 @@ function WebsiteSection() {
                             strokeLinejoin="round"
                             strokeWidth="2"
                             d="M5 13l4 4L19 7"
-                          ></path>
+                          />
                         </svg>
                         <span className="text-slate-600 text-sm">
                           {feature}
@@ -1379,6 +1378,7 @@ function WebsiteSection() {
                 </div>
               )}
             </div>
+
             <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
                 <div className="text-sm font-medium text-purple-600 mb-2">
@@ -1410,7 +1410,7 @@ function WebsiteSection() {
                           strokeLinejoin="round"
                           strokeWidth="2"
                           d="M5 13l4 4L19 7"
-                        ></path>
+                        />
                       </svg>
                       <span className="text-slate-600">{feature}</span>
                     </li>
@@ -1488,7 +1488,7 @@ function WebsiteSection() {
                           strokeLinejoin="round"
                           strokeWidth="2"
                           d="M5 13l4 4L19 7"
-                        ></path>
+                        />
                       </svg>
                       <span className="text-slate-600">{feature}</span>
                     </li>
@@ -1526,6 +1526,7 @@ function WebsiteSection() {
                 </button>
               </div>
             </div>
+
             {farcasterData && (
               <div className="text-center mt-6 sm:mt-8">
                 <button
@@ -1543,7 +1544,6 @@ function WebsiteSection() {
           </>
         )}
 
-        {/* Success Toast */}
         {isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -1616,7 +1616,6 @@ function WebsiteSection() {
           </div>
         )}
 
-        {/* Error Toast */}
         {(mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
