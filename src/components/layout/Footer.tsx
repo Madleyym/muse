@@ -54,7 +54,7 @@ export default function Footer() {
               Gallery
             </a>
 
-            <span className="text-neutral-400">|</span>
+            {/* <span className="text-neutral-400">|</span>
 
             <a
               href="https://warpcast.com"
@@ -63,7 +63,7 @@ export default function Footer() {
               className="text-[11px] font-medium text-neutral-500 hover:text-purple-600 transition"
             >
               Farcaster
-            </a>
+            </a> */}
           </div>
 
           {/* Bottom - WITH FARCASTER SVG ICON */}
