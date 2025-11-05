@@ -44,58 +44,46 @@ export function useFarcaster() {
 }
 
 /**
- * 🔥 Auto-connect component - HARUS di dalam provider agar ready = true
+ * 🔥 AUTO-CONNECT di Farcaster mini app
+ * Langsung connect ke injected wallet tanpa modal
  */
-function AutoConnectWallet() {
+function AutoConnectInFarcaster() {
   const { connect, connectors } = useConnect();
   const { isMiniApp, isWarpcast, ready } = useFarcaster();
   const { isConnected } = useAccount();
-  const [hasAttempted, setHasAttempted] = useState(false);
+  const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
-    if (!ready || isConnected || hasAttempted) {
-      if (!ready) {
-        console.log("⏳ Context not ready");
-      }
+    // Hanya jalankan di Farcaster mini app
+    if (!ready || !isMiniApp || !isWarpcast || isConnected || hasTriggered) {
       return;
     }
 
-    if (!isMiniApp && !isWarpcast) {
-      console.log("ℹ️ Not in Farcaster mini app");
-      return;
-    }
+    setHasTriggered(true);
+    console.log("🔥 [Farcaster] Starting auto-connect...");
 
-    setHasAttempted(true);
-    console.log("🔍 Starting auto-connect...");
-
+    // Cari injected connector
     const injectedConnector = connectors.find(
       (c) => c.id === "injected" || c.type === "injected"
     );
 
-    console.log("📊 Connector check:", {
-      found: !!injectedConnector,
-      windowEthereum: !!window.ethereum,
-      isMiniApp,
-      isWarpcast,
-      ready,
-    });
-
     if (!injectedConnector) {
-      console.warn("⚠️ No injected connector");
+      console.warn("⚠️ [Farcaster] No injected connector found");
       return;
     }
 
     if (!window.ethereum) {
-      console.warn("⚠️ No window.ethereum");
+      console.warn("⚠️ [Farcaster] window.ethereum not available");
       return;
     }
 
+    console.log("✅ [Farcaster] Auto-connecting to wallet...");
+
     try {
-      console.log("🔗 Connecting wallet...");
       connect({ connector: injectedConnector });
-      console.log("✅ Connect triggered");
+      console.log("🎉 [Farcaster] Wallet auto-connected!");
     } catch (error) {
-      console.error("❌ Error:", error);
+      console.error("❌ [Farcaster] Auto-connect failed:", error);
     }
   }, [
     ready,
@@ -104,7 +92,7 @@ function AutoConnectWallet() {
     isConnected,
     connect,
     connectors,
-    hasAttempted,
+    hasTriggered,
   ]);
 
   return null;
@@ -125,7 +113,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
 
     const url = new URL(window.location.href);
-
     const fromWarpcast = document.referrer.includes("warpcast.com");
     const hasWarpcastUA = navigator.userAgent.includes("Warpcast");
     const isIframe = window.self !== window.top;
@@ -133,7 +120,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
     const detectedIsWarpcast =
       fromWarpcast || hasWarpcastUA || isIframe || warpcastParam;
-
     const isMiniAppRoute = url.pathname.startsWith("/miniapp");
 
     let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
@@ -175,8 +161,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         ready,
       }}
     >
-      {/* 🔥 AutoConnectWallet HARUS di sini - DALAM provider */}
-      <AutoConnectWallet />
+      {/* 🔥 Auto-connect hanya di Farcaster */}
+      <AutoConnectInFarcaster />
       {children}
     </FarcasterContext.Provider>
   );
