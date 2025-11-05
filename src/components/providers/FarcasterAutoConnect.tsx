@@ -5,14 +5,15 @@ import { useConnect, useAccount } from "wagmi";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
 /**
- * 🔥 Dedicated component untuk auto-connect wallet di Farcaster mini app
- * Component ini harus di-render SEBELUM Header component
+ * 🔥 Auto-connect wallet di Farcaster mini app
+ * Menggunakan Farcaster signer jika tersedia
  */
 export function FarcasterAutoConnect() {
   const { connect, connectors } = useConnect();
   const { isMiniApp, isWarpcast, ready } = useFarcaster();
   const { isConnected } = useAccount();
   const hasAttempted = useRef(false);
+  const attemptCount = useRef(0);
 
   useEffect(() => {
     // Validation checks
@@ -31,46 +32,64 @@ export function FarcasterAutoConnect() {
       return;
     }
 
-    if (hasAttempted.current) {
-      console.log("⏭️ Auto-connect already attempted");
+    if (hasAttempted.current && attemptCount.current >= 3) {
+      console.log("⚠️ Max auto-connect attempts reached");
       return;
     }
 
-    hasAttempted.current = true;
+    attemptCount.current += 1;
+    console.log(`🔍 Auto-connect attempt ${attemptCount.current}/3...`);
 
-    // Trigger auto-connect
-    console.log("🔍 Starting auto-connect process...");
-    console.log(
-      "📊 Available connectors:",
-      connectors.map((c) => ({ id: c.id, type: c.type }))
-    );
+    const timer = setTimeout(async () => {
+      try {
+        // Try to get Farcaster context first
+        let farcasterSignerAvailable = false;
 
-    const injectedConnector = connectors.find(
-      (c) => c.id === "injected" || c.type === "injected"
-    );
+        try {
+          const { sdk } = await import("@farcaster/miniapp-sdk");
+          const context = await sdk.context;
 
-    if (!injectedConnector) {
-      console.warn("⚠️ No injected connector available");
-      return;
-    }
+          if (context?.user?.fid) {
+            console.log("✅ Farcaster context found:", context.user.fid);
+            farcasterSignerAvailable = true;
+          }
+        } catch (e) {
+          console.log("ℹ️ Farcaster SDK not available");
+        }
 
-    if (!window.ethereum) {
-      console.warn(
-        "⚠️ window.ethereum not available - wallet extension may not be installed"
-      );
-      return;
-    }
+        // Find injected connector
+        const injectedConnector = connectors.find(
+          (c) => c.id === "injected" || c.type === "injected"
+        );
 
-    console.log("✅ Conditions met! Auto-connecting wallet...");
+        console.log("📊 Debug info:", {
+          attempt: attemptCount.current,
+          connectorFound: !!injectedConnector,
+          windowEthereumExists: !!window.ethereum,
+          farcasterSignerAvailable,
+          connectorType: injectedConnector?.type,
+          connectorId: injectedConnector?.id,
+        });
 
-    try {
-      connect({ connector: injectedConnector });
-      console.log("🎉 Auto-connect triggered successfully!");
-    } catch (error) {
-      console.error("❌ Auto-connect failed:", error);
-    }
+        if (!injectedConnector) {
+          console.warn("⚠️ No injected connector available, retrying...");
+          return;
+        }
+
+        // Try to connect
+        console.log("🔗 Attempting to connect wallet...");
+
+        connect({ connector: injectedConnector });
+        hasAttempted.current = true;
+
+        console.log("🎉 Auto-connect triggered!");
+      } catch (error) {
+        console.error("❌ Auto-connect error:", error);
+      }
+    }, 500 * attemptCount.current); // Exponential backoff: 500ms, 1s, 1.5s
+
+    return () => clearTimeout(timer);
   }, [ready, isMiniApp, isWarpcast, isConnected, connect, connectors]);
 
-  // Component tidak render anything - hanya trigger side effects
   return null;
 }
