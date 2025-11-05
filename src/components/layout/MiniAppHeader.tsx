@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useAccount, useDisconnect } from "wagmi";
 import { useFarcaster } from "@/contexts/FarcasterContext";
+import { useFrameWallet } from "@/hooks/useFrameWallet"; // ✅ NEW
 
 // Helper function to check if URL is valid and safe
 const isValidImageUrl = (url: string | undefined | null): boolean => {
@@ -20,9 +20,8 @@ const isValidImageUrl = (url: string | undefined | null): boolean => {
 
 export default function MiniAppHeader() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
   const { farcasterData, hasFID } = useFarcaster();
+  const { address, isConnected, connect, disconnect } = useFrameWallet(); // ✅ Use Frame wallet
   const [pfpError, setPfpError] = useState(false);
 
   // Check if PFP URL is valid
@@ -39,7 +38,6 @@ export default function MiniAppHeader() {
     };
   }, [isSidebarOpen]);
 
-  // Reset error when pfpUrl changes
   useEffect(() => {
     setPfpError(false);
   }, [farcasterData?.pfpUrl]);
@@ -52,7 +50,6 @@ export default function MiniAppHeader() {
     setPfpError(true);
   };
 
-  // Fallback avatar component
   const FallbackAvatar = ({ size = "small" }: { size?: "small" | "large" }) => {
     const initial = farcasterData?.displayName?.charAt(0).toUpperCase() || "?";
     const sizeClass = size === "large" ? "text-xl" : "text-xs";
@@ -62,6 +59,23 @@ export default function MiniAppHeader() {
         <span className={sizeClass}>{initial}</span>
       </div>
     );
+  };
+
+  // ✅ Handle connect wallet
+  const handleConnect = async () => {
+    try {
+      await connect();
+      console.log("[MiniAppHeader] Wallet connected");
+    } catch (error: any) {
+      console.error("[MiniAppHeader] Connection failed:", error.message);
+    }
+  };
+
+  // ✅ Handle disconnect wallet
+  const handleDisconnect = () => {
+    disconnect();
+    setIsSidebarOpen(false);
+    console.log("[MiniAppHeader] Wallet disconnected");
   };
 
   return (
@@ -230,7 +244,7 @@ export default function MiniAppHeader() {
                 </button>
               </div>
 
-              {farcasterData ? (  
+              {farcasterData ? (
                 <div className="bg-white/20 backdrop-blur-md rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/50 flex-shrink-0 bg-white/10">
@@ -277,15 +291,26 @@ export default function MiniAppHeader() {
 
             <div className="px-4 py-4">
               <div className="space-y-3">
-                <Link
-                  href="#pricing"
-                  scroll={true}
-                  className="block w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white hover:opacity-90 rounded-xl transition shadow-lg"
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  {hasFID ? "Mint Now - FREE" : "Setup FID - FREE"}
-                </Link>
+                {/* ✅ Mint Button - Show "Connect" or "Mint" based on wallet status */}
+                {isConnected ? (
+                  <Link
+                    href="#pricing"
+                    scroll={true}
+                    className="block w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white hover:opacity-90 rounded-xl transition shadow-lg"
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    {hasFID ? "Mint Now - FREE" : "Setup FID - FREE"}
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleConnect}
+                    className="block w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white hover:opacity-90 rounded-xl transition shadow-lg"
+                  >
+                    Connect Wallet
+                  </button>
+                )}
 
+                {/* ✅ Show wallet address if connected */}
                 {address && (
                   <div className="bg-purple-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-neutral-600 mb-1">
@@ -297,15 +322,15 @@ export default function MiniAppHeader() {
                   </div>
                 )}
 
-                <button
-                  onClick={() => {
-                    disconnect();
-                    setIsSidebarOpen(false);
-                  }}
-                  className="w-full text-center px-4 py-3 text-sm font-semibold border-2 border-red-200 bg-white text-red-600 hover:bg-red-50 rounded-xl transition"
-                >
-                  Disconnect Wallet
-                </button>
+                {/* ✅ Disconnect button - Only show if connected */}
+                {isConnected && (
+                  <button
+                    onClick={handleDisconnect}
+                    className="w-full text-center px-4 py-3 text-sm font-semibold border-2 border-red-200 bg-white text-red-600 hover:bg-red-50 rounded-xl transition"
+                  >
+                    Disconnect Wallet
+                  </button>
+                )}
               </div>
 
               <div className="mt-6 pt-4 border-t border-neutral-200">
