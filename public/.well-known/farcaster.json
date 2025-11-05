@@ -1,4 +1,9 @@
 {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEzNDYwNDcsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgyZjdBRDNGMTFjNmQ2NTkwOWJmYmRDMGM5YTRDZDhCNTEyYmMwMzM0In0",
+    "payload": "eyJkb21haW4iOiJibG9jay1iYXNlLXBpLnZlcmNlbC5hcHAifQ",
+    "signature": "2I7dNHU0EAfCKRX1tYe8hsKuKeGacrk9P4zy1w//Grt3Ge3jj+1fyeuIJHtf+T0tSeXQe0/Zg7ukDlpytlp1iBs="
+  },
   "miniapp": {
     "version": "1",
     "name": "Muse - Mint Your Mood",

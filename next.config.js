@@ -28,75 +28,44 @@ const nextConfig = {
 
   images: {
     remotePatterns: [
-      // Farcaster CDNs
-      {
-        protocol: "https",
-        hostname: "imagedelivery.net",
-      },
-      {
-        protocol: "https",
-        hostname: "*.neynar.com",
-      },
-      {
-        protocol: "https",
-        hostname: "wrpcd.net",
-      },
-      // IPFS Gateways
-      {
-        protocol: "https",
-        hostname: "gateway.pinata.cloud",
-      },
-      {
-        protocol: "https",
-        hostname: "ipfs.io",
-      },
-      // OpenSea
-      {
-        protocol: "https",
-        hostname: "i.seadn.io",
-      },
-      {
-        protocol: "https",
-        hostname: "openseauserdata.com",
-      },
-      // Others
-      {
-        protocol: "https",
-        hostname: "i.imgur.com",
-      },
-      {
-        protocol: "https",
-        hostname: "imgur.com",
-      },
-      {
-        protocol: "https",
-        hostname: "pbs.twimg.com",
-      },
-      {
-        protocol: "https",
-        hostname: "ui-avatars.com",
-      },
-      {
-        protocol: "https",
-        hostname: "muse.write3.fun",
-      },
-      {
-        protocol: "https",
-        hostname: "**",
-      },
+      { protocol: "https", hostname: "imagedelivery.net" },
+      { protocol: "https", hostname: "*.neynar.com" },
+      { protocol: "https", hostname: "wrpcd.net" },
+      { protocol: "https", hostname: "gateway.pinata.cloud" },
+      { protocol: "https", hostname: "ipfs.io" },
+      { protocol: "https", hostname: "i.seadn.io" },
+      { protocol: "https", hostname: "openseauserdata.com" },
+      { protocol: "https", hostname: "i.imgur.com" },
+      { protocol: "https", hostname: "imgur.com" },
+      { protocol: "https", hostname: "pbs.twimg.com" },
+      { protocol: "https", hostname: "ui-avatars.com" },
+      { protocol: "https", hostname: "muse.write3.fun" },
+      { protocol: "https", hostname: "**" },
     ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60,
     unoptimized: true,
   },
 
-  // 🔥 NEW: Mini App redirect
-  async redirects() {
+  // 🔥 HEADERS untuk .well-known (BUKAN REDIRECT!)
+  async headers() {
     return [
       {
         source: "/.well-known/farcaster.json",
-        destination: "/api/farcaster/manifest",
-        permanent: false,
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/json",
+          },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600", // Cache 1 hour
+          },
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "*",
+          },
+        ],
       },
     ];
   },

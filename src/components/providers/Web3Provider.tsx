@@ -95,45 +95,89 @@ const farcasterWallet = (): Wallet => ({
       ],
     },
   },
-  // 🔥 FIXED: Correct createConnector without 'preference'
   createConnector: (walletDetails) => {
     const coinbaseConnector = coinbaseWallet({
       appName: "Muse - Mint Your Mood",
     });
-
     return coinbaseConnector.createConnector(walletDetails);
   },
 });
 
-// 🔥 WALLET LIST WITH FARCASTER FIRST
-const connectors =
-  typeof window !== "undefined"
-    ? connectorsForWallets(
-        [
-          {
-            groupName: "🎨 Farcaster",
-            wallets: [farcasterWallet],
-          },
-          {
-            groupName: "🔵 Best for Base",
-            wallets: [coinbaseWallet],
-          },
-          {
-            groupName: "Popular Wallets",
-            wallets: [
-              metaMaskWallet,
-              walletConnectWallet,
-              rainbowWallet,
-              trustWallet,
-            ],
-          },
-        ],
+// 🔥 Detect environment
+function detectEnvironment() {
+  if (typeof window === "undefined") return "web";
+
+  const url = new URL(window.location.href);
+  const isMiniApp =
+    url.pathname.startsWith("/miniapp") ||
+    url.searchParams.get("miniApp") === "true" ||
+    url.searchParams.get("fc") === "true";
+
+  const isWarpcast =
+    document.referrer.includes("warpcast.com") ||
+    navigator.userAgent.includes("Warpcast") ||
+    window.self !== window.top; // Inside iframe
+
+  if (isWarpcast) return "warpcast";
+  if (isMiniApp) return "miniapp";
+  return "web";
+}
+
+// 🔥 CONDITIONAL WALLET LIST
+function getConnectors() {
+  if (typeof window === "undefined") return [];
+
+  const environment = detectEnvironment();
+
+  // Mini app / Warpcast: Show Farcaster + Coinbase only
+  if (environment === "warpcast" || environment === "miniapp") {
+    return connectorsForWallets(
+      [
         {
-          appName: "Muse - Mint Your Mood",
-          projectId: "6036ef8f00ca882753a4d728036495b3",
-        }
-      )
-    : [];
+          groupName: "🎨 Farcaster",
+          wallets: [farcasterWallet],
+        },
+        {
+          groupName: "Wallet",
+          wallets: [coinbaseWallet],
+        },
+      ],
+      {
+        appName: "Muse - Mint Your Mood",
+        projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
+      }
+    );
+  }
+
+  // Web: Show all wallets
+  return connectorsForWallets(
+    [
+      {
+        groupName: "🎨 Farcaster",
+        wallets: [farcasterWallet],
+      },
+      {
+        groupName: "🔵 Best for Base",
+        wallets: [coinbaseWallet],
+      },
+      {
+        groupName: "Popular Wallets",
+        wallets: [
+          metaMaskWallet,
+          walletConnectWallet,
+          rainbowWallet,
+          trustWallet,
+        ],
+      },
+    ],
+    {
+      appName: "Muse - Mint Your Mood",
+      projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
+    }
+  );
+}
+
+const connectors = getConnectors();
 
 const config = createConfig({
   connectors,
@@ -162,12 +206,10 @@ function AutoConnectMiniApp() {
   useEffect(() => {
     if (hasAttempted || isConnected) return;
 
-    const isMiniApp =
-      window.location.pathname.startsWith("/miniapp") ||
-      window.location.search.includes("miniApp=true") ||
-      window.location.search.includes("fc=true");
+    const environment = detectEnvironment();
 
-    if (!isMiniApp) {
+    // Only auto-connect in mini app/warpcast
+    if (environment !== "warpcast" && environment !== "miniapp") {
       setHasAttempted(true);
       return;
     }
@@ -180,7 +222,7 @@ function AutoConnectMiniApp() {
 
       try {
         if (typeof window.ethereum !== "undefined") {
-          console.log("🎨 Mini App: Farcaster wallet detected");
+          console.log(`🎨 ${environment.toUpperCase()}: Wallet detected`);
 
           // Check existing connection
           const accounts = await window.ethereum.request({
@@ -188,9 +230,11 @@ function AutoConnectMiniApp() {
           });
 
           if (accounts && accounts.length > 0) {
-            console.log("🎨 Mini App: Already connected, syncing...");
+            console.log(
+              `🎨 ${environment.toUpperCase()}: Already connected, syncing...`
+            );
 
-            // Find Farcaster or Coinbase connector
+            // Find appropriate connector
             const connector =
               connectors.find((c) => c.id === "farcaster") ||
               connectors.find((c) =>
@@ -201,16 +245,18 @@ function AutoConnectMiniApp() {
 
             if (connector) {
               await connectAsync({ connector });
-              console.log("✅ Mini App: Auto-connected via", connector.name);
+              console.log(
+                `✅ ${environment.toUpperCase()}: Auto-connected via`,
+                connector.name
+              );
             }
-          } else {
-            console.log(
-              "🎨 Mini App: No existing connection (user can connect manually)"
-            );
           }
         }
       } catch (error: any) {
-        console.log("🎨 Mini App: Auto-connect skipped -", error.message);
+        console.log(
+          `🎨 ${environment.toUpperCase()}: Auto-connect skipped -`,
+          error.message
+        );
       }
     };
 
