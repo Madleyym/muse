@@ -403,49 +403,41 @@ export default function PricingMiniApp() {
           )}
         </div>
 
-        {/* ✅ ID CARD STYLE - Profile Card */}
+        {/* Profile Card */}
         {farcasterData && currentMood && (
-          <div className="max-w-md mx-auto mb-6 sm:mb-8">
-            {/* ✅ Outer Card Container */}
-            <div className="relative">
-              {/* ✅ Gradient Background Card */}
-              <div
-                className="rounded-[1.5rem] overflow-hidden shadow-2xl transition-all duration-500 border-4 border-white/20"
-                style={{
-                  background: getGradientStyle(
-                    currentMood.gradients[gradientIndex]
-                  ),
-                }}
-              >
-                {/* ✅ Top Section - Mood Image */}
-                <div className="relative h-48 sm:h-56 flex items-center justify-center pt-6">
-                  <div className="relative w-32 h-32 sm:w-40 sm:h-40">
+          <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
+            <div
+              className="rounded-2xl p-4 sm:p-6 text-white shadow-xl transition-all duration-500"
+              style={{
+                background: getGradientStyle(
+                  currentMood.gradients[gradientIndex]
+                ),
+              }}
+            >
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex-shrink-0">
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
+                  <div className="relative w-full h-full p-3 sm:p-4">
                     <Image
                       src={currentMood.baseImage}
                       alt={currentMood.name}
                       fill
                       className="object-contain drop-shadow-2xl"
-                      sizes="160px"
+                      sizes="(max-width: 640px) 144px, 192px"
                     />
                   </div>
-
-                  {/* ✅ Decorative Corner Elements */}
-                  <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/40 rounded-tl-lg"></div>
-                  <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-white/40 rounded-tr-lg"></div>
                 </div>
 
-                {/* ✅ Middle Section - User Info */}
-                <div className="relative bg-white/10 backdrop-blur-md border-t border-white/20">
-                  {/* ✅ Avatar - Positioned to overlap */}
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2">
-                    <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white/20">
+                <div className="flex-1 text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
+                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
                       {hasValidPfp && farcasterData.pfpUrl ? (
                         <Image
                           src={farcasterData.pfpUrl}
                           alt={farcasterData.displayName}
                           fill
                           className="object-cover"
-                          sizes="80px"
+                          sizes="48px"
                           unoptimized
                           onError={handlePfpError}
                         />
@@ -453,62 +445,42 @@ export default function PricingMiniApp() {
                         <FallbackAvatar />
                       )}
                     </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold">
+                        {farcasterData.displayName}
+                      </h3>
+                      <p className="text-white/80 text-xs sm:text-sm">
+                        @{farcasterData.username} · FID {farcasterData.fid}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* ✅ User Details */}
-                  <div className="pt-12 pb-4 px-6 text-center text-white">
-                    <h3 className="text-lg sm:text-xl font-bold mb-1">
-                      {farcasterData.displayName}
-                    </h3>
-                    <p className="text-white/80 text-xs sm:text-sm mb-1">
-                      @{farcasterData.username}
-                    </p>
-                    <p className="text-white/60 text-xs">
-                      FID {farcasterData.fid}
-                    </p>
-                  </div>
-                </div>
-
-                {/* ✅ Bottom Section - Mood Info */}
-                <div className="bg-white/15 backdrop-blur-md border-t border-white/20 px-6 py-4">
-                  <div className="text-center mb-4">
-                    <h4 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 sm:p-4">
+                    <div className="text-xl sm:text-2xl font-bold mb-1">
                       {currentMood.name}
-                    </h4>
-                    <p className="text-white/80 text-xs sm:text-sm">
-                      {currentMood.description}
-                    </p>
-                  </div>
-
-                  {/* ✅ Stats Row */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/20">
-                      <div className="text-white/70 text-xs mb-1 uppercase tracking-wide">
-                        Engagement Score
-                      </div>
-                      <div className="text-white text-xl sm:text-2xl font-bold">
-                        {farcasterData.engagementScore.toLocaleString()}
-                      </div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/20">
-                      <div className="text-white/70 text-xs mb-1 uppercase tracking-wide">
-                        Category
+                    <div className="text-xs sm:text-sm text-white/80 mb-3">
+                      {currentMood.description}
+                    </div>
+                    <div className="flex items-center justify-center sm:justify-start gap-3 sm:gap-4 flex-wrap">
+                      <div>
+                        <div className="text-xs text-white/70">
+                          Engagement Score
+                        </div>
+                        <div className="text-lg sm:text-xl font-bold">
+                          {farcasterData.engagementScore.toLocaleString()}
+                        </div>
                       </div>
-                      <div className="text-white text-xl sm:text-2xl font-bold uppercase">
-                        {currentMood.category}
+                      <div className="h-6 sm:h-8 w-px bg-white/30"></div>
+                      <div>
+                        <div className="text-xs text-white/70">Category</div>
+                        <div className="text-lg sm:text-xl font-bold uppercase">
+                          {currentMood.category}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {/* ✅ Decorative Bottom Corners */}
-                <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-white/40 rounded-bl-lg"></div>
-                <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/40 rounded-br-lg"></div>
-              </div>
-
-              {/* ✅ Holographic Effect Overlay */}
-              <div className="absolute inset-0 rounded-[1.5rem] pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-50"></div>
               </div>
             </div>
           </div>
