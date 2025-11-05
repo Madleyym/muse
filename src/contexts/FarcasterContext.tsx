@@ -7,8 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { useConnect, useAccount, useConnectorClient } from "wagmi";
-import { useCallback } from "react";
+import { useConnect, useAccount } from "wagmi";
 
 export interface FarcasterData {
   fid: number;
@@ -28,6 +27,7 @@ export interface FarcasterContextType {
   isWarpcast: boolean;
   environment: "web" | "miniapp" | "warpcast";
   ready: boolean;
+  isAutoConnecting: boolean;
 }
 
 const FarcasterContext = createContext<FarcasterContextType>({
@@ -38,6 +38,7 @@ const FarcasterContext = createContext<FarcasterContextType>({
   isWarpcast: false,
   environment: "web",
   ready: false,
+  isAutoConnecting: false,
 });
 
 export function useFarcaster() {
@@ -46,13 +47,14 @@ export function useFarcaster() {
 
 /**
  * 🔥 AUTO-CONNECT di Farcaster mini app
- * Trigger connect via Farcaster SDK signer
+ * Trigger connect via injected wallet
  */
 function AutoConnectInFarcaster() {
   const { connect, connectors } = useConnect();
   const { isConnected } = useAccount();
   const { isMiniApp, isWarpcast, ready } = useFarcaster();
   const [hasTriggered, setHasTriggered] = useState(false);
+  const [isAutoConnecting, setIsAutoConnecting] = useState(false);
 
   useEffect(() => {
     // Hanya jalankan di Farcaster mini app
@@ -61,11 +63,12 @@ function AutoConnectInFarcaster() {
     }
 
     setHasTriggered(true);
+    setIsAutoConnecting(true);
 
-    const attemptAutoConnect = async () => {
+    console.log("🔥 [Farcaster] Attempting auto-connect...");
+
+    const timer = setTimeout(async () => {
       try {
-        console.log("🔥 [Farcaster] Attempting auto-connect...");
-
         // Cari injected connector
         const injectedConnector = connectors.find(
           (c) => c.id === "injected" || c.type === "injected"
@@ -74,24 +77,28 @@ function AutoConnectInFarcaster() {
         if (!injectedConnector) {
           console.warn("⚠️ [Farcaster] No injected connector found");
           console.log(
-            "📊 Available connectors:",
+            "Available connectors:",
             connectors.map((c) => c.id)
           );
+          setIsAutoConnecting(false);
           return;
         }
 
-        console.log("✅ [Farcaster] Injected connector found, connecting...");
+        console.log(
+          "✅ [Farcaster] Found injected connector, attempting connect..."
+        );
 
-        // Try to connect
-        const result = connect({ connector: injectedConnector });
+        // Trigger connect - ini akan pop approval di wallet
+        const result = await connect({ connector: injectedConnector });
+
         console.log("🎉 [Farcaster] Connect triggered!", result);
+        setIsAutoConnecting(false);
       } catch (error) {
         console.error("❌ [Farcaster] Auto-connect error:", error);
+        setIsAutoConnecting(false);
       }
-    };
+    }, 500);
 
-    // Small delay untuk ensure window.ethereum ready
-    const timer = setTimeout(attemptAutoConnect, 300);
     return () => clearTimeout(timer);
   }, [
     ready,
@@ -116,6 +123,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     "web" | "miniapp" | "warpcast"
   >("web");
   const [ready, setReady] = useState(false);
+  const [isAutoConnecting, setIsAutoConnecting] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -167,6 +175,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         isWarpcast,
         environment,
         ready,
+        isAutoConnecting,
       }}
     >
       <AutoConnectInFarcaster />
