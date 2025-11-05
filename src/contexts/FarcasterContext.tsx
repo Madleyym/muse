@@ -25,6 +25,8 @@ export interface FarcasterContextType {
   hasFID: boolean;
   isMiniApp: boolean;
   isWarpcast: boolean;
+  isMobile: boolean; // ✅ NEW
+  isDesktop: boolean; // ✅ NEW
   environment: "web" | "miniapp" | "warpcast";
   ready: boolean;
   isAutoConnecting: boolean;
@@ -38,6 +40,8 @@ const FarcasterContext = createContext<FarcasterContextType>({
   hasFID: false,
   isMiniApp: false,
   isWarpcast: false,
+  isMobile: false,
+  isDesktop: false,
   environment: "web",
   ready: false,
   isAutoConnecting: false,
@@ -55,23 +59,24 @@ let autoConnectAttempted = false;
 function AutoConnectInFarcaster() {
   const { connect, connectors } = useConnect();
   const { isConnected, isConnecting } = useAccount();
-  const { isMiniApp, ready } = useFarcaster();
+  const { isMiniApp, isMobile, ready } = useFarcaster();
 
   useEffect(() => {
     // Skip if already attempted
     if (autoConnectAttempted) {
-      console.log("[AutoConnect] Already attempted, skipping...");
+      console.log("[AutoConnect] Already attempted");
       return;
     }
 
     // Skip if already connected
     if (isConnected) {
-      console.log("[AutoConnect] Already connected");
+      console.log("[AutoConnect] ✅ Already connected");
       return;
     }
 
     // Skip if not ready or not miniapp
     if (!ready || !isMiniApp) {
+      console.log("[AutoConnect] Not ready or not miniapp");
       return;
     }
 
@@ -81,18 +86,27 @@ function AutoConnectInFarcaster() {
       return;
     }
 
-    console.log("[AutoConnect] Starting auto-connect process...");
+    // ✅ On MOBILE: auto-connect
+    // ✅ On DESKTOP: skip (user will connect manually)
+    if (!isMobile) {
+      console.log("[AutoConnect] Desktop - skip auto-connect");
+      autoConnectAttempted = true; // Prevent retry loop
+      return;
+    }
+
+    console.log("[AutoConnect] 🚀 Starting auto-connect (Mobile)...");
     autoConnectAttempted = true;
 
     const timer = setTimeout(async () => {
       try {
+        if (connectors.length === 0) {
+          console.error("[AutoConnect] ❌ No connectors available");
+          return;
+        }
+
         console.log(
           "[AutoConnect] Available connectors:",
-          connectors.map((c) => ({
-            id: c.id,
-            type: c.type,
-            name: c.name,
-          }))
+          connectors.map((c) => ({ id: c.id, name: c.name }))
         );
 
         // Find injected connector
@@ -100,40 +114,33 @@ function AutoConnectInFarcaster() {
           (c) => c.id === "injected" || c.type === "injected"
         );
 
-        if (!injectedConnector) {
-          console.error("[Farcaster] Injected connector not found!");
-
-          // Try fallback
-          if (connectors.length > 0) {
-            const fallbackConnector = connectors[0];
-            console.log(
-              "[Farcaster] Using fallback connector:",
-              fallbackConnector.name
-            );
-            await connect({ connector: fallbackConnector });
-            console.log("[Farcaster] Connected with fallback!");
-            return;
-          }
-
-          console.error("[Farcaster] No connectors available");
-          return;
+        if (injectedConnector) {
+          console.log("[AutoConnect] 🔌 Connecting with injected...");
+          await connect({ connector: injectedConnector });
+          console.log("[AutoConnect] ✅ Connected!");
+        } else if (connectors.length > 0) {
+          // Fallback to first available
+          console.log("[AutoConnect] Using fallback:", connectors[0].name);
+          await connect({ connector: connectors[0] });
+          console.log("[AutoConnect] ✅ Connected with fallback!");
         }
-
-        console.log("[Farcaster] Found injected connector, connecting...");
-        await connect({ connector: injectedConnector });
-        console.log("[Farcaster] Successfully connected!");
       } catch (error: any) {
-        console.error(
-          "[Farcaster] Auto-connect error:",
-          error?.message || error
-        );
-        // Allow retry on next mount if failed
+        console.error("[AutoConnect] ❌ Error:", error?.message);
+        // Reset flag to allow retry
         autoConnectAttempted = false;
       }
-    }, 1500); // Increased to 1.5s for stability
+    }, 2000); // 2s delay for stability
 
     return () => clearTimeout(timer);
-  }, [ready, isMiniApp, isConnected, isConnecting, connect, connectors]);
+  }, [
+    ready,
+    isMiniApp,
+    isMobile,
+    isConnected,
+    isConnecting,
+    connect,
+    connectors,
+  ]);
 
   return null;
 }
@@ -144,6 +151,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   );
   const [isMiniApp, setIsMiniApp] = useState(false);
   const [isWarpcast, setIsWarpcast] = useState(false);
+  const [isMobile, setIsMobile] = useState(false); // ✅ NEW
+  const [isDesktop, setIsDesktop] = useState(false); // ✅ NEW
   const [environment, setEnvironment] = useState<
     "web" | "miniapp" | "warpcast"
   >("web");
@@ -172,6 +181,14 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         fromWarpcast || hasWarpcastUA || isIframe || warpcastParam;
       const finalIsMiniApp = detectedIsWarpcast || isMiniAppRoute;
 
+      // ✅ Detect Mobile vs Desktop
+      const userAgent = navigator.userAgent.toLowerCase();
+      const detectedIsMobile =
+        /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+          userAgent
+        );
+      const detectedIsDesktop = !detectedIsMobile;
+
       let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
 
       if (detectedIsWarpcast) {
@@ -183,7 +200,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       setEnvironment(finalEnvironment);
       setIsMiniApp(finalIsMiniApp);
       setIsWarpcast(detectedIsWarpcast);
-      setIsAutoConnecting(finalIsMiniApp);
+      setIsMobile(detectedIsMobile);
+      setIsDesktop(detectedIsDesktop);
+      setIsAutoConnecting(finalIsMiniApp && detectedIsMobile); // Only auto-connect on mobile
 
       document.body.classList.remove(
         "web-mode",
@@ -196,13 +215,15 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         environment: finalEnvironment,
         isMiniApp: finalIsMiniApp,
         isWarpcast: detectedIsWarpcast,
+        isMobile: detectedIsMobile,
+        isDesktop: detectedIsDesktop,
       });
 
       setReady(true);
     };
 
     detectEnvironment();
-  }, []); // ✅ Empty deps - run once only
+  }, []);
 
   return (
     <FarcasterContext.Provider
@@ -212,6 +233,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         hasFID: !!farcasterData?.fid,
         isMiniApp,
         isWarpcast,
+        isMobile,
+        isDesktop,
         environment,
         ready,
         isAutoConnecting,

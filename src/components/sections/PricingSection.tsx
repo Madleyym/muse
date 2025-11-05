@@ -27,7 +27,7 @@ const isValidImageUrl = (url: string | undefined | null): boolean => {
 // ==========================================
 function MiniAppSection() {
   const { isConnected } = useAccount();
-  const { farcasterData, setFarcasterData } = useFarcaster();
+  const { farcasterData, setFarcasterData, isDesktop } = useFarcaster();
   const { isReady: sdkReady, user: sdkUser } = useFarcasterSDK();
 
   const {
@@ -75,59 +75,73 @@ function MiniAppSection() {
         setIsDetectingMood(true);
         console.log("[MiniApp] Detecting mood for FID:", sdkUser.fid);
 
-        // Add timeout (10 seconds max)
+        // ✅ Try API with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
 
-        const response = await fetch(
-          `/api/farcaster/verify?fid=${sdkUser.fid}`,
-          { signal: controller.signal }
-        );
+        try {
+          const response = await fetch(
+            `/api/farcaster/verify?fid=${sdkUser.fid}`,
+            { signal: controller.signal }
+          );
 
-        clearTimeout(timeoutId);
+          clearTimeout(timeoutId);
 
-        const data = await response.json();
+          if (response.ok) {
+            const data = await response.json();
 
-        if (response.ok && data.success) {
-          const pfpUrl = data.user.pfpUrl || sdkUser.pfpUrl || "";
+            if (data.success && data.activity) {
+              const pfpUrl = data.user.pfpUrl || sdkUser.pfpUrl || "";
 
-          setFarcasterData({
-            fid: data.user.fid,
-            username: data.user.username,
-            displayName: data.user.displayName,
-            pfpUrl: pfpUrl,
-            mood: data.activity.suggestedMood,
-            moodId: data.activity.suggestedMoodId,
-            engagementScore: data.activity.engagementScore,
-          });
+              setFarcasterData({
+                fid: data.user.fid,
+                username: data.user.username,
+                displayName: data.user.displayName,
+                pfpUrl: pfpUrl,
+                mood: data.activity.suggestedMood,
+                moodId: data.activity.suggestedMoodId,
+                engagementScore: data.activity.engagementScore,
+              });
 
-          console.log("[MiniApp] Mood detected:", data.activity.suggestedMood);
-        } else {
-          // Fallback: Use default mood if API fails
-          console.warn("[MiniApp] API failed, using default mood");
-          setFarcasterData({
-            fid: sdkUser.fid,
-            username: sdkUser.username || "",
-            displayName: sdkUser.displayName || "",
-            pfpUrl: sdkUser.pfpUrl || "",
-            mood: "Creative Mind",
-            moodId: "creative-mind",
-            engagementScore: 0,
-          });
+              console.log(
+                "[MiniApp] ✅ Mood detected from API:",
+                data.activity.suggestedMood
+              );
+              setIsDetectingMood(false);
+              return; // Success, exit early
+            }
+          }
+        } catch (fetchError: any) {
+          console.warn("[MiniApp] API fetch failed:", fetchError.message);
+          // Continue to fallback
         }
-      } catch (error: any) {
-        console.error("[MiniApp] Failed to detect mood:", error);
 
-        // Fallback: Use default mood on error/timeout
+        // ✅ FALLBACK: Always set default mood if API fails
+        console.warn("[MiniApp] Using fallback mood");
         setFarcasterData({
           fid: sdkUser.fid,
           username: sdkUser.username || "",
-          displayName: sdkUser.displayName || "",
+          displayName: sdkUser.displayName || `User ${sdkUser.fid}`,
           pfpUrl: sdkUser.pfpUrl || "",
-          mood: "Creative Mind",
+          mood: "Creative Mind", // Default mood
           moodId: "creative-mind",
-          engagementScore: 0,
+          engagementScore: 100, // Default score
         });
+      } catch (error: any) {
+        console.error("[MiniApp] ❌ Mood detection error:", error);
+
+        // ✅ EMERGENCY FALLBACK
+        if (sdkUser) {
+          setFarcasterData({
+            fid: sdkUser.fid,
+            username: sdkUser.username || "",
+            displayName: sdkUser.displayName || `User ${sdkUser.fid}`,
+            pfpUrl: sdkUser.pfpUrl || "",
+            mood: "Creative Mind",
+            moodId: "creative-mind",
+            engagementScore: 100,
+          });
+        }
       } finally {
         setIsDetectingMood(false);
       }
@@ -135,6 +149,34 @@ function MiniAppSection() {
 
     detectMood();
   }, [sdkReady, sdkUser, farcasterData?.fid, setFarcasterData]);
+
+  // Add timeout for loading screen
+  useEffect(() => {
+    if (isDetectingMood) {
+      const timeout = setTimeout(() => {
+        console.warn(
+          "[MiniApp] ⏰ Mood detection timeout (10s), forcing default"
+        );
+        setIsDetectingMood(false);
+
+        // ✅ ALWAYS set default mood on timeout
+        if (!farcasterData && sdkUser) {
+          console.log("[MiniApp] Setting default mood due to timeout");
+          setFarcasterData({
+            fid: sdkUser.fid,
+            username: sdkUser.username || "",
+            displayName: sdkUser.displayName || `User ${sdkUser.fid}`,
+            pfpUrl: sdkUser.pfpUrl || "",
+            mood: "Creative Mind",
+            moodId: "creative-mind",
+            engagementScore: 100,
+          });
+        }
+      }, 10000); // 10 seconds max
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isDetectingMood, farcasterData, sdkUser, setFarcasterData]);
 
   // Add timeout for loading screen
   useEffect(() => {
@@ -438,14 +480,63 @@ function MiniAppSection() {
         {/* Warning if wallet not connected */}
         {!isConnected && (
           <div className="max-w-2xl mx-auto mb-6">
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
-              <p className="text-sm text-yellow-800 font-medium">
-                Connect your wallet to mint your NFT
-              </p>
-              <p className="text-xs text-yellow-600 mt-1">
-                Use the profile button in the header to connect
-              </p>
-            </div>
+            {isDesktop ? (
+              // ✅ Desktop-specific message
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-blue-900 mb-1 text-sm">
+                      Connect Your Wallet to Mint
+                    </h4>
+                    <p className="text-xs text-blue-700 mb-2">
+                      On desktop, you need to connect a wallet extension
+                      (MetaMask, OKX, etc.) to mint your NFT.
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      💡 <strong>Tip:</strong> On mobile Warpcast app, wallet
+                      connects automatically!
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    // Trigger connect from header
+                    const profileButton = document.querySelector(
+                      '[aria-label="Open menu"]'
+                    ) as HTMLElement;
+                    profileButton?.click();
+                  }}
+                  className="mt-3 w-full text-center px-4 py-2.5 text-sm font-semibold gradient-bg text-white hover:opacity-90 rounded-xl transition shadow-lg"
+                >
+                  Connect Wallet
+                </button>
+              </div>
+            ) : (
+              // ✅ Mobile message (original)
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
+                <p className="text-sm text-yellow-800 font-medium">
+                  Connect your wallet to mint your NFT
+                </p>
+                <p className="text-xs text-yellow-600 mt-1">
+                  Use the profile button in the header to connect
+                </p>
+              </div>
+            )}
           </div>
         )}
 
