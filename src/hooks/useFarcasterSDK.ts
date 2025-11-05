@@ -4,42 +4,35 @@ import { useEffect, useState } from "react";
 
 export function useFarcasterSDK() {
   const [isReady, setIsReady] = useState(false);
-  const [isAvailable, setIsAvailable] = useState(false);
+  const [isInMiniApp, setIsInMiniApp] = useState(false);
 
   useEffect(() => {
-    const initSDK = async () => {
-      let attempts = 0;
-      const maxAttempts = 50; // 5 seconds
+    const initializeSDK = async () => {
+      try {
+        // 🔥 Import official SDK
+        const { sdk } = await import("@farcaster/miniapp-sdk");
 
-      while (attempts < maxAttempts) {
-        if (
-          typeof window !== "undefined" &&
-          window.farcasterSdk?.actions?.ready
-        ) {
-          try {
-            console.log("✅ SDK found, calling ready()");
-            window.farcasterSdk.actions.ready();
-            setIsAvailable(true);
-            setIsReady(true);
-            return;
-          } catch (error) {
-            console.error("Error calling ready():", error);
-            setIsReady(true);
-            return;
-          }
+        // Check if we're in a mini app environment
+        if (typeof window !== "undefined") {
+          console.log("🔥 Farcaster SDK available, calling ready()...");
+
+          // Call ready() to hide splash screen
+          await sdk.actions.ready();
+
+          setIsInMiniApp(true);
+          console.log("✅ Mini app ready!");
         }
-
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        attempts++;
+      } catch (error) {
+        // SDK not available = web mode
+        console.log("ℹ️ Not in mini app environment (web mode):", error);
+        setIsInMiniApp(false);
+      } finally {
+        setIsReady(true);
       }
-
-      // SDK not found (web mode)
-      console.log("ℹ️ SDK not available - web mode");
-      setIsReady(true);
     };
 
-    initSDK();
+    initializeSDK();
   }, []);
 
-  return { isReady, isAvailable };
+  return { isReady, isInMiniApp };
 }
