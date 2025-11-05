@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Memory optimization
   experimental: {
     workerThreads: false,
     cpus: 1,
@@ -28,26 +27,62 @@ const nextConfig = {
 
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "imagedelivery.net" },
-      { protocol: "https", hostname: "*.neynar.com" },
-      { protocol: "https", hostname: "wrpcd.net" },
-      { protocol: "https", hostname: "gateway.pinata.cloud" },
-      { protocol: "https", hostname: "ipfs.io" },
-      { protocol: "https", hostname: "i.seadn.io" },
-      { protocol: "https", hostname: "openseauserdata.com" },
-      { protocol: "https", hostname: "i.imgur.com" },
-      { protocol: "https", hostname: "imgur.com" },
-      { protocol: "https", hostname: "pbs.twimg.com" },
-      { protocol: "https", hostname: "ui-avatars.com" },
-      { protocol: "https", hostname: "muse.write3.fun" },
-      { protocol: "https", hostname: "**" },
+      {
+        protocol: "https",
+        hostname: "imagedelivery.net",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.neynar.com",
+      },
+      {
+        protocol: "https",
+        hostname: "wrpcd.net",
+      },
+      {
+        protocol: "https",
+        hostname: "gateway.pinata.cloud",
+      },
+      {
+        protocol: "https",
+        hostname: "ipfs.io",
+      },
+      {
+        protocol: "https",
+        hostname: "i.seadn.io",
+      },
+      {
+        protocol: "https",
+        hostname: "openseauserdata.com",
+      },
+      {
+        protocol: "https",
+        hostname: "i.imgur.com",
+      },
+      {
+        protocol: "https",
+        hostname: "imgur.com",
+      },
+      {
+        protocol: "https",
+        hostname: "pbs.twimg.com",
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+      },
+      {
+        protocol: "https",
+        hostname: "muse.write3.fun",
+      },
     ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60,
     unoptimized: true,
   },
 
-  // 🔥 HEADERS untuk .well-known (BUKAN REDIRECT!)
   async headers() {
     return [
       {
@@ -59,7 +94,7 @@ const nextConfig = {
           },
           {
             key: "Cache-Control",
-            value: "public, max-age=3600", // Cache 1 hour
+            value: "public, max-age=3600",
           },
           {
             key: "Access-Control-Allow-Origin",
