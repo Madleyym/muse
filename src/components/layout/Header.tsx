@@ -15,6 +15,15 @@ export default function Header() {
   const { connect, connectors } = useConnect();
   const { farcasterData, hasFID, isMiniApp } = useFarcaster();
 
+  const handleManualConnect = async () => {
+    const injectedConnector = connectors.find(
+      (c) => c.id === "injected" || c.type === "injected"
+    );
+    if (injectedConnector) {
+      connect({ connector: injectedConnector });
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const dismissed = localStorage.getItem("miniAppInfoDismissed");
@@ -41,16 +50,6 @@ export default function Header() {
       document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
-
-  // Manual connect untuk mini app
-  const handleManualConnect = async () => {
-    const injectedConnector = connectors.find(
-      (c) => c.id === "injected" || c.type === "injected"
-    );
-    if (injectedConnector) {
-      connect({ connector: injectedConnector });
-    }
-  };
 
   return (
     <>
@@ -174,7 +173,7 @@ export default function Header() {
               <div className="flex items-center gap-x-3 lg:gap-x-2">
                 <div className="hidden lg:flex items-center gap-2">
                   {isMiniApp ? (
-                    // Mini App: Simple button tanpa modal
+                    // Mini app: Only Farcaster wallet button (NO modal)
                     <>
                       {isConnected ? (
                         <div className="flex items-center gap-2">
@@ -188,7 +187,6 @@ export default function Header() {
                           </Link>
 
                           <button
-                            onClick={() => {}}
                             type="button"
                             className="flex items-center gap-2 px-3 py-2 border border-purple-200 bg-white hover:bg-purple-50 rounded-[0.625rem] transition"
                           >
@@ -221,7 +219,7 @@ export default function Header() {
                       )}
                     </>
                   ) : (
-                    // Website: RainbowKit ConnectButton
+                    // Website: RainbowKit modal button
                     <ConnectButton.Custom>
                       {({
                         account,

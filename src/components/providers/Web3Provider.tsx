@@ -17,7 +17,23 @@ const queryClient = new QueryClient({
   },
 });
 
-const config = createConfig({
+// Website config: with injected + others
+const websiteConfig = createConfig({
+  chains: [base],
+  connectors: [
+    injected({
+      shimDisconnect: true,
+    }),
+  ],
+  transports: {
+    [base.id]: http(
+      process.env.NEXT_PUBLIC_BASE_RPC || "https://mainnet.base.org"
+    ),
+  },
+});
+
+// Mini app config: ONLY injected (Farcaster native wallet)
+const miniAppConfig = createConfig({
   chains: [base],
   connectors: [
     injected({
@@ -38,7 +54,6 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMounted(true);
 
-    // Check if we're in mini app
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
       const inMiniApp = path.startsWith("/miniapp");
@@ -51,14 +66,19 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     return null;
   }
 
+  // Choose config based on environment
+  const config = isMiniApp ? miniAppConfig : websiteConfig;
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         {isMiniApp ? (
-          // Mini App: NO RainbowKit modal
-          <>{children}</>
+          // Mini app: RainbowKit provider TANPA modal UI exposed
+          <RainbowKitProvider modalSize="compact" initialChain={base}>
+            {children}
+          </RainbowKitProvider>
         ) : (
-          // Website: WITH RainbowKit modal
+          // Website: RainbowKit provider DENGAN modal UI
           <RainbowKitProvider modalSize="compact" initialChain={base}>
             {children}
           </RainbowKitProvider>
