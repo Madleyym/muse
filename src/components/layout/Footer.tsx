@@ -7,7 +7,7 @@ import { useFarcaster } from "@/contexts/FarcasterContext";
 export default function Footer() {
   const { isMiniApp } = useFarcaster();
 
-  // ✅ MINIAPP FOOTER - Simplified & Compact
+  // ✅ MINIAPP FOOTER - Fixed
   if (isMiniApp) {
     return (
       <footer className="py-8 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 border-t border-purple-100/50">
@@ -32,8 +32,8 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Quick Links */}
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-6">
+          {/* Quick Links - WITH PIPES */}
+          <div className="flex items-center justify-center gap-2 mb-6">
             <a
               href="https://muse.write3.fun"
               target="_blank"
@@ -42,7 +42,9 @@ export default function Footer() {
             >
               Website
             </a>
-            <span className="text-neutral-300">·</span>
+
+            <span className="text-neutral-400">|</span>
+
             <a
               href="https://muse.write3.fun/gallery"
               target="_blank"
@@ -51,7 +53,9 @@ export default function Footer() {
             >
               Gallery
             </a>
-            <span className="text-neutral-300">·</span>
+
+            <span className="text-neutral-400">|</span>
+
             <a
               href="https://warpcast.com"
               target="_blank"
@@ -62,48 +66,50 @@ export default function Footer() {
             </a>
           </div>
 
-          {/* Bottom */}
+          {/* Bottom - WITH FARCASTER ICON */}
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
-              {/* Farcaster Icon */}
+              {/* ✅ Farcaster Icon - SVG Fallback */}
               <a
                 href="https://warpcast.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-slate-600 hover:text-purple-600 transition"
+                className="text-purple-600 hover:text-purple-700 transition"
+                title="Farcaster"
               >
-                <div className="relative w-4 h-4">
-                  <Image
-                    src="/assets/images/layout/farcaster.png"
-                    alt="Farcaster"
-                    width={16}
-                    height={16}
-                    className="object-contain"
-                  />
-                </div>
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 1000 1000"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M257.778 155.556H742.222V844.445H671.111V528.889H670.414C662.554 441.677 589.258 373.333 500 373.333C410.742 373.333 337.446 441.677 329.586 528.889H328.889V844.445H257.778V155.556Z" />
+                  <path d="M128.889 253.333L157.778 351.111H182.222V844.444H128.889V253.333Z" />
+                  <path d="M871.111 253.333L842.222 351.111H817.778V844.444H871.111V253.333Z" />
+                </svg>
               </a>
 
               <div className="h-4 w-px bg-purple-200"></div>
 
               {/* Muse Logo */}
-              <div className="relative w-4 h-4">
+              <div className="relative w-5 h-5">
                 <Image
                   src="/assets/Logo/Muse.png"
                   alt="Muse"
                   fill
-                  sizes="16px"
+                  sizes="20px"
                   className="object-contain"
                   quality={100}
                 />
               </div>
 
               {/* Base Logo */}
-              <div className="relative w-4 h-4">
+              <div className="relative w-5 h-5">
                 <Image
                   src="/assets/images/layout/eth-base.png"
                   alt="Base Network"
                   fill
-                  sizes="16px"
+                  sizes="20px"
                   className="object-contain"
                   quality={100}
                 />

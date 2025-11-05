@@ -1,7 +1,7 @@
 "use client";
 
 import MiniAppHeader from "@/components/layout/MiniAppHeader";
-import Footer from "@/components/layout/Footer"; // ✅ ADD
+import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import PricingSection from "@/components/sections/PricingSection";
 import { useFarcaster } from "@/contexts/FarcasterContext";
@@ -14,7 +14,7 @@ export default function MiniAppPage() {
 
   useEffect(() => {
     if (sdkReady && farcasterData) {
-      console.log("📱 MiniApp fully loaded:", {
+      console.log("MiniApp fully loaded:", {
         environment,
         user: farcasterData,
       });
@@ -26,6 +26,7 @@ export default function MiniAppPage() {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
         <div className="text-center">
           <div className="animate-spin mb-4 mx-auto w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full"></div>
+          {/* <p className="text-gray-600">🚀 Loading Muse...</p> */}
         </div>
       </div>
     );
@@ -59,7 +60,7 @@ export default function MiniAppPage() {
       <HeroSection />
       <PricingSection />
 
-      {/* ✅ ADD: Footer (auto-detects MiniApp) */}
+      {/* ✅ HANYA 1x FOOTER! */}
       <Footer />
     </main>
   );
