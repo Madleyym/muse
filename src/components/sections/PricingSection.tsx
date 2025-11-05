@@ -10,17 +10,24 @@ import { useMintNFT } from "@/hooks/useMintNFT";
 import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { getTransactionUrl } from "@/config/contracts";
 
-{
-  /* ✅ MINI APP COMPONENT - Auto-detect mood and show minting */
-}
+// Helper function to validate image URL
+const isValidImageUrl = (url: string | undefined | null): boolean => {
+  if (!url) return false;
+  
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+// MiniApp Component
 function MiniAppSection() {
   const { isConnected } = useAccount();
   const { farcasterData, setFarcasterData } = useFarcaster();
   const { isReady: sdkReady, user: sdkUser } = useFarcasterSDK();
 
-  {
-    /* ✅ Safe to call hooks here (inside component, not conditional) */
-  }
   const {
     mintFree,
     mintHD,
@@ -38,33 +45,35 @@ function MiniAppSection() {
   const [gradientIndex, setGradientIndex] = useState(0);
   const [localMintError, setLocalMintError] = useState<string>("");
   const [isDetectingMood, setIsDetectingMood] = useState(true);
+  const [pfpError, setPfpError] = useState(false);
 
-  {
-    /* ✅ Get current mood NFT */
-  }
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
     return nftMoods.find((mood) => mood.id === farcasterData.moodId) || null;
   }, [farcasterData]);
 
-  {
-    /* ✅ Auto-detect mood when miniapp loads */
-  }
+  // Check if PFP URL is valid
+  const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
+
+  // Auto-detect mood when miniapp loads
   useEffect(() => {
     const detectMood = async () => {
-      if (!sdkReady || !sdkUser || !isConnected) return;
+      // ✅ Changed: Don't wait for isConnected
+      if (!sdkReady || !sdkUser) {
+        console.log("[MiniApp] SDK not ready or no user");
+        return;
+      }
 
       if (farcasterData?.fid) {
+        console.log("[MiniApp] Mood already detected");
         setIsDetectingMood(false);
         return;
       }
 
       try {
         setIsDetectingMood(true);
+        console.log("[MiniApp] Detecting mood for FID:", sdkUser.fid);
 
-        {
-          /* ✅ Call API to detect mood based on FID */
-        }
         const response = await fetch(
           `/api/farcaster/verify?fid=${sdkUser.fid}`
         );
@@ -74,7 +83,7 @@ function MiniAppSection() {
           const pfpUrl =
             data.user.pfpUrl ||
             sdkUser.pfpUrl ||
-            "/assets/images/layout/connected.png";
+            "";
 
           setFarcasterData({
             fid: data.user.fid,
@@ -86,24 +95,19 @@ function MiniAppSection() {
             engagementScore: data.activity.engagementScore,
           });
 
-          console.log(
-            "[MiniApp] ✅ Mood detected:",
-            data.activity.suggestedMood
-          );
+          console.log("[MiniApp] Mood detected:", data.activity.suggestedMood);
         }
       } catch (error) {
-        console.error("[MiniApp] ❌ Failed to detect mood:", error);
+        console.error("[MiniApp] Failed to detect mood:", error);
       } finally {
         setIsDetectingMood(false);
       }
     };
 
     detectMood();
-  }, [sdkReady, sdkUser, isConnected, farcasterData?.fid, setFarcasterData]);
+  }, [sdkReady, sdkUser, farcasterData?.fid, setFarcasterData]); // ✅ Removed isConnected dependency
 
-  {
-    /* ✅ Animate gradient */
-  }
+  // Animate gradient
   useEffect(() => {
     if (!currentMood) return;
     const interval = setInterval(() => {
@@ -112,9 +116,7 @@ function MiniAppSection() {
     return () => clearInterval(interval);
   }, [currentMood]);
 
-  {
-    /* ✅ Auto-clear mint error */
-  }
+  // Auto-clear mint error
   useEffect(() => {
     if (mintError || localMintError) {
       const timer = setTimeout(() => {
@@ -123,6 +125,16 @@ function MiniAppSection() {
       return () => clearTimeout(timer);
     }
   }, [mintError, localMintError]);
+
+  // Reset PFP error when URL changes
+  useEffect(() => {
+    setPfpError(false);
+  }, [farcasterData?.pfpUrl]);
+
+  const handlePfpError = () => {
+    console.error("[MiniApp] Failed to load PFP:", farcasterData?.pfpUrl);
+    setPfpError(true);
+  };
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -154,6 +166,12 @@ function MiniAppSection() {
       setLocalMintError("User data not found");
       return;
     }
+    
+    if (!isConnected) {
+      setLocalMintError("Please connect your wallet first");
+      return;
+    }
+    
     setLocalMintError("");
     try {
       await mintFree({
@@ -174,6 +192,12 @@ function MiniAppSection() {
       setLocalMintError("User data not found");
       return;
     }
+    
+    if (!isConnected) {
+      setLocalMintError("Please connect your wallet first");
+      return;
+    }
+    
     setLocalMintError("");
     try {
       await mintHD({
@@ -189,7 +213,19 @@ function MiniAppSection() {
     }
   };
 
-  if (!sdkReady || !isConnected || isDetectingMood) {
+  // Fallback avatar component
+  const FallbackAvatar = () => {
+    const initial = farcasterData?.displayName?.charAt(0).toUpperCase() || "?";
+    
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
+        {initial}
+      </div>
+    );
+  };
+
+  // ✅ Loading state - ONLY while SDK is initializing or detecting mood
+  if (!sdkReady || isDetectingMood) {
     return (
       <section
         id="pricing"
@@ -230,14 +266,10 @@ function MiniAppSection() {
                 </svg>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
-                {!isConnected
-                  ? "Connecting Wallet..."
-                  : "Detecting Your Mood..."}
+                Detecting Your Mood...
               </h3>
               <p className="text-sm sm:text-base text-slate-600">
-                {!isConnected
-                  ? "Please approve in your Warpcast wallet"
-                  : "Reading your Farcaster activity"}
+                Reading your Farcaster activity
               </p>
             </div>
           </div>
@@ -246,6 +278,7 @@ function MiniAppSection() {
     );
   }
 
+  // ✅ Main content - Show even if wallet not connected
   return (
     <section
       id="pricing"
@@ -266,6 +299,7 @@ function MiniAppSection() {
           )}
         </div>
 
+        {/* ✅ Profile Card - Show even without wallet connection */}
         {farcasterData && currentMood && (
           <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
             <div
@@ -293,7 +327,7 @@ function MiniAppSection() {
                 <div className="flex-1 text-center sm:text-left">
                   <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
                     <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
-                      {farcasterData.pfpUrl ? (
+                      {hasValidPfp && farcasterData.pfpUrl ? (
                         <Image
                           src={farcasterData.pfpUrl}
                           alt={farcasterData.displayName}
@@ -301,20 +335,10 @@ function MiniAppSection() {
                           className="object-cover"
                           sizes="48px"
                           unoptimized
-                          onError={(e) => {
-                            console.error(
-                              "Failed to load PFP:",
-                              farcasterData.pfpUrl
-                            );
-                            (e.target as HTMLImageElement).style.display =
-                              "none";
-                          }}
+                          onError={handlePfpError}
                         />
-                      ) : null}
-                      {!farcasterData.pfpUrl && (
-                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
-                          {farcasterData.displayName.charAt(0).toUpperCase()}
-                        </div>
+                      ) : (
+                        <FallbackAvatar />
                       )}
                     </div>
                     <div>
@@ -358,6 +382,21 @@ function MiniAppSection() {
           </div>
         )}
 
+        {/* ✅ Warning if wallet not connected */}
+        {!isConnected && (
+          <div className="max-w-2xl mx-auto mb-6">
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
+              <p className="text-sm text-yellow-800 font-medium">
+                Connect your wallet to mint your NFT
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                Use the profile button in the header to connect
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Tier Selector */}
         <div className="max-w-4xl mx-auto mb-6">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
             <div className="grid grid-cols-2 gap-2">
@@ -388,6 +427,7 @@ function MiniAppSection() {
           </div>
         </div>
 
+        {/* Mobile Pricing Cards */}
         <div className="md:hidden max-w-md mx-auto">
           {selectedTier === "free" ? (
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
@@ -434,21 +474,12 @@ function MiniAppSection() {
                 }
                 className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
               >
-                {uploadingToIPFS && mintType === "free" && "Uploading..."}
-                {isPending &&
-                  mintType === "free" &&
-                  !uploadingToIPFS &&
-                  "Confirming..."}
-                {isConfirming &&
-                  mintType === "free" &&
-                  !uploadingToIPFS &&
-                  "Minting..."}
-                {isSuccess && mintType === "free" && "✓ Minted!"}
-                {(!uploadingToIPFS &&
-                  !isPending &&
-                  !isConfirming &&
-                  !isSuccess) ||
-                mintType !== "free"
+                {!isConnected && "Connect Wallet First"}
+                {isConnected && uploadingToIPFS && mintType === "free" && "Uploading..."}
+                {isConnected && isPending && mintType === "free" && !uploadingToIPFS && "Confirming..."}
+                {isConnected && isConfirming && mintType === "free" && !uploadingToIPFS && "Minting..."}
+                {isConnected && isSuccess && mintType === "free" && "Minted!"}
+                {isConnected && (!uploadingToIPFS && !isPending && !isConfirming && !isSuccess) || mintType !== "free"
                   ? "Mint Free NFT"
                   : ""}
               </button>
@@ -508,21 +539,12 @@ function MiniAppSection() {
                 }
                 className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
               >
-                {uploadingToIPFS && mintType === "hd" && "Uploading..."}
-                {isPending &&
-                  mintType === "hd" &&
-                  !uploadingToIPFS &&
-                  "Confirming..."}
-                {isConfirming &&
-                  mintType === "hd" &&
-                  !uploadingToIPFS &&
-                  "Minting..."}
-                {isSuccess && mintType === "hd" && "✓ Minted!"}
-                {(!uploadingToIPFS &&
-                  !isPending &&
-                  !isConfirming &&
-                  !isSuccess) ||
-                mintType !== "hd"
+                {!isConnected && "Connect Wallet First"}
+                {isConnected && uploadingToIPFS && mintType === "hd" && "Uploading..."}
+                {isConnected && isPending && mintType === "hd" && !uploadingToIPFS && "Confirming..."}
+                {isConnected && isConfirming && mintType === "hd" && !uploadingToIPFS && "Minting..."}
+                {isConnected && isSuccess && mintType === "hd" && "Minted!"}
+                {isConnected && (!uploadingToIPFS && !isPending && !isConfirming && !isSuccess) || mintType !== "hd"
                   ? "Mint HD NFT"
                   : ""}
               </button>
@@ -530,7 +552,9 @@ function MiniAppSection() {
           )}
         </div>
 
+        {/* Desktop Pricing Cards */}
         <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* FREE Card */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
             <div className="text-sm font-medium text-purple-600 mb-2">
               FREE MINT
@@ -575,26 +599,18 @@ function MiniAppSection() {
               }
               className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
             >
-              {uploadingToIPFS && mintType === "free" && "Uploading..."}
-              {isPending &&
-                mintType === "free" &&
-                !uploadingToIPFS &&
-                "Confirming..."}
-              {isConfirming &&
-                mintType === "free" &&
-                !uploadingToIPFS &&
-                "Minting..."}
-              {isSuccess && mintType === "free" && "✓ Minted!"}
-              {(!uploadingToIPFS &&
-                !isPending &&
-                !isConfirming &&
-                !isSuccess) ||
-              mintType !== "free"
+              {!isConnected && "Connect Wallet First"}
+              {isConnected && uploadingToIPFS && mintType === "free" && "Uploading..."}
+              {isConnected && isPending && mintType === "free" && !uploadingToIPFS && "Confirming..."}
+              {isConnected && isConfirming && mintType === "free" && !uploadingToIPFS && "Minting..."}
+              {isConnected && isSuccess && mintType === "free" && "Minted!"}
+              {isConnected && ((!uploadingToIPFS && !isPending && !isConfirming && !isSuccess) || mintType !== "free")
                 ? "Mint Free NFT"
                 : ""}
             </button>
           </div>
 
+          {/* HD Card */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-purple-500 hover:border-purple-600 hover:shadow-2xl transition-all relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
               MOST POPULAR
@@ -612,9 +628,7 @@ function MiniAppSection() {
               {isDevAddress ? "FREE" : "0.001 ETH"}
             </div>
             <p className="text-slate-600 mb-6">
-              {isDevAddress
-                ? "Developer Access"
-                : "For collectors and believers"}
+              {isDevAddress ? "Developer Access" : "For collectors and believers"}
             </p>
             <ul className="space-y-3 mb-8">
               {[
@@ -651,27 +665,19 @@ function MiniAppSection() {
               }
               className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
             >
-              {uploadingToIPFS && mintType === "hd" && "Uploading..."}
-              {isPending &&
-                mintType === "hd" &&
-                !uploadingToIPFS &&
-                "Confirming..."}
-              {isConfirming &&
-                mintType === "hd" &&
-                !uploadingToIPFS &&
-                "Minting..."}
-              {isSuccess && mintType === "hd" && "✓ Minted!"}
-              {(!uploadingToIPFS &&
-                !isPending &&
-                !isConfirming &&
-                !isSuccess) ||
-              mintType !== "hd"
+              {!isConnected && "Connect Wallet First"}
+              {isConnected && uploadingToIPFS && mintType === "hd" && "Uploading..."}
+              {isConnected && isPending && mintType === "hd" && !uploadingToIPFS && "Confirming..."}
+              {isConnected && isConfirming && mintType === "hd" && !uploadingToIPFS && "Minting..."}
+              {isConnected && isSuccess && mintType === "hd" && "Minted!"}
+              {isConnected && ((!uploadingToIPFS && !isPending && !isConfirming && !isSuccess) || mintType !== "hd")
                 ? "Mint HD NFT"
                 : ""}
             </button>
           </div>
         </div>
 
+        {/* Success Notification */}
         {isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -712,6 +718,7 @@ function MiniAppSection() {
           </div>
         )}
 
+        {/* Error Notification */}
         {(mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
