@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { nftMoods } from "@/data/nftMoods";
@@ -48,6 +48,8 @@ export default function PricingMiniApp() {
   const [hasMinted, setHasMinted] = useState(false);
   const [checkingMinted, setCheckingMinted] = useState(false);
 
+  const checkedFidRef = useRef<number | null>(null);
+
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
     const found = nftMoods.find((mood) => mood.id === farcasterData.moodId);
@@ -69,6 +71,8 @@ export default function PricingMiniApp() {
   useEffect(() => {
     const checkMinted = async () => {
       if (!farcasterData?.fid || !checkIfAlreadyMinted) return;
+      if (checkedFidRef.current === farcasterData.fid) return;
+
       setCheckingMinted(true);
       try {
         console.log(
@@ -76,9 +80,12 @@ export default function PricingMiniApp() {
           farcasterData.fid
         );
         const minted = await checkIfAlreadyMinted(farcasterData.fid);
+        checkedFidRef.current = farcasterData.fid;
         setHasMinted(minted);
         if (minted) {
           console.log("[MiniApp] ⚠️ FID already minted");
+        } else {
+          console.log("[MiniApp] ✅ FID can mint");
         }
       } catch (error: any) {
         console.error("[MiniApp] Check minted error:", error);
@@ -247,6 +254,16 @@ export default function PricingMiniApp() {
 
   const handleCloseSuccess = () => {
     setShowSuccessNotification(false);
+
+    if (farcasterData?.fid && checkIfAlreadyMinted) {
+      checkedFidRef.current = null;
+
+      checkIfAlreadyMinted(farcasterData.fid).then((minted) => {
+        setHasMinted(minted);
+        checkedFidRef.current = farcasterData.fid;
+        console.log("[MiniApp] 🔄 Re-checked FID status:", minted);
+      });
+    }
   };
 
   const handleCloseError = () => {
@@ -513,8 +530,7 @@ export default function PricingMiniApp() {
                     Already Minted!
                   </h3>
                   <p className="text-sm text-orange-800 mb-3">
-                    This FID has already minted an NFT. Each FID can only mint
-                    once to ensure fairness.
+                    This FID already minted — only one mint allowed.
                   </p>
                 </div>
               </div>
@@ -971,6 +987,7 @@ export default function PricingMiniApp() {
                   />
                 </svg>
               </div>
+
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-green-900 text-sm mb-0.5">
                   Minted Successfully! 🎉
@@ -978,23 +995,21 @@ export default function PricingMiniApp() {
                 <p className="text-xs text-slate-500 mb-2 truncate">
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
-                <div className="flex gap-2">
-                  <a
-                    href={getTransactionUrl(hash)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 text-center gradient-bg text-white text-xs py-1.5 px-2 rounded-md hover:opacity-90 transition font-medium"
-                  >
-                    View on Basescan
-                  </a>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="flex-1 text-center border border-slate-300 text-slate-700 text-xs py-1.5 px-2 rounded-md hover:bg-slate-50 transition font-medium"
-                  >
-                    Mint Again
-                  </button>
-                </div>
+
+                <a
+                  href={getTransactionUrl(hash)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center gradient-bg text-white text-xs py-2 px-3 rounded-lg hover:opacity-90 transition font-medium"
+                >
+                  View on Basescan
+                </a>
+
+                <p className="text-xs text-slate-500 text-center mt-2">
+                  Each FID can only mint once
+                </p>
               </div>
+
               <button
                 onClick={handleCloseSuccess}
                 className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition -mt-1 cursor-pointer"
@@ -1016,6 +1031,7 @@ export default function PricingMiniApp() {
                 </svg>
               </button>
             </div>
+
             <div className="mt-2 h-0.5 bg-green-100 rounded-full overflow-hidden">
               <div className="h-full bg-green-500 animate-shrink-slow" />
             </div>

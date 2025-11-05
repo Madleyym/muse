@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
@@ -9,10 +9,8 @@ import { nftMoods } from "@/data/nftMoods";
 import { useMintNFT } from "@/hooks/useMintNFT";
 import { getTransactionUrl } from "@/config/contracts";
 
-// Helper function to validate image URL
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
-
   try {
     const parsed = new URL(url);
     return parsed.protocol === "https:";
@@ -28,6 +26,7 @@ export default function PricingWebsite() {
   const {
     mintFree,
     mintHD,
+    checkIfAlreadyMinted,
     mintType,
     isPending,
     isConfirming,
@@ -48,12 +47,14 @@ export default function PricingWebsite() {
   const [pfpError, setPfpError] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [hasMinted, setHasMinted] = useState(false);
+  const [checkingMinted, setCheckingMinted] = useState(false);
+
+  const checkedFidRef = useRef<number | null>(null);
 
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
-
     const found = nftMoods.find((mood) => mood.id === farcasterData.moodId);
-
     if (!found) {
       console.error(
         "[WebsiteSection] ❌ Mood not found for ID:",
@@ -64,11 +65,38 @@ export default function PricingWebsite() {
         nftMoods.map((m) => m.id)
       );
     }
-
     return found || null;
   }, [farcasterData]);
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
+
+  useEffect(() => {
+    const checkMinted = async () => {
+      if (!farcasterData?.fid || !checkIfAlreadyMinted) return;
+      if (checkedFidRef.current === farcasterData.fid) return;
+
+      setCheckingMinted(true);
+      try {
+        console.log(
+          "[Website] Checking mint status for FID:",
+          farcasterData.fid
+        );
+        const minted = await checkIfAlreadyMinted(farcasterData.fid);
+        checkedFidRef.current = farcasterData.fid;
+        setHasMinted(minted);
+        if (minted) {
+          console.log("[Website] ⚠️ FID already minted");
+        } else {
+          console.log("[Website] ✅ FID can mint");
+        }
+      } catch (error: any) {
+        console.error("[Website] Check minted error:", error);
+      } finally {
+        setCheckingMinted(false);
+      }
+    };
+    checkMinted();
+  }, [farcasterData?.fid, checkIfAlreadyMinted]);
 
   useEffect(() => {
     setPfpError(false);
@@ -84,7 +112,6 @@ export default function PricingWebsite() {
 
   const FallbackAvatar = () => {
     const initial = farcasterData?.displayName?.charAt(0).toUpperCase() || "?";
-
     return (
       <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
         {initial}
@@ -118,24 +145,19 @@ export default function PricingWebsite() {
     return error;
   };
 
-  // ✅ Show success notification when mint succeeds
   useEffect(() => {
     if (isSuccess && hash) {
       setShowSuccessNotification(true);
     }
   }, [isSuccess, hash]);
 
-  // ✅ Show error notification when mint fails
   useEffect(() => {
     if (mintError || localMintError) {
       setShowErrorNotification(true);
-
-      // Auto-hide after 5 seconds
       const timer = setTimeout(() => {
         setShowErrorNotification(false);
         setLocalMintError("");
       }, 5000);
-
       return () => clearTimeout(timer);
     }
   }, [mintError, localMintError]);
@@ -173,7 +195,6 @@ export default function PricingWebsite() {
       const response = await fetch(`/api/farcaster/verify?fid=${fid}`);
       const data = await response.json();
 
-      // ✅ DEBUG LOG
       console.log("[WebsiteSection] 📦 API Response:", {
         success: data.success,
         mood: data.activity?.suggestedMood,
@@ -192,8 +213,6 @@ export default function PricingWebsite() {
       const validPfpUrl = isValidImageUrl(data.user.pfpUrl)
         ? data.user.pfpUrl
         : "";
-
-      // ✅ VALIDATE MOOD EXISTS
       const moodExists = nftMoods.find(
         (m) => m.id === data.activity.suggestedMoodId
       );
@@ -207,7 +226,6 @@ export default function PricingWebsite() {
           "[WebsiteSection] Available moods:",
           nftMoods.map((m) => m.id)
         );
-        // Use fallback
         data.activity.suggestedMood = "Creative Mind";
         data.activity.suggestedMoodId = "creative-mind";
       }
@@ -280,12 +298,20 @@ export default function PricingWebsite() {
     }
   };
 
-  // ✅ Handle close success notification
   const handleCloseSuccess = () => {
     setShowSuccessNotification(false);
+
+    if (farcasterData?.fid && checkIfAlreadyMinted) {
+      checkedFidRef.current = null;
+
+      checkIfAlreadyMinted(farcasterData.fid).then((minted) => {
+        setHasMinted(minted);
+        checkedFidRef.current = farcasterData.fid;
+        console.log("[Website] 🔄 Re-checked FID status:", minted);
+      });
+    }
   };
 
-  // ✅ Handle close error notification
   const handleCloseError = () => {
     setShowErrorNotification(false);
     setLocalMintError("");
@@ -310,7 +336,6 @@ export default function PricingWebsite() {
     const fromRgb = hexToRgb(gradient.from);
     const toRgb = hexToRgb(gradient.to);
     const viaRgb = gradient.via ? hexToRgb(gradient.via) : null;
-
     return viaRgb
       ? `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${viaRgb.r},${viaRgb.g},${viaRgb.b}) 50%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`
       : `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`;
@@ -339,7 +364,6 @@ export default function PricingWebsite() {
           </p>
         </div>
 
-        {/* Step 1: Connect Wallet */}
         {!isConnected && step === "connect" && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 border-2 border-purple-200 text-center shadow-lg">
@@ -370,7 +394,6 @@ export default function PricingWebsite() {
           </div>
         )}
 
-        {/* Step 2: Enter FID */}
         {isConnected && step === "fid" && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border-2 border-purple-200 shadow-lg">
@@ -437,7 +460,6 @@ export default function PricingWebsite() {
                     Find it here
                   </a>
                 </div>
-
                 <button
                   onClick={() => setStep("preview")}
                   className="w-full text-center text-sm text-slate-600 hover:text-purple-600 transition py-2 hover:bg-purple-50 rounded-lg"
@@ -479,7 +501,6 @@ export default function PricingWebsite() {
           </div>
         )}
 
-        {/* Step 3: Preview & Mint */}
         {isConnected && step === "preview" && (
           <>
             {farcasterData && currentMood && (
@@ -566,7 +587,38 @@ export default function PricingWebsite() {
               </div>
             )}
 
-            {/* Mobile Tier Selector */}
+            {hasMinted && !checkingMinted && (
+              <div className="max-w-2xl mx-auto mb-6">
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-6 shadow-lg">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-orange-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-orange-900 mb-2">
+                        Already Minted!
+                      </h3>
+                      <p className="text-sm text-orange-800 mb-3">
+                        This FID already minted — only one mint allowed.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="max-w-4xl mx-auto mb-6">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
                 <div className="grid grid-cols-2 gap-2">
@@ -597,7 +649,6 @@ export default function PricingWebsite() {
               </div>
             </div>
 
-            {/* Mobile Pricing Cards */}
             <div className="md:hidden max-w-md mx-auto">
               {selectedTier === "free" ? (
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
@@ -641,6 +692,8 @@ export default function PricingWebsite() {
                   <button
                     onClick={handleMintFree}
                     disabled={
+                      checkingMinted ||
+                      hasMinted ||
                       !isConnected ||
                       (mintType === "free" &&
                         (uploadingToIPFS || isPending || isConfirming)) ||
@@ -648,23 +701,37 @@ export default function PricingWebsite() {
                     }
                     className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
                   >
-                    {uploadingToIPFS &&
+                    {checkingMinted && "Checking..."}
+                    {!checkingMinted && hasMinted && "Already Minted"}
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      uploadingToIPFS &&
                       mintType === "free" &&
                       "Uploading to IPFS..."}
-                    {isPending &&
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      isPending &&
                       mintType === "free" &&
                       !uploadingToIPFS &&
                       "Confirm in Wallet..."}
-                    {isConfirming &&
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      isConfirming &&
                       mintType === "free" &&
                       !uploadingToIPFS &&
                       "Minting NFT..."}
-                    {isSuccess && mintType === "free" && "Minted Successfully"}
-                    {((!uploadingToIPFS &&
-                      !isPending &&
-                      !isConfirming &&
-                      !isSuccess) ||
-                      mintType !== "free") &&
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      isSuccess &&
+                      mintType === "free" &&
+                      "Minted Successfully"}
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      ((!uploadingToIPFS &&
+                        !isPending &&
+                        !isConfirming &&
+                        !isSuccess) ||
+                        mintType !== "free") &&
                       "Mint Free NFT"}
                   </button>
                 </div>
@@ -720,6 +787,8 @@ export default function PricingWebsite() {
                   <button
                     onClick={handleMintHD}
                     disabled={
+                      checkingMinted ||
+                      hasMinted ||
                       !isConnected ||
                       (mintType === "hd" &&
                         (uploadingToIPFS || isPending || isConfirming)) ||
@@ -727,30 +796,43 @@ export default function PricingWebsite() {
                     }
                     className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
                   >
-                    {uploadingToIPFS &&
+                    {checkingMinted && "Checking..."}
+                    {!checkingMinted && hasMinted && "Already Minted"}
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      uploadingToIPFS &&
                       mintType === "hd" &&
                       "Uploading to IPFS..."}
-                    {isPending &&
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      isPending &&
                       mintType === "hd" &&
                       !uploadingToIPFS &&
                       "Confirm in Wallet..."}
-                    {isConfirming &&
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      isConfirming &&
                       mintType === "hd" &&
                       !uploadingToIPFS &&
                       "Minting NFT..."}
-                    {isSuccess && mintType === "hd" && "Minted Successfully"}
-                    {((!uploadingToIPFS &&
-                      !isPending &&
-                      !isConfirming &&
-                      !isSuccess) ||
-                      mintType !== "hd") &&
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      isSuccess &&
+                      mintType === "hd" &&
+                      "Minted Successfully"}
+                    {!checkingMinted &&
+                      !hasMinted &&
+                      ((!uploadingToIPFS &&
+                        !isPending &&
+                        !isConfirming &&
+                        !isSuccess) ||
+                        mintType !== "hd") &&
                       "Mint HD NFT"}
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Desktop Pricing Cards */}
             <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
                 <div className="text-sm font-medium text-purple-600 mb-2">
@@ -791,6 +873,8 @@ export default function PricingWebsite() {
                 <button
                   onClick={handleMintFree}
                   disabled={
+                    checkingMinted ||
+                    hasMinted ||
                     !isConnected ||
                     (mintType === "free" &&
                       (uploadingToIPFS || isPending || isConfirming)) ||
@@ -798,23 +882,37 @@ export default function PricingWebsite() {
                   }
                   className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
                 >
-                  {uploadingToIPFS &&
+                  {checkingMinted && "Checking..."}
+                  {!checkingMinted && hasMinted && "Already Minted"}
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    uploadingToIPFS &&
                     mintType === "free" &&
                     "Uploading to IPFS..."}
-                  {isPending &&
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    isPending &&
                     mintType === "free" &&
                     !uploadingToIPFS &&
                     "Confirm in Wallet..."}
-                  {isConfirming &&
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    isConfirming &&
                     mintType === "free" &&
                     !uploadingToIPFS &&
                     "Minting NFT..."}
-                  {isSuccess && mintType === "free" && "Minted Successfully"}
-                  {((!uploadingToIPFS &&
-                    !isPending &&
-                    !isConfirming &&
-                    !isSuccess) ||
-                    mintType !== "free") &&
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    isSuccess &&
+                    mintType === "free" &&
+                    "Minted Successfully"}
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    ((!uploadingToIPFS &&
+                      !isPending &&
+                      !isConfirming &&
+                      !isSuccess) ||
+                      mintType !== "free") &&
                     "Mint Free NFT"}
                 </button>
               </div>
@@ -868,6 +966,8 @@ export default function PricingWebsite() {
                 <button
                   onClick={handleMintHD}
                   disabled={
+                    checkingMinted ||
+                    hasMinted ||
                     !isConnected ||
                     (mintType === "hd" &&
                       (uploadingToIPFS || isPending || isConfirming)) ||
@@ -875,23 +975,37 @@ export default function PricingWebsite() {
                   }
                   className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
                 >
-                  {uploadingToIPFS &&
+                  {checkingMinted && "Checking..."}
+                  {!checkingMinted && hasMinted && "Already Minted"}
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    uploadingToIPFS &&
                     mintType === "hd" &&
                     "Uploading to IPFS..."}
-                  {isPending &&
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    isPending &&
                     mintType === "hd" &&
                     !uploadingToIPFS &&
                     "Confirm in Wallet..."}
-                  {isConfirming &&
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    isConfirming &&
                     mintType === "hd" &&
                     !uploadingToIPFS &&
                     "Minting NFT..."}
-                  {isSuccess && mintType === "hd" && "Minted Successfully"}
-                  {((!uploadingToIPFS &&
-                    !isPending &&
-                    !isConfirming &&
-                    !isSuccess) ||
-                    mintType !== "hd") &&
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    isSuccess &&
+                    mintType === "hd" &&
+                    "Minted Successfully"}
+                  {!checkingMinted &&
+                    !hasMinted &&
+                    ((!uploadingToIPFS &&
+                      !isPending &&
+                      !isConfirming &&
+                      !isSuccess) ||
+                      mintType !== "hd") &&
                     "Mint HD NFT"}
                 </button>
               </div>
@@ -904,6 +1018,8 @@ export default function PricingWebsite() {
                     setStep("fid");
                     setFarcasterData(null);
                     setFid("");
+                    checkedFidRef.current = null;
+                    setHasMinted(false);
                   }}
                   className="text-sm text-slate-600 hover:text-purple-600 transition"
                 >
@@ -914,7 +1030,6 @@ export default function PricingWebsite() {
           </>
         )}
 
-        {/* ✅ SUCCESS NOTIFICATION - FIXED */}
         {showSuccessNotification && isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -942,22 +1057,18 @@ export default function PricingWebsite() {
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
 
-                <div className="flex gap-2">
-                  <a
-                    href={getTransactionUrl(hash)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 text-center gradient-bg text-white text-xs py-1.5 px-2 rounded-md hover:opacity-90 transition font-medium"
-                  >
-                    View on Basescan
-                  </a>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="flex-1 text-center border border-slate-300 text-slate-700 text-xs py-1.5 px-2 rounded-md hover:bg-slate-50 transition font-medium"
-                  >
-                    Mint Again
-                  </button>
-                </div>
+                <a
+                  href={getTransactionUrl(hash)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center gradient-bg text-white text-xs py-2 px-3 rounded-lg hover:opacity-90 transition font-medium"
+                >
+                  View on Basescan
+                </a>
+
+                <p className="text-xs text-slate-500 text-center mt-2">
+                  Each FID can only mint once
+                </p>
               </div>
 
               <button
@@ -988,7 +1099,6 @@ export default function PricingWebsite() {
           </div>
         )}
 
-        {/* ✅ ERROR NOTIFICATION - FIXED */}
         {showErrorNotification && (mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -1036,7 +1146,6 @@ export default function PricingWebsite() {
                 </svg>
               </button>
             </div>
-
             <div className="mt-3 h-1 bg-red-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 animate-shrink" />
             </div>
