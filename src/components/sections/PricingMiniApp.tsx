@@ -403,41 +403,48 @@ export default function PricingMiniApp() {
           )}
         </div>
 
-        {/* Profile Card */}
+        {/* Profile Card - ID CARD STYLE */}
         {farcasterData && currentMood && (
-          <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
+          <div className="max-w-4xl mx-auto mb-6 sm:mb-8">
             <div
-              className="rounded-2xl p-4 sm:p-6 text-white shadow-xl transition-all duration-500"
+              className="rounded-3xl p-6 sm:p-8 text-white shadow-2xl transition-all duration-500 overflow-hidden relative"
               style={{
                 background: getGradientStyle(
                   currentMood.gradients[gradientIndex]
                 ),
               }}
             >
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex-shrink-0">
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
-                  <div className="relative w-full h-full p-3 sm:p-4">
-                    <Image
-                      src={currentMood.baseImage}
-                      alt={currentMood.name}
-                      fill
-                      className="object-contain drop-shadow-2xl"
-                      sizes="(max-width: 640px) 144px, 192px"
-                    />
-                  </div>
-                </div>
+              {/* Decorative Circles Background */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
 
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
-                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
+              <div className="relative z-10 grid md:grid-cols-[300px,1fr] gap-6 sm:gap-8">
+                {/* ✅ LEFT SECTION - Visual Elements */}
+                <div className="flex flex-col items-center justify-center space-y-4">
+                  {/* Large Avatar/Mood Image */}
+                  <div className="relative w-40 h-40 sm:w-48 sm:h-48">
+                    <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-3xl"></div>
+                    <div className="relative w-full h-full p-4">
+                      <Image
+                        src={currentMood.baseImage}
+                        alt={currentMood.name}
+                        fill
+                        className="object-contain drop-shadow-2xl"
+                        sizes="192px"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Small Profile Picture & User Info */}
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="relative w-16 h-16 rounded-full overflow-hidden border-4 border-white/40 bg-white/20 shadow-lg">
                       {hasValidPfp && farcasterData.pfpUrl ? (
                         <Image
                           src={farcasterData.pfpUrl}
                           alt={farcasterData.displayName}
                           fill
                           className="object-cover"
-                          sizes="48px"
+                          sizes="64px"
                           unoptimized
                           onError={handlePfpError}
                         />
@@ -445,39 +452,76 @@ export default function PricingMiniApp() {
                         <FallbackAvatar />
                       )}
                     </div>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold">
+
+                    <div className="text-center">
+                      <h3 className="text-lg sm:text-xl font-bold">
                         {farcasterData.displayName}
                       </h3>
-                      <p className="text-white/80 text-xs sm:text-sm">
-                        @{farcasterData.username} · FID {farcasterData.fid}
+                      <p className="text-white/70 text-xs sm:text-sm">
+                        @{farcasterData.username}
+                      </p>
+                      <p className="text-white/60 text-xs">
+                        FID {farcasterData.fid}
                       </p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 sm:p-4">
-                    <div className="text-xl sm:text-2xl font-bold mb-1">
+                {/* ✅ RIGHT SECTION - Text Information */}
+                <div className="flex flex-col justify-between space-y-4">
+                  {/* Top: Mood Name & Description */}
+                  <div className="space-y-2">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
                       {currentMood.name}
-                    </div>
-                    <div className="text-xs sm:text-sm text-white/80 mb-3">
+                    </h2>
+                    <p className="text-base sm:text-lg text-white/80 leading-relaxed">
                       {currentMood.description}
-                    </div>
-                    <div className="flex items-center justify-center sm:justify-start gap-3 sm:gap-4 flex-wrap">
-                      <div>
-                        <div className="text-xs text-white/70">
+                    </p>
+                  </div>
+
+                  {/* Bottom: Metrics */}
+                  <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/20">
+                    <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                      {/* Engagement Score */}
+                      <div className="text-center">
+                        <div className="text-xs sm:text-sm text-white/60 uppercase tracking-wide mb-1">
                           Engagement Score
                         </div>
-                        <div className="text-lg sm:text-xl font-bold">
+                        <div className="text-3xl sm:text-4xl font-bold">
                           {farcasterData.engagementScore.toLocaleString()}
                         </div>
                       </div>
-                      <div className="h-6 sm:h-8 w-px bg-white/30"></div>
-                      <div>
-                        <div className="text-xs text-white/70">Category</div>
-                        <div className="text-lg sm:text-xl font-bold uppercase">
+
+                      {/* Divider */}
+                      <div className="flex items-center justify-center">
+                        <div className="w-px h-full bg-white/30"></div>
+                      </div>
+
+                      {/* Category */}
+                      <div className="text-center -ml-4">
+                        <div className="text-xs sm:text-sm text-white/60 uppercase tracking-wide mb-1">
+                          Category
+                        </div>
+                        <div className="text-3xl sm:text-4xl font-bold uppercase">
                           {currentMood.category}
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Optional: Small Badge */}
+                  <div className="flex justify-end">
+                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="text-xs sm:text-sm font-semibold">
+                        Mood NFT
+                      </span>
                     </div>
                   </div>
                 </div>
