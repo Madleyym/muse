@@ -9,25 +9,81 @@ import { nftMoods } from "@/data/nftMoods";
 import { useMintNFT } from "@/hooks/useMintNFT";
 import { getTransactionUrl } from "@/config/contracts";
 
-export default function PricingSection() {
+// ✅ MINI APP COMPONENT - NO hooks dependency
+function MiniAppSection() {
+  return (
+    <section
+      id="pricing"
+      className="py-12 sm:py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50"
+    >
+      <div className="max-w-7xl mx-auto px-4 xl:px-0">
+        <div className="text-center mb-8 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text">
+            Mint Your Mood NFT
+          </h2>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-600 px-4">
+            Farcaster mini app minting
+          </p>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 border-2 border-purple-200 text-center shadow-lg">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center animate-pulse">
+              <svg
+                className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 animate-spin"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                  opacity="0.25"
+                ></circle>
+                <path
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
+              Connecting Your Wallet...
+            </h3>
+            <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto">
+              Please approve the connection in your wallet
+            </p>
+            <div className="text-sm text-purple-600">
+              Auto-connect in progress
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ✅ WEBSITE COMPONENT - WITH useMintNFT hook
+function WebsiteSection() {
   const { isConnected } = useAccount();
-  const { farcasterData, setFarcasterData, isMiniApp } = useFarcaster();
+  const { farcasterData, setFarcasterData } = useFarcaster();
 
-  // ✅ HANYA panggil useMintNFT di WEBSITE
-  const mintHook = !isMiniApp ? useMintNFT() : null;
-
+  // ✅ NOW SAFE - hooks called unconditionally inside component
   const {
-    mintFree = async () => {},
-    mintHD = async () => {},
-    mintType = null,
-    isPending = false,
-    isConfirming = false,
-    isSuccess = false,
-    uploadingToIPFS = false,
-    isDevAddress = false,
-    error: mintError = null,
-    hash = null,
-  } = mintHook || {};
+    mintFree,
+    mintHD,
+    mintType,
+    isPending,
+    isConfirming,
+    isSuccess,
+    uploadingToIPFS,
+    isDevAddress,
+    error: mintError,
+    hash,
+  } = useMintNFT();
 
   const [step, setStep] = useState<"connect" | "fid" | "preview">("connect");
   const [fid, setFid] = useState("");
@@ -201,64 +257,6 @@ export default function PricingSection() {
       : `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`;
   };
 
-  // ✅ EARLY RETURN untuk mini app
-  if (isMiniApp) {
-    return (
-      <section
-        id="pricing"
-        className="py-12 sm:py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50"
-      >
-        <div className="max-w-7xl mx-auto px-4 xl:px-0">
-          <div className="text-center mb-8 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text">
-              Mint Your Mood NFT
-            </h2>
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-600 px-4">
-              Farcaster mini app minting
-            </p>
-          </div>
-
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 border-2 border-purple-200 text-center shadow-lg">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center animate-pulse">
-                <svg
-                  className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 animate-spin"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    fill="none"
-                    opacity="0.25"
-                  ></circle>
-                  <path
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
-                Connecting Your Wallet...
-              </h3>
-              <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto">
-                Please approve the connection in your wallet
-              </p>
-              <div className="text-sm text-purple-600">
-                Auto-connect in progress
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // ✅ WEBSITE: Full minting interface
   return (
     <section
       id="pricing"
@@ -976,4 +974,10 @@ export default function PricingSection() {
       </div>
     </section>
   );
+}
+
+export default function PricingSection() {
+  const { isMiniApp } = useFarcaster();
+
+  return isMiniApp ? <MiniAppSection /> : <WebsiteSection />;
 }
