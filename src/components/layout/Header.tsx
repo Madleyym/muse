@@ -45,7 +45,6 @@ export default function Header() {
     <>
       <header className="py-3 pb-0">
         <div className="max-w-7xl mx-auto px-4 xl:px-0">
-          {/* 🔥 FIX: Conditional grid layout based on isMiniApp */}
           <div
             className={`bg-white/90 backdrop-blur-md flex items-center justify-between gap-x-4 rounded-2xl py-2.5 pl-5 pr-2.5 shadow-[0_2px_10px_0px_rgba(139,92,246,0.2)] border border-purple-100/50 lg:rounded-[1.375rem] ${
               !isMiniApp
@@ -78,7 +77,6 @@ export default function Header() {
               )}
             </div>
 
-            {/* Navigation - Only show when NOT Mini App */}
             {!isMiniApp && (
               <nav className="hidden lg:block">
                 <ul className="flex items-center">
@@ -154,7 +152,6 @@ export default function Header() {
               </nav>
             )}
 
-            {/* Right section - 🔥 FIX: Remove justify-self-end when Mini App */}
             <div
               className={`flex items-center gap-x-10 ${
                 !isMiniApp ? "lg:justify-self-end" : ""
@@ -177,8 +174,6 @@ export default function Header() {
                       const ready = mounted;
                       const connected = ready && account && chain;
 
-                      // 🔥 GUNAKAN variable dari top-level, bukan call hook lagi
-                      // DI FARCASTER: Hide connect button saat auto-connecting
                       if (isMiniApp && isAutoConnecting && !connected) {
                         return (
                           <div className="flex items-center gap-2 px-3 py-2 text-xs text-purple-600">
@@ -254,7 +249,6 @@ export default function Header() {
                                 >
                                   {hasFID ? "Mint Now" : "Setup FID"}
                                   <span className="ml-1 text-purple-200">
-                                    {" "}
                                     - FREE
                                   </span>
                                 </Link>
@@ -316,7 +310,6 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <>
           <div
@@ -369,7 +362,7 @@ export default function Header() {
                 <div className="mb-4 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20 animate-fade-in">
                   <div className="flex items-start gap-2 mb-3">
                     <div className="flex-shrink-0 w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                      <span className="text-sm">✨</span>
+                      <span className="text-sm">*</span>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
@@ -464,9 +457,7 @@ export default function Header() {
               )}
             </div>
 
-            {/* Menu Content */}
             <div className="px-4 py-4">
-              {/* Navigation - Hidden in Mini App */}
               {!isMiniApp && (
                 <nav className="mb-4">
                   <ul className="space-y-1">
@@ -599,7 +590,6 @@ export default function Header() {
                 </nav>
               )}
 
-              {/* Action Buttons */}
               <div className="border-t border-neutral-200 pt-4 space-y-3">
                 <ConnectButton.Custom>
                   {({ account, chain, openConnectModal, mounted }) => {

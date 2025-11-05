@@ -255,11 +255,10 @@ export default function PricingSection() {
                     Please approve the connection in your wallet extension
                   </p>
                   <div className="text-sm text-purple-600">
-                    ✅ Auto-connect in progress
+                    Auto-connect in progress
                   </div>
                 </>
               ) : (
-                // 🔥 DI WEBSITE: Normal Connect button
                 <>
                   <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center">
                     <svg
@@ -487,7 +486,6 @@ export default function PricingSection() {
               </div>
             )}
 
-            {/* ✨ TAB SWITCH FOR MOBILE */}
             <div className="max-w-4xl mx-auto mb-6">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
                 <div className="grid grid-cols-2 gap-2">
@@ -518,7 +516,6 @@ export default function PricingSection() {
               </div>
             </div>
 
-            {/* MOBILE: Single Card View */}
             <div className="md:hidden max-w-md mx-auto">
               {selectedTier === "free" ? (
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
@@ -673,7 +670,6 @@ export default function PricingSection() {
               )}
             </div>
 
-            {/* DESKTOP: Side by Side */}
             <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
                 <div className="text-sm font-medium text-purple-600 mb-2">
@@ -860,7 +856,7 @@ export default function PricingSection() {
 
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-green-900 text-sm mb-0.5">
-                  Minted Successfully! 🎉
+                  Minted Successfully
                 </h4>
                 <p className="text-xs text-slate-500 mb-2 truncate">
                   {hash.slice(0, 8)}...{hash.slice(-6)}

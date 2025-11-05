@@ -45,57 +45,46 @@ export function useFarcaster() {
   return useContext(FarcasterContext);
 }
 
-/**
- * 🔥 AUTO-CONNECT di Farcaster mini app
- * Trigger connect via injected wallet
- */
 function AutoConnectInFarcaster() {
   const { connect, connectors } = useConnect();
   const { isConnected } = useAccount();
   const { isMiniApp, isWarpcast, ready } = useFarcaster();
   const [hasTriggered, setHasTriggered] = useState(false);
-  const [isAutoConnecting, setIsAutoConnecting] = useState(false);
 
   useEffect(() => {
-    // Hanya jalankan di Farcaster mini app
     if (!ready || !isMiniApp || !isWarpcast || isConnected || hasTriggered) {
       return;
     }
 
     setHasTriggered(true);
-    setIsAutoConnecting(true);
 
-    console.log("🔥 [Farcaster] Attempting auto-connect...");
+    console.log(
+      "[Farcaster Mini App] Attempting auto-connect to native wallet..."
+    );
 
     const timer = setTimeout(async () => {
       try {
-        // Cari injected connector
         const injectedConnector = connectors.find(
           (c) => c.id === "injected" || c.type === "injected"
         );
 
         if (!injectedConnector) {
-          console.warn("⚠️ [Farcaster] No injected connector found");
+          console.error("[Farcaster] Injected connector not found!");
           console.log(
             "Available connectors:",
             connectors.map((c) => c.id)
           );
-          setIsAutoConnecting(false);
           return;
         }
 
-        console.log(
-          "✅ [Farcaster] Found injected connector, attempting connect..."
-        );
+        console.log("[Farcaster] Found Farcaster native wallet (injected)");
+        console.log("[Farcaster] Connecting...");
 
-        // Trigger connect - ini akan pop approval di wallet
-        const result = await connect({ connector: injectedConnector });
+        await connect({ connector: injectedConnector });
 
-        console.log("🎉 [Farcaster] Connect triggered!", result);
-        setIsAutoConnecting(false);
-      } catch (error) {
-        console.error("❌ [Farcaster] Auto-connect error:", error);
-        setIsAutoConnecting(false);
+        console.log("[Farcaster] Successfully connected to Farcaster wallet!");
+      } catch (error: any) {
+        console.error("[Farcaster] Connection error:", error?.message || error);
       }
     }, 500);
 
@@ -156,7 +145,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     document.body.classList.remove("web-mode", "miniapp-mode", "warpcast-mode");
     document.body.classList.add(`${finalEnvironment}-mode`);
 
-    console.log("🔥 Farcaster Environment:", {
+    console.log("[Farcaster] Environment:", {
       environment: finalEnvironment,
       isMiniApp: finalIsMiniApp,
       isWarpcast: detectedIsWarpcast,
