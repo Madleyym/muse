@@ -10,6 +10,7 @@ import {
 } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import { MUSE_NFT_CONTRACT } from "@/config/contracts";
+import { useFarcaster } from "@/contexts/FarcasterContext";
 
 export interface MintParams {
   fid: number;
@@ -26,7 +27,30 @@ function isDevWallet(address: string | undefined): boolean {
   return DEV_ADDRESSES.includes(address.toLowerCase());
 }
 
+// DEFAULT return value untuk mini app atau saat RainbowKit belum ready
+const defaultReturn = {
+  mintFree: async () => console.warn("Minting not available"),
+  mintHD: async () => console.warn("Minting not available"),
+  mintType: null,
+  isPending: false,
+  isConfirming: false,
+  isSuccess: false,
+  uploadingToIPFS: false,
+  isDevAddress: false,
+  isCheckingDev: false,
+  error: null,
+  hash: null,
+};
+
 export function useMintNFT() {
+  const { isMiniApp, ready } = useFarcaster();
+
+  // ✅ RETURN EARLY BEFORE calling any wagmi hooks
+  if (isMiniApp || !ready) {
+    return defaultReturn;
+  }
+
+  // ✅ HANYA call wagmi hooks SETELAH check di atas
   const [mintType, setMintType] = useState<"free" | "hd" | null>(null);
   const [uploadingToIPFS, setUploadingToIPFS] = useState(false);
 
@@ -39,6 +63,9 @@ export function useMintNFT() {
       abi: MUSE_NFT_CONTRACT.abi,
       functionName: "checkIsDevAddress",
       args: address ? [address] : undefined,
+      query: {
+        enabled: !!address,
+      },
     });
 
   const isDevAddress = isDevWallet(address) || !!isDevAddressFromContract;
@@ -66,7 +93,6 @@ export function useMintNFT() {
     setUploadingToIPFS(true);
 
     try {
-      // ✅ API will return HTTP gateway URLs now
       const uploadResponse = await fetch("/api/metadata/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,7 +126,7 @@ export function useMintNFT() {
           params.moodName,
           params.farcasterUsername,
           BigInt(params.engagementScore),
-          metadataURI, // ✅ Now HTTP URL (not ipfs://)
+          metadataURI,
         ],
         chainId: 8453,
       });
@@ -116,7 +142,6 @@ export function useMintNFT() {
     setUploadingToIPFS(true);
 
     try {
-      // ✅ API will return HTTP gateway URLs now
       const uploadResponse = await fetch("/api/metadata/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -152,7 +177,7 @@ export function useMintNFT() {
           params.moodName,
           params.farcasterUsername,
           BigInt(params.engagementScore),
-          metadataURI, // ✅ Now HTTP URL (not ipfs://)
+          metadataURI,
         ],
         value: mintValue,
         chainId: 8453,
