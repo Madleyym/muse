@@ -23,8 +23,9 @@ export interface FarcasterContextType {
   setFarcasterData: (data: FarcasterData | null) => void;
   hasFID: boolean;
   isMiniApp: boolean;
-  isWarpcast: boolean; // 🔥 NEW
-  environment: "web" | "miniapp" | "warpcast"; // 🔥 NEW
+  isWarpcast: boolean;
+  environment: "web" | "miniapp" | "warpcast";
+  ready: boolean; // 🔥 ADD THIS
 }
 
 const FarcasterContext = createContext<FarcasterContextType>({
@@ -34,6 +35,7 @@ const FarcasterContext = createContext<FarcasterContextType>({
   isMiniApp: false,
   isWarpcast: false,
   environment: "web",
+  ready: false, // 🔥 ADD THIS
 });
 
 export function useFarcaster() {
@@ -49,6 +51,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [environment, setEnvironment] = useState<
     "web" | "miniapp" | "warpcast"
   >("web");
+  const [ready, setReady] = useState(false); // 🔥 ADD THIS
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -88,6 +91,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     document.body.classList.remove("web-mode", "miniapp-mode", "warpcast-mode");
     document.body.classList.add(`${finalEnvironment}-mode`);
 
+    // 🔥 Set ready
+    setReady(true);
+
     console.log("🔥 Farcaster Environment:", {
       environment: finalEnvironment,
       isMiniApp: finalIsMiniApp,
@@ -111,6 +117,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         isMiniApp,
         isWarpcast,
         environment,
+        ready, // 🔥 PROVIDE THIS
       }}
     >
       {children}

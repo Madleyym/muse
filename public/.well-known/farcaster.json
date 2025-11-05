@@ -13,11 +13,11 @@
     "buttonTitle": "Start Minting",
     "splashImageUrl": "https://muse.write3.fun/assets/Logo/Muse.png",
     "splashBackgroundColor": "#8B5CF6",
-    "subtitle": "Turn your vibe into collectible art",
+    "subtitle": "Mint your vibe",
     "description": "Connect your wallet, enter your Farcaster ID, and mint unique mood NFTs based on your social activity. Free SD or Premium HD editions on Base.",
     "requiredChains": ["eip155:8453"],
     "primaryCategory": "social",
-    "tags": ["nft", "art", "social", "base", "mood", "mint"],
+    "tags": ["nft", "art", "social", "mint"],
     "tagline": "Mint Your Mood NFT",
     "screenshotUrls": [
       "https://muse.write3.fun/screenshot-1.png",
