@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { base } from "wagmi/chains";
+import { injected } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
@@ -16,8 +17,10 @@ const queryClient = new QueryClient({
   },
 });
 
+// 🔥 Create config with explicit injected connector first (untuk auto-connect)
 const config = createConfig({
   chains: [base],
+  connectors: [injected()],
   transports: {
     [base.id]: http(
       process.env.NEXT_PUBLIC_BASE_RPC || "https://mainnet.base.org"
@@ -32,7 +35,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
-  // 🔥 Don't render anything with wagmi hooks until mounted
+  // Don't render anything with wagmi hooks until mounted
   if (!mounted) {
     return null;
   }

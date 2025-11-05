@@ -6,8 +6,12 @@ import { useState, useEffect } from "react";
 import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useFarcaster } from "@/contexts/FarcasterContext";
+import { useAutoConnectWallet } from "@/hooks/useAutoConnectWallet";
 
 export default function Header() {
+  // 🔥 Trigger auto-connect di mini app
+  useAutoConnectWallet();
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMiniAppInfo, setShowMiniAppInfo] = useState(true);
   const { address, isConnected } = useAccount();
@@ -284,7 +288,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu - Same as before */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <>
           <div
@@ -568,7 +572,6 @@ export default function Header() {
               )}
 
               {/* Action Buttons */}
-
               <div className="border-t border-neutral-200 pt-4 space-y-3">
                 <ConnectButton.Custom>
                   {({ account, chain, openConnectModal, mounted }) => {
@@ -637,5 +640,5 @@ export default function Header() {
         </>
       )}
     </>
-  );  
+  );
 }

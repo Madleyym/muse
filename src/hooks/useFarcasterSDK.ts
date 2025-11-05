@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAutoConnectWallet } from "./useAutoConnectWallet";
 
 export function useFarcasterSDK() {
   const [isReady, setIsReady] = useState(false);
+
+  // 🔥 Trigger auto-connect saat SDK siap
+  useAutoConnectWallet();
 
   useEffect(() => {
     const initializeSDK = async () => {
@@ -18,6 +22,7 @@ export function useFarcasterSDK() {
           await sdk.actions.ready();
           setIsReady(true);
           console.log("✅ Mini app ready! Splash screen hidden.");
+          console.log("🔗 Auto-connect should trigger now...");
         }
       } catch (error) {
         // SDK not available in web mode - OK!
