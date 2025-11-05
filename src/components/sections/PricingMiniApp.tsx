@@ -428,7 +428,6 @@ export default function PricingMiniApp() {
 
         {farcasterData && currentMood && (
           <div className="max-w-md mx-auto mb-6 px-4">
-            {/* ✅ COMPACT CARD - Description Below Image */}
             <div
               className="rounded-3xl p-4 text-white shadow-2xl transition-all duration-500 border-2 border-white/20"
               style={{
@@ -481,10 +480,10 @@ export default function PricingMiniApp() {
                   </div>
                 </div>
 
-                {/* Right: Mood Name Only */}
+                {/* Right: Mood Name - ✅ FIXED SIZE */}
                 <div className="flex-1 min-w-0">
                   <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg h-24 flex items-center justify-center">
-                    <h2 className="text-xl font-bold leading-tight text-center">
+                    <h2 className="text-base font-bold leading-tight text-center px-1">
                       {currentMood.name}
                     </h2>
                   </div>
@@ -494,30 +493,30 @@ export default function PricingMiniApp() {
               {/* Description (Full Width Below Image) */}
               <div className="mb-3.5">
                 <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg">
-                  <p className="text-xs text-white/90 leading-relaxed text-center line-clamp-3">
+                  <p className="text-[11px] text-white/90 leading-relaxed text-center line-clamp-3">
                     {currentMood.description}
                   </p>
                 </div>
               </div>
 
-              {/* Bottom: Stats Grid (Full Width) */}
+              {/* Bottom: Stats Grid - ✅ FIXED SIZES */}
               <div className="grid grid-cols-2 gap-2.5">
                 {/* Engagement Score */}
-                <div className="bg-white/20 backdrop-blur-md rounded-xl px-3 py-2.5 border border-white/30 shadow-lg text-center">
-                  <div className="text-[9px] text-white/70 uppercase tracking-wide leading-tight mb-1">
-                    Engagement Score
+                <div className="bg-white/20 backdrop-blur-md rounded-xl px-2.5 py-2 border border-white/30 shadow-lg text-center">
+                  <div className="text-[8px] text-white/70 uppercase tracking-wider leading-tight mb-1">
+                    Engagement
                   </div>
-                  <div className="text-2xl font-bold leading-tight">
+                  <div className="text-lg font-bold leading-tight">
                     {farcasterData.engagementScore.toLocaleString()}
                   </div>
                 </div>
 
                 {/* Category */}
-                <div className="bg-white/20 backdrop-blur-md rounded-xl px-3 py-2.5 border border-white/30 shadow-lg text-center">
-                  <div className="text-[9px] text-white/70 uppercase tracking-wide leading-tight mb-1">
+                <div className="bg-white/20 backdrop-blur-md rounded-xl px-2.5 py-2 border border-white/30 shadow-lg text-center">
+                  <div className="text-[8px] text-white/70 uppercase tracking-wider leading-tight mb-1">
                     Category
                   </div>
-                  <div className="text-2xl font-bold uppercase leading-tight">
+                  <div className="text-lg font-bold uppercase leading-tight">
                     {currentMood.category}
                   </div>
                 </div>
@@ -527,12 +526,13 @@ export default function PricingMiniApp() {
         )}
 
         {hasMinted && !checkingMinted && (
-          <div className="max-w-2xl mx-auto mb-6">
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+          <div className="max-w-md mx-auto mb-4 px-4">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-4 shadow-lg">
+              <div className="flex items-start gap-3">
+                {/* Icon - Smaller */}
+                <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                   <svg
-                    className="w-6 h-6 text-orange-600"
+                    className="w-5 h-5 text-orange-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -545,11 +545,13 @@ export default function PricingMiniApp() {
                     />
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-orange-900 mb-2">
+
+                {/* Text - Compact */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-orange-900 mb-1 leading-tight">
                     Already Minted!
                   </h3>
-                  <p className="text-sm text-orange-800 mb-3">
+                  <p className="text-xs text-orange-800 leading-snug">
                     This FID already minted — only one mint allowed.
                   </p>
                 </div>
