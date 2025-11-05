@@ -45,48 +45,75 @@ export function useFarcaster() {
   return useContext(FarcasterContext);
 }
 
+// ✅ COMPONENT untuk auto-connect
 function AutoConnectInFarcaster() {
-  const { connect, connectors } = useConnect();
-  const { isConnected } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
+  const { isConnected, isConnecting } = useAccount();
   const { isMiniApp, isWarpcast, ready } = useFarcaster();
   const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
-    if (!ready || !isMiniApp || !isWarpcast || isConnected || hasTriggered) {
+    // ❌ Don't proceed jika:
+    // - Belum ready
+    // - Tidak di mini app
+    // - Sudah connected
+    // - Sudah pernah trigger
+    if (
+      !ready ||
+      !isMiniApp ||
+      !isWarpcast ||
+      isConnected ||
+      isConnecting ||
+      isPending ||
+      hasTriggered
+    ) {
       return;
     }
 
+    // ✅ Mark as triggered untuk hindari double-connect
     setHasTriggered(true);
 
     console.log(
-      "[Farcaster Mini App] Attempting auto-connect to native wallet..."
+      "[Farcaster Mini App] ⏳ Attempting auto-connect to native wallet..."
     );
 
+    // ✅ Delay sebentar biar semua siap
     const timer = setTimeout(async () => {
       try {
+        // ✅ Cari connector yang correct
         const injectedConnector = connectors.find(
           (c) => c.id === "injected" || c.type === "injected"
         );
 
         if (!injectedConnector) {
-          console.error("[Farcaster] Injected connector not found!");
+          console.error("[Farcaster] ❌ Injected connector not found!");
           console.log(
-            "Available connectors:",
-            connectors.map((c) => c.id)
+            "[Farcaster] Available connectors:",
+            connectors.map((c) => ({
+              id: c.id,
+              type: c.type,
+              name: c.name,
+            }))
           );
           return;
         }
 
-        console.log("[Farcaster] Found Farcaster native wallet (injected)");
-        console.log("[Farcaster] Connecting...");
+        console.log("[Farcaster] ✅ Found Farcaster native wallet (injected)");
+        console.log("[Farcaster] 🔌 Connecting...");
 
+        // ✅ Connect ke wallet
         await connect({ connector: injectedConnector });
 
-        console.log("[Farcaster] Successfully connected to Farcaster wallet!");
+        console.log("[Farcaster] ✅ Successfully connected to Farcaster!");
       } catch (error: any) {
-        console.error("[Farcaster] Connection error:", error?.message || error);
+        console.error(
+          "[Farcaster] ❌ Auto-connect error:",
+          error?.message || error
+        );
+        // ✅ Allow retry by resetting hasTriggered
+        setHasTriggered(false);
       }
-    }, 500);
+    }, 800); // ✅ Increase delay sedikit
 
     return () => clearTimeout(timer);
   }, [
@@ -94,6 +121,8 @@ function AutoConnectInFarcaster() {
     isMiniApp,
     isWarpcast,
     isConnected,
+    isConnecting,
+    isPending,
     connect,
     connectors,
     hasTriggered,
@@ -102,6 +131,7 @@ function AutoConnectInFarcaster() {
   return null;
 }
 
+// ✅ PROVIDER
 export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [farcasterData, setFarcasterData] = useState<FarcasterData | null>(
     null
@@ -117,41 +147,66 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const url = new URL(window.location.href);
-    const fromWarpcast = document.referrer.includes("warpcast.com");
-    const hasWarpcastUA = navigator.userAgent.includes("Warpcast");
-    const isIframe = window.self !== window.top;
-    const warpcastParam = url.searchParams.get("fc") === "true";
+    const detectEnvironment = () => {
+      const url = new URL(window.location.href);
 
-    const detectedIsWarpcast =
-      fromWarpcast || hasWarpcastUA || isIframe || warpcastParam;
-    const isMiniAppRoute = url.pathname.startsWith("/miniapp");
+      // ✅ Multiple ways to detect Farcaster/Warpcast
+      const fromWarpcast = document.referrer.includes("warpcast.com");
+      const hasWarpcastUA = navigator.userAgent.includes("Warpcast");
+      const isIframe = window.self !== window.top;
+      const warpcastParam = url.searchParams.get("fc") === "true";
 
-    let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
-    let finalIsMiniApp = false;
+      // ✅ Check mini app route
+      const isMiniAppRoute =
+        url.pathname.startsWith("/miniapp") ||
+        url.searchParams.has("frameContext");
 
-    if (detectedIsWarpcast) {
-      finalEnvironment = "warpcast";
-      finalIsMiniApp = true;
-    } else if (isMiniAppRoute) {
-      finalEnvironment = "miniapp";
-      finalIsMiniApp = true;
-    }
+      const detectedIsWarpcast =
+        fromWarpcast || hasWarpcastUA || isIframe || warpcastParam;
+      const finalIsMiniApp = detectedIsWarpcast || isMiniAppRoute;
 
-    setEnvironment(finalEnvironment);
-    setIsMiniApp(finalIsMiniApp);
-    setIsWarpcast(detectedIsWarpcast);
+      let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
 
-    document.body.classList.remove("web-mode", "miniapp-mode", "warpcast-mode");
-    document.body.classList.add(`${finalEnvironment}-mode`);
+      if (detectedIsWarpcast) {
+        finalEnvironment = "warpcast";
+      } else if (isMiniAppRoute) {
+        finalEnvironment = "miniapp";
+      }
 
-    console.log("[Farcaster] Environment:", {
-      environment: finalEnvironment,
-      isMiniApp: finalIsMiniApp,
-      isWarpcast: detectedIsWarpcast,
-    });
+      // ✅ Update states
+      setEnvironment(finalEnvironment);
+      setIsMiniApp(finalIsMiniApp);
+      setIsWarpcast(detectedIsWarpcast);
+      setIsAutoConnecting(finalIsMiniApp);
 
-    setReady(true);
+      // ✅ Add body class untuk styling
+      document.body.classList.remove(
+        "web-mode",
+        "miniapp-mode",
+        "warpcast-mode"
+      );
+      document.body.classList.add(`${finalEnvironment}-mode`);
+
+      console.log("[Farcaster] 🌍 Environment Detection:", {
+        environment: finalEnvironment,
+        isMiniApp: finalIsMiniApp,
+        isWarpcast: detectedIsWarpcast,
+        isIframe,
+        url: url.pathname,
+        userAgent: navigator.userAgent.substring(0, 50),
+      });
+
+      setReady(true);
+    };
+
+    // ✅ Detect immediately
+    detectEnvironment();
+
+    // ✅ Also detect on URL change (for SPA)
+    const handlePopState = () => detectEnvironment();
+    window.addEventListener("popstate", handlePopState);
+
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   return (
@@ -159,7 +214,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       value={{
         farcasterData,
         setFarcasterData,
-        hasFID: !!farcasterData,
+        hasFID: !!farcasterData?.fid,
         isMiniApp,
         isWarpcast,
         environment,
@@ -167,6 +222,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         isAutoConnecting,
       }}
     >
+      {/* ✅ Auto-connect component */}
       <AutoConnectInFarcaster />
       {children}
     </FarcasterContext.Provider>

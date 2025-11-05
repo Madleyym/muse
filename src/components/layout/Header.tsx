@@ -214,6 +214,7 @@ export default function Header() {
 
                               return (
                                 <div className="flex items-center gap-2">
+                                  {/* ✅ SESUAIKAN: Use proper pricing link */}
                                   <Link
                                     href="/#pricing"
                                     scroll={true}
@@ -256,10 +257,11 @@ export default function Header() {
                       }}
                     </ConnectButton.Custom>
                   ) : (
-                    // MINI APP: Simple status only
+                    // MINI APP: Simple status only - ✅ NO RainbowKit here!
                     <>
                       {isConnected && (
                         <div className="flex items-center gap-2">
+                          {/* ✅ SESUAIKAN: Use proper pricing link for mini app */}
                           <Link
                             href="#pricing"
                             scroll={true}
@@ -602,28 +604,56 @@ export default function Header() {
               )}
 
               <div className="border-t border-neutral-200 pt-4 space-y-3">
-                <ConnectButton.Custom>
-                  {({ account, chain, openConnectModal, mounted }) => {
-                    const connected = mounted && account && chain;
+                {!isMiniApp ? (
+                  // WEBSITE: Full RainbowKit
+                  <ConnectButton.Custom>
+                    {({ account, chain, openConnectModal, mounted }) => {
+                      const connected = mounted && account && chain;
 
-                    if (!connected) {
+                      if (!connected) {
+                        return (
+                          <button
+                            onClick={() => {
+                              openConnectModal();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white rounded-xl transition shadow-lg hover:opacity-90"
+                          >
+                            Connect Wallet
+                          </button>
+                        );
+                      }
+
                       return (
-                        <button
-                          onClick={() => {
-                            openConnectModal();
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white rounded-xl transition shadow-lg hover:opacity-90"
-                        >
-                          Connect Wallet
-                        </button>
+                        <>
+                          <Link
+                            href="/#pricing"
+                            scroll={true}
+                            className="block w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white hover:opacity-90 rounded-xl transition shadow-lg"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {hasFID ? "Mint Now - FREE" : "Setup FID - FREE"}
+                          </Link>
+                          <button
+                            onClick={() => {
+                              disconnect();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className="w-full text-center px-4 py-3 text-sm font-semibold border-2 border-red-200 bg-white text-red-600 hover:bg-red-50 rounded-xl transition"
+                          >
+                            Disconnect Wallet
+                          </button>
+                        </>
                       );
-                    }
-
-                    return (
+                    }}
+                  </ConnectButton.Custom>
+                ) : (
+                  // MINI APP: Simple buttons only - NO RainbowKit
+                  <>
+                    {isConnected && (
                       <>
                         <Link
-                          href={isMiniApp ? "#pricing" : "/#pricing"}
+                          href="#pricing"
                           scroll={true}
                           className="block w-full text-center px-4 py-3.5 text-sm font-bold gradient-bg text-white hover:opacity-90 rounded-xl transition shadow-lg"
                           onClick={() => setIsMobileMenuOpen(false)}
@@ -640,9 +670,9 @@ export default function Header() {
                           Disconnect Wallet
                         </button>
                       </>
-                    );
-                  }}
-                </ConnectButton.Custom>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="mt-6 pt-4 border-t border-neutral-200">
