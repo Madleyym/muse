@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { nftMoods } from "@/data/nftMoods";
 import { useMintNFT } from "@/hooks/useMintNFT";
@@ -23,7 +22,7 @@ const isValidImageUrl = (url: string | undefined | null): boolean => {
 };
 
 export default function PricingMiniApp() {
-  const { isConnected } = useFrameWallet(); // ✅ Use Frame wallet
+  const { isConnected } = useFrameWallet();
   const { farcasterData, setFarcasterData } = useFarcaster();
   const { isReady: sdkReady, user: sdkUser } = useFarcasterSDK();
 
@@ -53,7 +52,7 @@ export default function PricingMiniApp() {
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
-  // Auto-detect mood when miniapp loads
+  // ✅ AUTO-DETECT MOOD (with 15s fetch timeout)
   useEffect(() => {
     const detectMood = async () => {
       if (!sdkReady || !sdkUser) {
@@ -71,8 +70,9 @@ export default function PricingMiniApp() {
         setIsDetectingMood(true);
         console.log("[MiniApp] Detecting mood for FID:", sdkUser.fid);
 
+        // ✅ 15s timeout for API call
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
           const response = await fetch(
@@ -110,7 +110,7 @@ export default function PricingMiniApp() {
           console.warn("[MiniApp] API fetch failed:", fetchError.message);
         }
 
-        // Fallback
+        // ✅ FALLBACK: Use default mood if API fails
         console.warn("[MiniApp] Using fallback mood");
         setFarcasterData({
           fid: sdkUser.fid,
@@ -124,6 +124,7 @@ export default function PricingMiniApp() {
       } catch (error: any) {
         console.error("[MiniApp] ❌ Mood detection error:", error);
 
+        // ✅ EMERGENCY FALLBACK
         if (sdkUser) {
           setFarcasterData({
             fid: sdkUser.fid,
@@ -143,15 +144,15 @@ export default function PricingMiniApp() {
     detectMood();
   }, [sdkReady, sdkUser, farcasterData?.fid, setFarcasterData]);
 
-  // Add timeout for loading screen
+  // ✅ UI SAFETY TIMEOUT (15s max for loading screen)
   useEffect(() => {
     if (isDetectingMood) {
       const timeout = setTimeout(() => {
-        console.warn("[MiniApp] ⏰ Mood detection timeout (10s)");
+        console.warn("[MiniApp] ⏰ UI timeout (15s) - forcing fallback");
         setIsDetectingMood(false);
 
         if (!farcasterData && sdkUser) {
-          console.log("[MiniApp] Setting default mood due to timeout");
+          console.log("[MiniApp] Setting default mood due to UI timeout");
           setFarcasterData({
             fid: sdkUser.fid,
             username: sdkUser.username || "",
@@ -162,7 +163,7 @@ export default function PricingMiniApp() {
             engagementScore: 100,
           });
         }
-      }, 10000);
+      }, 15000);
 
       return () => clearTimeout(timeout);
     }
@@ -243,7 +244,7 @@ export default function PricingMiniApp() {
         engagementScore: farcasterData.engagementScore,
       });
     } catch (err: any) {
-      console.error("Mint error:", err);
+      console.error("[MiniApp] Mint error:", err);
       setLocalMintError(err.message || "Failed to mint NFT");
     }
   };
@@ -269,7 +270,7 @@ export default function PricingMiniApp() {
         engagementScore: farcasterData.engagementScore,
       });
     } catch (err: any) {
-      console.error("Mint error:", err);
+      console.error("[MiniApp] Mint error:", err);
       setLocalMintError(err.message || "Failed to mint NFT");
     }
   };
@@ -284,7 +285,7 @@ export default function PricingMiniApp() {
     );
   };
 
-  // Loading state
+  // ✅ LOADING STATE
   if (!sdkReady || isDetectingMood) {
     return (
       <section
@@ -338,7 +339,7 @@ export default function PricingMiniApp() {
     );
   }
 
-  // Main content
+  // ✅ MAIN CONTENT
   return (
     <section
       id="pricing"
@@ -836,7 +837,7 @@ export default function PricingMiniApp() {
                     rel="noopener noreferrer"
                     className="flex-1 text-center gradient-bg text-white text-xs py-1.5 px-2 rounded-md hover:opacity-90 transition font-medium"
                   >
-                    Basescan
+                    View on Basescan
                   </a>
                 </div>
               </div>
@@ -874,6 +875,7 @@ export default function PricingMiniApp() {
               <button
                 onClick={() => setLocalMintError("")}
                 className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition"
+                aria-label="Close"
               >
                 <svg
                   className="w-5 h-5"
