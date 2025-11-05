@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { verifyFID, getFarcasterActivity } from "@/lib/farcaster";
+import { nftMoods } from "@/data/nftMoods";
 
-// ✅ Simple in-memory cache
+// ✅ Cache untuk menghindari rate limit
 const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 60000; // 1 minute
 
@@ -26,52 +27,61 @@ export async function GET(request: Request) {
   }
 
   try {
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("API timeout after 10s")), 10000)
-    );
+    console.log("[API Verify] 🔍 Fetching user data...");
+    const user = await verifyFID(Number(fid));
 
-    const verifyPromise = (async () => {
-      console.log("[API Verify] 🔍 Fetching user data...");
-      const user = await verifyFID(Number(fid));
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-      if (!user) {
-        throw new Error("User not found");
-      }
+    console.log("[API Verify] ✅ User found:", user.username);
 
-      console.log("[API Verify] ✅ User found:", user.username);
+    console.log("[API Verify] 📊 Fetching activity...");
+    const activity = await getFarcasterActivity(Number(fid));
 
-      console.log("[API Verify] 📊 Fetching activity...");
-      const activity = await getFarcasterActivity(Number(fid));
+    if (!activity) {
+      console.warn("[API Verify] ⚠️ No activity data, using defaults");
 
-      if (!activity) {
-        console.warn("[API Verify] ⚠️ No activity data, using defaults");
-        return {
-          user,
-          activity: {
-            totalCasts: 10,
-            totalLikes: 50,
-            totalReplies: 20,
-            engagementScore: 150,
-            suggestedMood: "Creative Mind",
-            suggestedMoodId: "creative-mind",
-          },
-        };
-      }
+      const defaultActivity = {
+        totalCasts: 10,
+        totalLikes: 50,
+        totalReplies: 20,
+        engagementScore: 150,
+        suggestedMood: "Creative Mind",
+        suggestedMoodId: "creative-mind",
+      };
 
-      console.log("[API Verify] ✅ Activity found:", activity.suggestedMood);
+      const responseData = {
+        success: true,
+        user,
+        activity: defaultActivity,
+      };
 
-      return { user, activity };
-    })();
+      // ✅ Cache it
+      cache.set(cacheKey, {
+        data: responseData,
+        timestamp: Date.now(),
+      });
 
-    const { user, activity } = (await Promise.race([
-      verifyPromise,
-      timeoutPromise,
-    ])) as any;
+      return NextResponse.json(responseData);
+    }
 
-    console.log("[API Verify] ✅ Success:", {
-      fid: user.fid,
-      mood: activity.suggestedMood,
-    });
+    // ✅ VALIDATE MOOD EXISTS IN nftMoods
+    const validMood = nftMoods.find((m) => m.id === activity.suggestedMoodId);
+
+    if (!validMood) {
+      console.warn("[API Verify] ⚠️ Invalid moodId:", activity.suggestedMoodId);
+      console.warn(
+        "[API Verify] Available moods:",
+        nftMoods.map((m) => m.id)
+      );
+
+      // ✅ Use fallback
+      activity.suggestedMood = "Creative Mind";
+      activity.suggestedMoodId = "creative-mind";
+    }
+
+    console.log("[API Verify] ✅ Activity found:", activity.suggestedMood);
 
     const responseData = {
       success: true,
@@ -89,34 +99,14 @@ export async function GET(request: Request) {
   } catch (error: any) {
     console.error("[API Verify] ❌ Error:", error?.message);
 
-    // Fallback data
-    const fallbackData = {
-      success: true,
-      user: {
-        fid: Number(fid),
-        username: `user${fid}`,
-        displayName: `User ${fid}`,
-        pfpUrl: "",
-        followerCount: 0,
-        followingCount: 0,
-        bio: "",
+    // ✅ RETURN ERROR, JANGAN FALLBACK OTOMATIS
+    // Ini biar frontend bisa handle sendiri
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Failed to fetch user data",
       },
-      activity: {
-        totalCasts: 10,
-        totalLikes: 50,
-        totalReplies: 20,
-        engagementScore: 150,
-        suggestedMood: "Creative Mind",
-        suggestedMoodId: "creative-mind",
-      },
-    };
-
-    // ✅ Cache fallback too
-    cache.set(cacheKey, {
-      data: fallbackData,
-      timestamp: Date.now(),
-    });
-
-    return NextResponse.json(fallbackData);
+      { status: 500 }
+    );
   }
 }

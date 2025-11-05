@@ -47,7 +47,21 @@ export default function PricingMiniApp() {
 
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
-    return nftMoods.find((mood) => mood.id === farcasterData.moodId) || null;
+
+    const found = nftMoods.find((mood) => mood.id === farcasterData.moodId);
+
+    if (!found) {
+      console.error(
+        "[MiniApp] ❌ Mood not found for ID:",
+        farcasterData.moodId
+      );
+      console.log(
+        "[MiniApp] Available mood IDs:",
+        nftMoods.map((m) => m.id)
+      );
+    }
+
+    return found || null;
   }, [farcasterData]);
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
@@ -68,7 +82,7 @@ export default function PricingMiniApp() {
 
       try {
         setIsDetectingMood(true);
-        console.log("[MiniApp] Detecting mood for FID:", sdkUser.fid);
+        console.log("[MiniApp] 🔍 Detecting mood for FID:", sdkUser.fid);
 
         // ✅ 15s timeout for API call
         const controller = new AbortController();
@@ -85,8 +99,34 @@ export default function PricingMiniApp() {
           if (response.ok) {
             const data = await response.json();
 
+            console.log("[MiniApp] 📦 API Response:", {
+              success: data.success,
+              mood: data.activity?.suggestedMood,
+              moodId: data.activity?.suggestedMoodId,
+              score: data.activity?.engagementScore,
+            });
+
             if (data.success && data.activity) {
               const pfpUrl = data.user.pfpUrl || sdkUser.pfpUrl || "";
+
+              // ✅ VALIDATE MOOD EXISTS
+              const moodExists = nftMoods.find(
+                (m) => m.id === data.activity.suggestedMoodId
+              );
+
+              if (!moodExists) {
+                console.error(
+                  "[MiniApp] ❌ Invalid moodId from API:",
+                  data.activity.suggestedMoodId
+                );
+                console.log(
+                  "[MiniApp] Available moods:",
+                  nftMoods.map((m) => m.id)
+                );
+                // Use fallback
+                data.activity.suggestedMood = "Creative Mind";
+                data.activity.suggestedMoodId = "creative-mind";
+              }
 
               setFarcasterData({
                 fid: data.user.fid,
@@ -99,12 +139,15 @@ export default function PricingMiniApp() {
               });
 
               console.log(
-                "[MiniApp] ✅ Mood detected from API:",
+                "[MiniApp] ✅ Mood detected:",
                 data.activity.suggestedMood
               );
               setIsDetectingMood(false);
               return;
             }
+          } else {
+            const errorData = await response.json();
+            console.error("[MiniApp] ❌ API Error:", errorData.error);
           }
         } catch (fetchError: any) {
           console.warn("[MiniApp] API fetch failed:", fetchError.message);
@@ -360,41 +403,49 @@ export default function PricingMiniApp() {
           )}
         </div>
 
-        {/* Profile Card */}
+        {/* ✅ ID CARD STYLE - Profile Card */}
         {farcasterData && currentMood && (
-          <div className="max-w-3xl mx-auto mb-6 sm:mb-8">
-            <div
-              className="rounded-2xl p-4 sm:p-6 text-white shadow-xl transition-all duration-500"
-              style={{
-                background: getGradientStyle(
-                  currentMood.gradients[gradientIndex]
-                ),
-              }}
-            >
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex-shrink-0">
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
-                  <div className="relative w-full h-full p-3 sm:p-4">
+          <div className="max-w-md mx-auto mb-6 sm:mb-8">
+            {/* ✅ Outer Card Container */}
+            <div className="relative">
+              {/* ✅ Gradient Background Card */}
+              <div
+                className="rounded-[1.5rem] overflow-hidden shadow-2xl transition-all duration-500 border-4 border-white/20"
+                style={{
+                  background: getGradientStyle(
+                    currentMood.gradients[gradientIndex]
+                  ),
+                }}
+              >
+                {/* ✅ Top Section - Mood Image */}
+                <div className="relative h-48 sm:h-56 flex items-center justify-center pt-6">
+                  <div className="relative w-32 h-32 sm:w-40 sm:h-40">
                     <Image
                       src={currentMood.baseImage}
                       alt={currentMood.name}
                       fill
                       className="object-contain drop-shadow-2xl"
-                      sizes="(max-width: 640px) 144px, 192px"
+                      sizes="160px"
                     />
                   </div>
+
+                  {/* ✅ Decorative Corner Elements */}
+                  <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/40 rounded-tl-lg"></div>
+                  <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-white/40 rounded-tr-lg"></div>
                 </div>
 
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
-                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 sm:border-4 border-white/30 bg-white/20 flex-shrink-0">
+                {/* ✅ Middle Section - User Info */}
+                <div className="relative bg-white/10 backdrop-blur-md border-t border-white/20">
+                  {/* ✅ Avatar - Positioned to overlap */}
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2">
+                    <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white/20">
                       {hasValidPfp && farcasterData.pfpUrl ? (
                         <Image
                           src={farcasterData.pfpUrl}
                           alt={farcasterData.displayName}
                           fill
                           className="object-cover"
-                          sizes="48px"
+                          sizes="80px"
                           unoptimized
                           onError={handlePfpError}
                         />
@@ -402,42 +453,62 @@ export default function PricingMiniApp() {
                         <FallbackAvatar />
                       )}
                     </div>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold">
-                        {farcasterData.displayName}
-                      </h3>
-                      <p className="text-white/80 text-xs sm:text-sm">
-                        @{farcasterData.username} · FID {farcasterData.fid}
-                      </p>
-                    </div>
                   </div>
 
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 sm:p-4">
-                    <div className="text-xl sm:text-2xl font-bold mb-1">
+                  {/* ✅ User Details */}
+                  <div className="pt-12 pb-4 px-6 text-center text-white">
+                    <h3 className="text-lg sm:text-xl font-bold mb-1">
+                      {farcasterData.displayName}
+                    </h3>
+                    <p className="text-white/80 text-xs sm:text-sm mb-1">
+                      @{farcasterData.username}
+                    </p>
+                    <p className="text-white/60 text-xs">
+                      FID {farcasterData.fid}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ✅ Bottom Section - Mood Info */}
+                <div className="bg-white/15 backdrop-blur-md border-t border-white/20 px-6 py-4">
+                  <div className="text-center mb-4">
+                    <h4 className="text-2xl sm:text-3xl font-bold text-white mb-1">
                       {currentMood.name}
-                    </div>
-                    <div className="text-xs sm:text-sm text-white/80 mb-3">
+                    </h4>
+                    <p className="text-white/80 text-xs sm:text-sm">
                       {currentMood.description}
-                    </div>
-                    <div className="flex items-center justify-center sm:justify-start gap-3 sm:gap-4 flex-wrap">
-                      <div>
-                        <div className="text-xs text-white/70">
-                          Engagement Score
-                        </div>
-                        <div className="text-lg sm:text-xl font-bold">
-                          {farcasterData.engagementScore.toLocaleString()}
-                        </div>
+                    </p>
+                  </div>
+
+                  {/* ✅ Stats Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/20">
+                      <div className="text-white/70 text-xs mb-1 uppercase tracking-wide">
+                        Engagement Score
                       </div>
-                      <div className="h-6 sm:h-8 w-px bg-white/30"></div>
-                      <div>
-                        <div className="text-xs text-white/70">Category</div>
-                        <div className="text-lg sm:text-xl font-bold uppercase">
-                          {currentMood.category}
-                        </div>
+                      <div className="text-white text-xl sm:text-2xl font-bold">
+                        {farcasterData.engagementScore.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/20">
+                      <div className="text-white/70 text-xs mb-1 uppercase tracking-wide">
+                        Category
+                      </div>
+                      <div className="text-white text-xl sm:text-2xl font-bold uppercase">
+                        {currentMood.category}
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* ✅ Decorative Bottom Corners */}
+                <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-white/40 rounded-bl-lg"></div>
+                <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/40 rounded-br-lg"></div>
+              </div>
+
+              {/* ✅ Holographic Effect Overlay */}
+              <div className="absolute inset-0 rounded-[1.5rem] pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-50"></div>
               </div>
             </div>
           </div>
@@ -845,7 +916,7 @@ export default function PricingMiniApp() {
           </div>
         )}
 
-        {/* Error Notification */}
+        {/* Error Notification - FIXED */}
         {(mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -872,10 +943,18 @@ export default function PricingMiniApp() {
                   {mintError?.message || localMintError || "Unknown error"}
                 </p>
               </div>
+              {/* ✅ FIXED: Add onClick handler */}
               <button
-                onClick={() => setLocalMintError("")}
-                className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setLocalMintError("");
+                  // ✅ Also reload page to clear error state
+                  window.location.reload();
+                }}
+                className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition cursor-pointer"
                 aria-label="Close"
+                type="button"
               >
                 <svg
                   className="w-5 h-5"

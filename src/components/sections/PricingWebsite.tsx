@@ -46,10 +46,26 @@ export default function PricingWebsite() {
   const [localMintError, setLocalMintError] = useState<string>("");
   const [selectedTier, setSelectedTier] = useState<"free" | "hd">("free");
   const [pfpError, setPfpError] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [showErrorNotification, setShowErrorNotification] = useState(false);
 
   const currentMood = useMemo(() => {
     if (!farcasterData) return null;
-    return nftMoods.find((mood) => mood.id === farcasterData.moodId) || null;
+
+    const found = nftMoods.find((mood) => mood.id === farcasterData.moodId);
+
+    if (!found) {
+      console.error(
+        "[WebsiteSection] ❌ Mood not found for ID:",
+        farcasterData.moodId
+      );
+      console.log(
+        "[WebsiteSection] Available mood IDs:",
+        nftMoods.map((m) => m.id)
+      );
+    }
+
+    return found || null;
   }, [farcasterData]);
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
@@ -102,6 +118,28 @@ export default function PricingWebsite() {
     return error;
   };
 
+  // ✅ Show success notification when mint succeeds
+  useEffect(() => {
+    if (isSuccess && hash) {
+      setShowSuccessNotification(true);
+    }
+  }, [isSuccess, hash]);
+
+  // ✅ Show error notification when mint fails
+  useEffect(() => {
+    if (mintError || localMintError) {
+      setShowErrorNotification(true);
+
+      // Auto-hide after 5 seconds
+      const timer = setTimeout(() => {
+        setShowErrorNotification(false);
+        setLocalMintError("");
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [mintError, localMintError]);
+
   useEffect(() => {
     if (!currentMood) return;
     const interval = setInterval(() => {
@@ -122,15 +160,6 @@ export default function PricingWebsite() {
     }
   }, [farcasterData, isConnected]);
 
-  useEffect(() => {
-    if (mintError || localMintError) {
-      const timer = setTimeout(() => {
-        setLocalMintError("");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [mintError, localMintError]);
-
   const handleVerifyFID = async () => {
     if (!fid || isNaN(Number(fid))) {
       setError("Please enter a valid FID number");
@@ -144,6 +173,14 @@ export default function PricingWebsite() {
       const response = await fetch(`/api/farcaster/verify?fid=${fid}`);
       const data = await response.json();
 
+      // ✅ DEBUG LOG
+      console.log("[WebsiteSection] 📦 API Response:", {
+        success: data.success,
+        mood: data.activity?.suggestedMood,
+        moodId: data.activity?.suggestedMoodId,
+        score: data.activity?.engagementScore,
+      });
+
       if (!response.ok || !data.success) {
         setError(
           data.error || "FID not found. Please check your Farcaster ID."
@@ -156,11 +193,30 @@ export default function PricingWebsite() {
         ? data.user.pfpUrl
         : "";
 
-      console.log("[WebsiteSection] FID verified:", {
+      // ✅ VALIDATE MOOD EXISTS
+      const moodExists = nftMoods.find(
+        (m) => m.id === data.activity.suggestedMoodId
+      );
+
+      if (!moodExists) {
+        console.error(
+          "[WebsiteSection] ❌ Invalid moodId:",
+          data.activity.suggestedMoodId
+        );
+        console.log(
+          "[WebsiteSection] Available moods:",
+          nftMoods.map((m) => m.id)
+        );
+        // Use fallback
+        data.activity.suggestedMood = "Creative Mind";
+        data.activity.suggestedMoodId = "creative-mind";
+      }
+
+      console.log("[WebsiteSection] ✅ FID verified:", {
         fid: data.user.fid,
-        pfpOriginal: data.user.pfpUrl,
-        pfpValidated: validPfpUrl,
-        isValid: !!validPfpUrl,
+        mood: data.activity.suggestedMood,
+        moodId: data.activity.suggestedMoodId,
+        pfpValidated: !!validPfpUrl,
       });
 
       setFarcasterData({
@@ -174,7 +230,8 @@ export default function PricingWebsite() {
       });
 
       setStep("preview");
-    } catch (err) {
+    } catch (err: any) {
+      console.error("[WebsiteSection] ❌ Error:", err);
       setError("Failed to verify FID. Please try again.");
     } finally {
       setLoading(false);
@@ -187,6 +244,7 @@ export default function PricingWebsite() {
       return;
     }
     setLocalMintError("");
+    setShowErrorNotification(false);
     try {
       await mintFree({
         fid: farcasterData.fid,
@@ -196,7 +254,7 @@ export default function PricingWebsite() {
         engagementScore: farcasterData.engagementScore,
       });
     } catch (err: any) {
-      console.error("Mint error:", err);
+      console.error("[WebsiteSection] Mint error:", err);
       setLocalMintError(err.message || "Failed to mint NFT");
     }
   };
@@ -207,6 +265,7 @@ export default function PricingWebsite() {
       return;
     }
     setLocalMintError("");
+    setShowErrorNotification(false);
     try {
       await mintHD({
         fid: farcasterData.fid,
@@ -216,9 +275,20 @@ export default function PricingWebsite() {
         engagementScore: farcasterData.engagementScore,
       });
     } catch (err: any) {
-      console.error("Mint error:", err);
+      console.error("[WebsiteSection] Mint error:", err);
       setLocalMintError(err.message || "Failed to mint NFT");
     }
+  };
+
+  // ✅ Handle close success notification
+  const handleCloseSuccess = () => {
+    setShowSuccessNotification(false);
+  };
+
+  // ✅ Handle close error notification
+  const handleCloseError = () => {
+    setShowErrorNotification(false);
+    setLocalMintError("");
   };
 
   const hexToRgb = (hex: string) => {
@@ -844,8 +914,8 @@ export default function PricingWebsite() {
           </>
         )}
 
-        {/* Success Notification */}
-        {isSuccess && hash && (
+        {/* ✅ SUCCESS NOTIFICATION - FIXED */}
+        {showSuccessNotification && isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -866,7 +936,7 @@ export default function PricingWebsite() {
 
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-green-900 text-sm mb-0.5">
-                  Minted Successfully
+                  Minted Successfully! 🎉
                 </h4>
                 <p className="text-xs text-slate-500 mb-2 truncate">
                   {hash.slice(0, 8)}...{hash.slice(-6)}
@@ -879,7 +949,7 @@ export default function PricingWebsite() {
                     rel="noopener noreferrer"
                     className="flex-1 text-center gradient-bg text-white text-xs py-1.5 px-2 rounded-md hover:opacity-90 transition font-medium"
                   >
-                    Basescan
+                    View on Basescan
                   </a>
                   <button
                     onClick={() => window.location.reload()}
@@ -891,9 +961,10 @@ export default function PricingWebsite() {
               </div>
 
               <button
-                onClick={() => window.location.reload()}
-                className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition -mt-1"
-                aria-label="Close"
+                onClick={handleCloseSuccess}
+                className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition -mt-1 cursor-pointer"
+                aria-label="Close notification"
+                type="button"
               >
                 <svg
                   className="w-4 h-4"
@@ -917,8 +988,8 @@ export default function PricingWebsite() {
           </div>
         )}
 
-        {/* Error Notification */}
-        {(mintError || localMintError) && (
+        {/* ✅ ERROR NOTIFICATION - FIXED */}
+        {showErrorNotification && (mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -945,9 +1016,10 @@ export default function PricingWebsite() {
                 </p>
               </div>
               <button
-                onClick={() => setLocalMintError("")}
-                className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition"
-                aria-label="Close"
+                onClick={handleCloseError}
+                className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                aria-label="Close notification"
+                type="button"
               >
                 <svg
                   className="w-5 h-5"

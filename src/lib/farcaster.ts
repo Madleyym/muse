@@ -50,6 +50,8 @@ export function validatePfpUrl(pfpUrl: string | undefined | null): string {
  */
 export async function verifyFID(fid: number): Promise<FarcasterUser | null> {
   try {
+    console.log("[Farcaster] 🔍 Verifying FID:", fid);
+
     const response = await fetch(`${NEYNAR_BASE_URL}/user/bulk?fids=${fid}`, {
       headers: {
         accept: "application/json",
@@ -58,24 +60,27 @@ export async function verifyFID(fid: number): Promise<FarcasterUser | null> {
     });
 
     if (!response.ok) {
-      console.error("[Farcaster] Neynar API error:", response.status);
+      console.error("[Farcaster] ❌ Neynar API error:", response.status);
       return null;
     }
 
     const data = await response.json();
-    const user = data.users[0];
+    const user = data.users?.[0];
 
-    if (!user) return null;
+    if (!user) {
+      console.error("[Farcaster] ❌ User not found for FID:", fid);
+      return null;
+    }
 
     // Validate and clean PFP URL
     const validPfpUrl = validatePfpUrl(user.pfp_url);
 
-    console.log("[Farcaster] PFP URL validation:", {
-      original: user.pfp_url,
-      validated: validPfpUrl,
-      isValid: !!validPfpUrl,
+    console.log("[Farcaster] ✅ User verified:", {
       fid: user.fid,
       username: user.username,
+      displayName: user.display_name,
+      pfpUrl: validPfpUrl ? "Valid" : "Invalid",
+      followerCount: user.follower_count || 0,
     });
 
     return {
@@ -87,8 +92,8 @@ export async function verifyFID(fid: number): Promise<FarcasterUser | null> {
       followingCount: user.following_count || 0,
       bio: user.profile?.bio?.text || "",
     };
-  } catch (error) {
-    console.error("[Farcaster] Failed to verify FID:", error);
+  } catch (error: any) {
+    console.error("[Farcaster] ❌ Failed to verify FID:", error?.message);
     return null;
   }
 }
@@ -100,16 +105,38 @@ export async function getFarcasterActivity(
   fid: number
 ): Promise<FarcasterActivity | null> {
   try {
-    console.log("[Farcaster] Fetching activity for FID:", fid);
-
-    // ✅ REMOVED: Don't call verifyFID again (already called in API route)
-    // const user = await verifyFID(fid);
+    console.log("[Farcaster] 📊 Fetching activity for FID:", fid);
 
     let totalCasts = 0;
     let totalLikes = 0;
     let totalReplies = 0;
-    let followerCount = 0; // Will estimate if casts fail
+    let followerCount = 0;
 
+    // ✅ Fetch user data untuk dapat followerCount
+    try {
+      const userResponse = await fetch(
+        `${NEYNAR_BASE_URL}/user/bulk?fids=${fid}`,
+        {
+          headers: {
+            accept: "application/json",
+            api_key: NEYNAR_API_KEY || "",
+          },
+        }
+      );
+
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        const user = userData.users?.[0];
+        if (user) {
+          followerCount = user.follower_count || 0;
+          console.log("[Farcaster] 👥 Follower count:", followerCount);
+        }
+      }
+    } catch (err) {
+      console.warn("[Farcaster] ⚠️ Could not fetch follower count");
+    }
+
+    // ✅ Fetch casts
     try {
       const feedResponse = await fetch(
         `${NEYNAR_BASE_URL}/feed?feed_type=filter&filter_type=fids&fid=${fid}&with_recasts=false&limit=25`,
@@ -146,28 +173,41 @@ export async function getFarcasterActivity(
     } catch (castError: any) {
       console.error("[Farcaster] ⚠️ Could not fetch casts:", castError.message);
 
-      // Use default values
-      totalCasts = 10;
-      totalLikes = 50;
-      totalReplies = 20;
-      followerCount = 20; // From your data
+      // ✅ Use estimated values based on follower count
+      if (followerCount > 0) {
+        totalCasts = Math.max(10, Math.floor(followerCount / 10));
+        totalLikes = Math.max(50, Math.floor(followerCount * 2));
+        totalReplies = Math.max(20, Math.floor(followerCount / 5));
+      } else {
+        // Default fallback
+        totalCasts = 10;
+        totalLikes = 50;
+        totalReplies = 20;
+      }
 
-      console.log("[Farcaster] Using default values");
+      console.log("[Farcaster] 📊 Using estimated values:", {
+        totalCasts,
+        totalLikes,
+        totalReplies,
+      });
     }
 
-    // Calculate engagement score
+    // ✅ Calculate engagement score
     const engagementScore =
-      totalLikes * 2 +
-      totalReplies * 3 +
-      totalCasts +
-      Math.floor(followerCount / 100);
+      totalLikes * 2 + // Likes worth 2 points
+      totalReplies * 3 + // Replies worth 3 points
+      totalCasts * 1 + // Casts worth 1 point
+      Math.floor(followerCount / 10); // Followers contribute too
 
-    // Determine mood
+    console.log("[Farcaster] 📈 Engagement score:", engagementScore);
+
+    // ✅ Determine mood
     const mood = calculateMood(engagementScore, totalCasts, totalLikes);
 
-    console.log("[Farcaster] ✅ Activity calculated:", {
+    console.log("[Farcaster] ✅ Mood determined:", {
+      moodName: mood.name,
+      moodId: mood.id,
       engagementScore,
-      mood: mood.name,
     });
 
     return {
@@ -181,14 +221,14 @@ export async function getFarcasterActivity(
   } catch (error: any) {
     console.error("[Farcaster] ❌ Failed to fetch activity:", error.message);
 
-    // Fallback
+    // ✅ Return fallback with proper mood
     return {
       totalCasts: 10,
       totalLikes: 50,
       totalReplies: 20,
       engagementScore: 150,
-      suggestedMood: "Creative Mind",
-      suggestedMoodId: "creative-mind",
+      suggestedMood: "Mysterious",
+      suggestedMoodId: "mysterious",
     };
   }
 }
@@ -201,52 +241,59 @@ function calculateMood(
   casts: number,
   likes: number
 ): { name: string; id: string } {
-  console.log("[Farcaster] Calculating mood:", {
-    engagementScore,
-    casts,
-    likes,
-  });
+  console.log("[Farcaster] 🎯 Calculating mood from score:", engagementScore);
 
+  // ✅ TIER 1: Super Active (6000+)
   if (engagementScore > 6000) {
     return { name: "Fire Starter", id: "fire-starter" };
   }
 
+  // ✅ TIER 2: Very Active (4000-6000)
   if (engagementScore > 4000) {
     return { name: "Chaos Energy", id: "chaos-energy" };
   }
 
+  // ✅ TIER 3: Highly Active (2500-4000)
   if (engagementScore > 2500) {
     return { name: "Chaostic Expression", id: "chaostic-expression" };
   }
 
+  // ✅ TIER 4: Active (1500-2500)
   if (engagementScore > 1500) {
     return { name: "Creative Mind", id: "creative-mind" };
   }
 
+  // ✅ TIER 5: Moderately Active (1000-1500)
   if (engagementScore > 1000) {
     return { name: "Morning Mom", id: "morning-mom" };
   }
 
+  // ✅ TIER 6: Regular (600-1000)
   if (engagementScore > 600) {
     return { name: "Moon Mission", id: "moon-mission" };
   }
 
+  // ✅ TIER 7: Casual (400-600)
   if (engagementScore > 400) {
     return { name: "Relaxed Mode", id: "relaxed-mode" };
   }
 
+  // ✅ TIER 8: Light Activity (250-400)
   if (engagementScore > 250) {
     return { name: "Green Peace", id: "green-peace" };
   }
 
+  // ✅ TIER 9: Low Activity (150-250)
   if (engagementScore > 150) {
     return { name: "Mysterious", id: "mysterious" };
   }
 
+  // ✅ TIER 10: Very Low (50-150)
   if (engagementScore > 50) {
     return { name: "Ocean Lady", id: "ocean-lady" };
   }
 
+  // ✅ TIER 11: Minimal (<50)
   return { name: "Pink to Rose", id: "pink-to-rose" };
 }
 
