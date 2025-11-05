@@ -58,7 +58,6 @@ function MiniAppSection() {
   // Auto-detect mood when miniapp loads
   useEffect(() => {
     const detectMood = async () => {
-      // ✅ Changed: Don't wait for isConnected
       if (!sdkReady || !sdkUser) {
         console.log("[MiniApp] SDK not ready or no user");
         return;
@@ -74,16 +73,21 @@ function MiniAppSection() {
         setIsDetectingMood(true);
         console.log("[MiniApp] Detecting mood for FID:", sdkUser.fid);
 
+        // ✅ ADD TIMEOUT (10 seconds max)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const response = await fetch(
-          `/api/farcaster/verify?fid=${sdkUser.fid}`
+          `/api/farcaster/verify?fid=${sdkUser.fid}`,
+          { signal: controller.signal }
         );
+
+        clearTimeout(timeoutId);
+
         const data = await response.json();
 
         if (response.ok && data.success) {
-          const pfpUrl =
-            data.user.pfpUrl ||
-            sdkUser.pfpUrl ||
-            "";
+          const pfpUrl = data.user.pfpUrl || sdkUser.pfpUrl || "";
 
           setFarcasterData({
             fid: data.user.fid,
@@ -96,16 +100,39 @@ function MiniAppSection() {
           });
 
           console.log("[MiniApp] Mood detected:", data.activity.suggestedMood);
+        } else {
+          // ✅ FALLBACK: Use default mood if API fails
+          console.warn("[MiniApp] API failed, using default mood");
+          setFarcasterData({
+            fid: sdkUser.fid,
+            username: sdkUser.username || "",
+            displayName: sdkUser.displayName || "",
+            pfpUrl: sdkUser.pfpUrl || "",
+            mood: "Creative Mind", // Default mood
+            moodId: "creative-mind",
+            engagementScore: 0,
+          });
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("[MiniApp] Failed to detect mood:", error);
+
+        // ✅ FALLBACK: Use default mood on error/timeout
+        setFarcasterData({
+          fid: sdkUser.fid,
+          username: sdkUser.username || "",
+          displayName: sdkUser.displayName || "",
+          pfpUrl: sdkUser.pfpUrl || "",
+          mood: "Creative Mind", // Default mood
+          moodId: "creative-mind",
+          engagementScore: 0,
+        });
       } finally {
         setIsDetectingMood(false);
       }
     };
 
     detectMood();
-  }, [sdkReady, sdkUser, farcasterData?.fid, setFarcasterData]); // ✅ Removed isConnected dependency
+  }, [sdkReady, sdkUser, farcasterData?.fid, setFarcasterData]);
 
   // Animate gradient
   useEffect(() => {
@@ -166,12 +193,12 @@ function MiniAppSection() {
       setLocalMintError("User data not found");
       return;
     }
-    
+
     if (!isConnected) {
       setLocalMintError("Please connect your wallet first");
       return;
     }
-    
+
     setLocalMintError("");
     try {
       await mintFree({
@@ -192,12 +219,12 @@ function MiniAppSection() {
       setLocalMintError("User data not found");
       return;
     }
-    
+
     if (!isConnected) {
       setLocalMintError("Please connect your wallet first");
       return;
     }
-    
+
     setLocalMintError("");
     try {
       await mintHD({
@@ -216,7 +243,7 @@ function MiniAppSection() {
   // Fallback avatar component
   const FallbackAvatar = () => {
     const initial = farcasterData?.displayName?.charAt(0).toUpperCase() || "?";
-    
+
     return (
       <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-base">
         {initial}
@@ -475,11 +502,27 @@ function MiniAppSection() {
                 className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
               >
                 {!isConnected && "Connect Wallet First"}
-                {isConnected && uploadingToIPFS && mintType === "free" && "Uploading..."}
-                {isConnected && isPending && mintType === "free" && !uploadingToIPFS && "Confirming..."}
-                {isConnected && isConfirming && mintType === "free" && !uploadingToIPFS && "Minting..."}
+                {isConnected &&
+                  uploadingToIPFS &&
+                  mintType === "free" &&
+                  "Uploading..."}
+                {isConnected &&
+                  isPending &&
+                  mintType === "free" &&
+                  !uploadingToIPFS &&
+                  "Confirming..."}
+                {isConnected &&
+                  isConfirming &&
+                  mintType === "free" &&
+                  !uploadingToIPFS &&
+                  "Minting..."}
                 {isConnected && isSuccess && mintType === "free" && "Minted!"}
-                {isConnected && (!uploadingToIPFS && !isPending && !isConfirming && !isSuccess) || mintType !== "free"
+                {(isConnected &&
+                  !uploadingToIPFS &&
+                  !isPending &&
+                  !isConfirming &&
+                  !isSuccess) ||
+                mintType !== "free"
                   ? "Mint Free NFT"
                   : ""}
               </button>
@@ -540,11 +583,27 @@ function MiniAppSection() {
                 className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
               >
                 {!isConnected && "Connect Wallet First"}
-                {isConnected && uploadingToIPFS && mintType === "hd" && "Uploading..."}
-                {isConnected && isPending && mintType === "hd" && !uploadingToIPFS && "Confirming..."}
-                {isConnected && isConfirming && mintType === "hd" && !uploadingToIPFS && "Minting..."}
+                {isConnected &&
+                  uploadingToIPFS &&
+                  mintType === "hd" &&
+                  "Uploading..."}
+                {isConnected &&
+                  isPending &&
+                  mintType === "hd" &&
+                  !uploadingToIPFS &&
+                  "Confirming..."}
+                {isConnected &&
+                  isConfirming &&
+                  mintType === "hd" &&
+                  !uploadingToIPFS &&
+                  "Minting..."}
                 {isConnected && isSuccess && mintType === "hd" && "Minted!"}
-                {isConnected && (!uploadingToIPFS && !isPending && !isConfirming && !isSuccess) || mintType !== "hd"
+                {(isConnected &&
+                  !uploadingToIPFS &&
+                  !isPending &&
+                  !isConfirming &&
+                  !isSuccess) ||
+                mintType !== "hd"
                   ? "Mint HD NFT"
                   : ""}
               </button>
@@ -600,11 +659,27 @@ function MiniAppSection() {
               className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
             >
               {!isConnected && "Connect Wallet First"}
-              {isConnected && uploadingToIPFS && mintType === "free" && "Uploading..."}
-              {isConnected && isPending && mintType === "free" && !uploadingToIPFS && "Confirming..."}
-              {isConnected && isConfirming && mintType === "free" && !uploadingToIPFS && "Minting..."}
+              {isConnected &&
+                uploadingToIPFS &&
+                mintType === "free" &&
+                "Uploading..."}
+              {isConnected &&
+                isPending &&
+                mintType === "free" &&
+                !uploadingToIPFS &&
+                "Confirming..."}
+              {isConnected &&
+                isConfirming &&
+                mintType === "free" &&
+                !uploadingToIPFS &&
+                "Minting..."}
               {isConnected && isSuccess && mintType === "free" && "Minted!"}
-              {isConnected && ((!uploadingToIPFS && !isPending && !isConfirming && !isSuccess) || mintType !== "free")
+              {isConnected &&
+              ((!uploadingToIPFS &&
+                !isPending &&
+                !isConfirming &&
+                !isSuccess) ||
+                mintType !== "free")
                 ? "Mint Free NFT"
                 : ""}
             </button>
@@ -628,7 +703,9 @@ function MiniAppSection() {
               {isDevAddress ? "FREE" : "0.001 ETH"}
             </div>
             <p className="text-slate-600 mb-6">
-              {isDevAddress ? "Developer Access" : "For collectors and believers"}
+              {isDevAddress
+                ? "Developer Access"
+                : "For collectors and believers"}
             </p>
             <ul className="space-y-3 mb-8">
               {[
@@ -666,11 +743,27 @@ function MiniAppSection() {
               className="block w-full text-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm active:scale-95"
             >
               {!isConnected && "Connect Wallet First"}
-              {isConnected && uploadingToIPFS && mintType === "hd" && "Uploading..."}
-              {isConnected && isPending && mintType === "hd" && !uploadingToIPFS && "Confirming..."}
-              {isConnected && isConfirming && mintType === "hd" && !uploadingToIPFS && "Minting..."}
+              {isConnected &&
+                uploadingToIPFS &&
+                mintType === "hd" &&
+                "Uploading..."}
+              {isConnected &&
+                isPending &&
+                mintType === "hd" &&
+                !uploadingToIPFS &&
+                "Confirming..."}
+              {isConnected &&
+                isConfirming &&
+                mintType === "hd" &&
+                !uploadingToIPFS &&
+                "Minting..."}
               {isConnected && isSuccess && mintType === "hd" && "Minted!"}
-              {isConnected && ((!uploadingToIPFS && !isPending && !isConfirming && !isSuccess) || mintType !== "hd")
+              {isConnected &&
+              ((!uploadingToIPFS &&
+                !isPending &&
+                !isConfirming &&
+                !isSuccess) ||
+                mintType !== "hd")
                 ? "Mint HD NFT"
                 : ""}
             </button>
