@@ -7,11 +7,26 @@ import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
+// Helper function to validate image URL
+const isValidImageUrl = (url: string | undefined | null): boolean => {
+  if (!url) return false;
+
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [pfpError, setPfpError] = useState(false);
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const { farcasterData, hasFID } = useFarcaster();
+
+  const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -23,6 +38,29 @@ export default function Header() {
       document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    setPfpError(false);
+  }, [farcasterData?.pfpUrl]);
+
+  const handlePfpError = () => {
+    console.error(
+      "[Header] Failed to load profile picture:",
+      farcasterData?.pfpUrl
+    );
+    setPfpError(true);
+  };
+
+  // Fallback avatar component
+  const FallbackAvatar = () => {
+    const initial = farcasterData?.displayName?.charAt(0).toUpperCase() || "?";
+
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
+        {initial}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -199,18 +237,21 @@ export default function Header() {
                                   type="button"
                                   className="flex items-center gap-2 px-3 py-2 border border-purple-200 bg-white hover:bg-purple-50 rounded-[0.625rem] transition"
                                 >
-                                  <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300">
-                                    <Image
-                                      src={
-                                        farcasterData?.pfpUrl ||
-                                        "/assets/images/layout/connected.png"
-                                      }
-                                      alt="Profile"
-                                      fill
-                                      sizes="24px"
-                                      className="object-cover"
-                                      quality={100}
-                                    />
+                                  <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300 bg-purple-100">
+                                    {hasValidPfp && farcasterData?.pfpUrl ? (
+                                      <Image
+                                        src={farcasterData.pfpUrl}
+                                        alt="Profile"
+                                        fill
+                                        sizes="24px"
+                                        className="object-cover"
+                                        quality={90}
+                                        onError={handlePfpError}
+                                        unoptimized
+                                      />
+                                    ) : (
+                                      <FallbackAvatar />
+                                    )}
                                   </div>
                                   <span className="text-sm font-medium text-neutral-700">
                                     {farcasterData?.displayName ||

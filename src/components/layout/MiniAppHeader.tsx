@@ -92,7 +92,7 @@ export default function MiniAppHeader() {
             <div className="flex-1"></div>
 
             <div className="flex items-center gap-x-3">
-              {isConnected && farcasterData ? (
+              {farcasterData ? (
                 <>
                   {/* Desktop Profile Button */}
                   <div
@@ -230,7 +230,7 @@ export default function MiniAppHeader() {
                 </button>
               </div>
 
-              {isConnected && farcasterData ? (
+              {farcasterData ? (  
                 <div className="bg-white/20 backdrop-blur-md rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/50 flex-shrink-0 bg-white/10">

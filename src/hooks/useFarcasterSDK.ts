@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { validatePfpUrl } from "@/lib/farcaster";
 
@@ -22,7 +22,16 @@ export function useFarcasterSDK() {
   const [error, setError] = useState<string | null>(null);
   const { setFarcasterData, isMiniApp } = useFarcaster();
 
+  // Prevent duplicate initialization
+  const initialized = useRef(false);
+
   useEffect(() => {
+    // Skip if already initialized
+    if (initialized.current) {
+      console.log("[Farcaster SDK] Already initialized, skipping...");
+      return;
+    }
+
     const initializeSDK = async () => {
       try {
         const { sdk } = await import("@farcaster/miniapp-sdk");
@@ -81,13 +90,14 @@ export function useFarcasterSDK() {
           console.warn("[Farcaster] No user context found in SDK");
         }
 
-        // Hide splash screen
+        // Hide splash screen (only once)
         if (typeof sdk.actions?.ready === "function") {
           await sdk.actions.ready();
           console.log("[Farcaster] Mini app splash screen hidden");
         }
 
         setIsReady(true);
+        initialized.current = true; // Mark as initialized
       } catch (error: any) {
         const errorMsg = error?.message || "Failed to initialize Farcaster SDK";
         console.log(
