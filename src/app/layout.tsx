@@ -5,7 +5,7 @@ import { Web3Provider } from "@/components/providers/Web3Provider";
 import { NavigationProgress } from "@/components/providers/NavigationProgress";
 import { FarcasterProvider } from "@/contexts/FarcasterContext";
 import TopBanner from "@/components/layout/TopBanner";
-import Footer from "@/components/layout/Footer";
+// ❌ REMOVE: import Footer from "@/components/layout/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -51,14 +51,12 @@ export default function RootLayout({
         <link rel="canonical" href="https://muse.write3.fun" />
       </head>
       <body className={inter.className}>
-        {/* PENTING: WagmiProvider HARUS PERTAMA */}
         <Web3Provider>
-          {/* KEMUDIAN: FarcasterProvider (yang pakai useConnect) */}
           <FarcasterProvider>
             <NavigationProgress>
               <TopBanner />
               <div className="page-transition">{children}</div>
-              <Footer />
+              {/* ❌ REMOVED: <Footer /> */}
             </NavigationProgress>
           </FarcasterProvider>
         </Web3Provider>

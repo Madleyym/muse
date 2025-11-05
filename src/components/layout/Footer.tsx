@@ -7,7 +7,7 @@ import { useFarcaster } from "@/contexts/FarcasterContext";
 export default function Footer() {
   const { isMiniApp } = useFarcaster();
 
-  // ✅ MINIAPP FOOTER - Fixed
+  // ✅ MINIAPP FOOTER - Compact & Mobile-Optimized
   if (isMiniApp) {
     return (
       <footer className="py-8 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 border-t border-purple-100/50">
@@ -66,10 +66,10 @@ export default function Footer() {
             </a>
           </div>
 
-          {/* Bottom - WITH FARCASTER ICON */}
+          {/* Bottom - WITH FARCASTER SVG ICON */}
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
-              {/* ✅ Farcaster Icon - SVG Fallback */}
+              {/* ✅ Farcaster Icon - SVG */}
               <a
                 href="https://warpcast.com"
                 target="_blank"

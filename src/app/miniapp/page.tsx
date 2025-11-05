@@ -43,25 +43,12 @@ export default function MiniAppPage() {
     );
   }
 
-  return (
-    <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed bottom-4 right-4 px-3 py-1 bg-black text-white text-xs rounded-full z-50 flex items-center gap-2">
-          <span>{environment.toUpperCase()}</span>
-          {farcasterData && (
-            <span className="bg-green-600 px-2 py-0.5 rounded text-[10px]">
-              ✓ Connected
-            </span>
-          )}
-        </div>
-      )}
-
-      <MiniAppHeader />
-      <HeroSection />
-      <PricingSection />
-
-      {/* ✅ HANYA 1x FOOTER! */}
-      <Footer />
-    </main>
-  );
+ return (
+   <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
+     <MiniAppHeader />
+     <HeroSection />
+     <PricingSection />
+     <Footer />
+   </main>
+ );
 }
