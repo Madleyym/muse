@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   RainbowKitProvider,
   connectorsForWallets,
+  Wallet,
 } from "@rainbow-me/rainbowkit";
 import {
   metaMaskWallet,
@@ -15,8 +16,7 @@ import {
 } from "@rainbow-me/rainbowkit/wallets";
 import "@rainbow-me/rainbowkit/styles.css";
 import { ReactNode, useEffect, useState } from "react";
-import { useConnect, useAccount } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { useAccount, useConnect } from "wagmi";
 
 // Define Base Mainnet chain
 const base = {
@@ -62,10 +62,58 @@ const mainnet = {
   },
 };
 
+// 🔥 CUSTOM FARCASTER WALLET
+const farcasterWallet = (): Wallet => ({
+  id: "farcaster",
+  name: "Farcaster Wallet",
+  iconUrl: "/assets/images/layout/farcaster.png",
+  iconBackground: "#8A63D2",
+  downloadUrls: {
+    android: "https://warpcast.com/",
+    ios: "https://warpcast.com/",
+    chrome: "https://warpcast.com/",
+    qrCode: "https://warpcast.com/",
+  },
+  mobile: {
+    getUri: () => "farcaster://",
+  },
+  qrCode: {
+    getUri: () => "farcaster://",
+    instructions: {
+      learnMoreUrl: "https://warpcast.com/",
+      steps: [
+        {
+          description: "Open Farcaster app on your phone",
+          step: "install",
+          title: "Open Farcaster",
+        },
+        {
+          description: "Scan QR code with Farcaster camera",
+          step: "scan",
+          title: "Scan QR",
+        },
+      ],
+    },
+  },
+  // 🔥 FIXED: Correct createConnector without 'preference'
+  createConnector: (walletDetails) => {
+    const coinbaseConnector = coinbaseWallet({
+      appName: "Muse - Mint Your Mood",
+    });
+
+    return coinbaseConnector.createConnector(walletDetails);
+  },
+});
+
+// 🔥 WALLET LIST WITH FARCASTER FIRST
 const connectors =
   typeof window !== "undefined"
     ? connectorsForWallets(
         [
+          {
+            groupName: "🎨 Farcaster",
+            wallets: [farcasterWallet],
+          },
           {
             groupName: "🔵 Best for Base",
             wallets: [coinbaseWallet],
@@ -105,68 +153,69 @@ const queryClient = new QueryClient({
   },
 });
 
-// 🔥 SILENT AUTO-CONNECT - NO MODAL
+// 🔥 SMART AUTO-CONNECT (NO MODAL IN MINI APP)
 function AutoConnectMiniApp() {
-  const { connectAsync, connectors } = useConnect();
   const { isConnected } = useAccount();
-  const [attempted, setAttempted] = useState(false);
+  const { connectAsync, connectors } = useConnect();
+  const [hasAttempted, setHasAttempted] = useState(false);
 
   useEffect(() => {
-    if (attempted || isConnected) return;
+    if (hasAttempted || isConnected) return;
 
-    // Detect Mini App
     const isMiniApp =
       window.location.pathname.startsWith("/miniapp") ||
       window.location.search.includes("miniApp=true") ||
       window.location.search.includes("fc=true");
 
     if (!isMiniApp) {
-      setAttempted(true);
+      setHasAttempted(true);
       return;
     }
 
-    const autoConnect = async () => {
-      setAttempted(true);
+    const attemptConnection = async () => {
+      setHasAttempted(true);
+
+      // Wait for provider
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       try {
-        // 🔥 METHOD 1: Try injected provider first (Farcaster injects this)
         if (typeof window.ethereum !== "undefined") {
-          console.log("🎨 Detected injected provider, connecting...");
+          console.log("🎨 Mini App: Farcaster wallet detected");
 
-          // Find injected connector
-          const injectedConnector = connectors.find(
-            (c) => c.type === "injected" || c.id === "injected"
-          );
+          // Check existing connection
+          const accounts = await window.ethereum.request({
+            method: "eth_accounts",
+          });
 
-          if (injectedConnector) {
-            await connectAsync({ connector: injectedConnector });
-            console.log("✅ Connected via injected provider!");
-            return;
+          if (accounts && accounts.length > 0) {
+            console.log("🎨 Mini App: Already connected, syncing...");
+
+            // Find Farcaster or Coinbase connector
+            const connector =
+              connectors.find((c) => c.id === "farcaster") ||
+              connectors.find((c) =>
+                c.name.toLowerCase().includes("coinbase")
+              ) ||
+              connectors.find((c) => c.type === "injected") ||
+              connectors[0];
+
+            if (connector) {
+              await connectAsync({ connector });
+              console.log("✅ Mini App: Auto-connected via", connector.name);
+            }
+          } else {
+            console.log(
+              "🎨 Mini App: No existing connection (user can connect manually)"
+            );
           }
         }
-
-        // 🔥 METHOD 2: Fallback to Coinbase Wallet
-        const coinbase = connectors.find((c) =>
-          c.name.toLowerCase().includes("coinbase")
-        );
-
-        if (coinbase) {
-          console.log("🎨 Trying Coinbase Wallet...");
-          await connectAsync({ connector: coinbase });
-          console.log("✅ Connected via Coinbase!");
-        }
       } catch (error: any) {
-        console.log(
-          "🎨 Auto-connect failed (user can manually connect):",
-          error.message
-        );
+        console.log("🎨 Mini App: Auto-connect skipped -", error.message);
       }
     };
 
-    // Delay to ensure providers are loaded
-    const timer = setTimeout(autoConnect, 1000);
-    return () => clearTimeout(timer);
-  }, [connectAsync, connectors, isConnected, attempted]);
+    attemptConnection();
+  }, [isConnected, connectAsync, connectors, hasAttempted]);
 
   return null;
 }
