@@ -13,18 +13,21 @@ export default function PricingSection() {
   const { isConnected } = useAccount();
   const { farcasterData, setFarcasterData, isMiniApp } = useFarcaster();
 
+  // ✅ HANYA panggil useMintNFT di WEBSITE
+  const mintHook = !isMiniApp ? useMintNFT() : null;
+
   const {
-    mintFree,
-    mintHD,
-    mintType,
-    isPending,
-    isConfirming,
-    isSuccess,
-    uploadingToIPFS,
-    isDevAddress,
-    error: mintError,
-    hash,
-  } = useMintNFT();
+    mintFree = async () => {},
+    mintHD = async () => {},
+    mintType = null,
+    isPending = false,
+    isConfirming = false,
+    isSuccess = false,
+    uploadingToIPFS = false,
+    isDevAddress = false,
+    error: mintError = null,
+    hash = null,
+  } = mintHook || {};
 
   const [step, setStep] = useState<"connect" | "fid" | "preview">("connect");
   const [fid, setFid] = useState("");
@@ -198,6 +201,64 @@ export default function PricingSection() {
       : `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`;
   };
 
+  // ✅ EARLY RETURN untuk mini app
+  if (isMiniApp) {
+    return (
+      <section
+        id="pricing"
+        className="py-12 sm:py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 xl:px-0">
+          <div className="text-center mb-8 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text">
+              Mint Your Mood NFT
+            </h2>
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-600 px-4">
+              Farcaster mini app minting
+            </p>
+          </div>
+
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 border-2 border-purple-200 text-center shadow-lg">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center animate-pulse">
+                <svg
+                  className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 animate-spin"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    fill="none"
+                    opacity="0.25"
+                  ></circle>
+                  <path
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
+                Connecting Your Wallet...
+              </h3>
+              <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto">
+                Please approve the connection in your wallet
+              </p>
+              <div className="text-sm text-purple-600">
+                Auto-connect in progress
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ✅ WEBSITE: Full minting interface
   return (
     <section
       id="pricing"
@@ -224,76 +285,29 @@ export default function PricingSection() {
         {!isConnected && step === "connect" && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-12 border-2 border-purple-200 text-center shadow-lg">
-              {isMiniApp ? (
-                <>
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center animate-pulse">
-                    <svg
-                      className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 animate-spin"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        fill="none"
-                        opacity="0.25"
-                      ></circle>
-                      <path
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
-                    Connecting Your Wallet...
-                  </h3>
-                  <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto">
-                    Please approve the connection in your wallet extension
-                  </p>
-                  <div className="text-sm text-purple-600">
-                    Auto-connect in progress
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
-                    Connect Your Wallet
-                  </h3>
-                  <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto">
-                    Connect your wallet to mint mood NFTs based on your
-                    Farcaster activity
-                  </p>
-                  <ConnectButton.Custom>
-                    {({ openConnectModal }) => (
-                      <button
-                        onClick={openConnectModal}
-                        className="inline-flex items-center gradient-bg text-white font-medium px-3 sm:px-4 py-2 sm:py-2.5 rounded-[0.625rem] hover:opacity-90 transition text-xs sm:text-sm shadow-lg active:scale-95"
-                      >
-                        Connect Wallet to Continue
-                      </button>
-                    )}
-                  </ConnectButton.Custom>
-                </>
-              )}
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-purple-100 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
+                Connect Your Wallet
+              </h3>
+              <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-md mx-auto">
+                Connect your wallet to mint mood NFTs based on your Farcaster
+                activity
+              </p>
+              <ConnectButton />
             </div>
           </div>
         )}
