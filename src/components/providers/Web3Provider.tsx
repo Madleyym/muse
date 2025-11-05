@@ -16,6 +16,7 @@ import {
 import "@rainbow-me/rainbowkit/styles.css";
 import { ReactNode, useEffect, useState } from "react";
 import { useConnect, useAccount } from "wagmi";
+import { injected } from "wagmi/connectors";
 
 // Define Base Mainnet chain
 const base = {
@@ -28,18 +29,11 @@ const base = {
     symbol: "ETH",
   },
   rpcUrls: {
-    default: {
-      http: ["https://mainnet.base.org"],
-    },
-    public: {
-      http: ["https://mainnet.base.org"],
-    },
+    default: { http: ["https://mainnet.base.org"] },
+    public: { http: ["https://mainnet.base.org"] },
   },
   blockExplorers: {
-    default: {
-      name: "Basescan",
-      url: "https://basescan.org",
-    },
+    default: { name: "Basescan", url: "https://basescan.org" },
   },
   contracts: {
     multicall3: {
@@ -60,18 +54,11 @@ const mainnet = {
     symbol: "ETH",
   },
   rpcUrls: {
-    default: {
-      http: ["https://eth.llamarpc.com"],
-    },
-    public: {
-      http: ["https://eth.llamarpc.com"],
-    },
+    default: { http: ["https://eth.llamarpc.com"] },
+    public: { http: ["https://eth.llamarpc.com"] },
   },
   blockExplorers: {
-    default: {
-      name: "Etherscan",
-      url: "https://etherscan.io",
-    },
+    default: { name: "Etherscan", url: "https://etherscan.io" },
   },
 };
 
@@ -118,57 +105,68 @@ const queryClient = new QueryClient({
   },
 });
 
-// 🔥 NEW: Auto Connect Component for Mini App
+// 🔥 SILENT AUTO-CONNECT - NO MODAL
 function AutoConnectMiniApp() {
-  const { connect, connectors } = useConnect();
+  const { connectAsync, connectors } = useConnect();
   const { isConnected } = useAccount();
-  const [hasAttempted, setHasAttempted] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   useEffect(() => {
-    // Only run once
-    if (hasAttempted || isConnected) return;
+    if (attempted || isConnected) return;
 
-    // Check if in Mini App mode
-    const url = new URL(window.location.href);
+    // Detect Mini App
     const isMiniApp =
-      url.pathname.startsWith("/miniapp") ||
-      url.searchParams.get("miniApp") === "true" ||
-      url.searchParams.get("fc") === "true" ||
-      document.referrer.includes("warpcast.com");
+      window.location.pathname.startsWith("/miniapp") ||
+      window.location.search.includes("miniApp=true") ||
+      window.location.search.includes("fc=true");
 
-    if (!isMiniApp) return;
+    if (!isMiniApp) {
+      setAttempted(true);
+      return;
+    }
 
-    // 🔥 Auto-connect to first available connector (Coinbase Wallet for Farcaster)
     const autoConnect = async () => {
-      try {
-        setHasAttempted(true);
+      setAttempted(true);
 
-        // Try Coinbase Wallet first (used by Farcaster)
-        const coinbaseConnector = connectors.find((connector) =>
-          connector.name.toLowerCase().includes("coinbase")
+      try {
+        // 🔥 METHOD 1: Try injected provider first (Farcaster injects this)
+        if (typeof window.ethereum !== "undefined") {
+          console.log("🎨 Detected injected provider, connecting...");
+
+          // Find injected connector
+          const injectedConnector = connectors.find(
+            (c) => c.type === "injected" || c.id === "injected"
+          );
+
+          if (injectedConnector) {
+            await connectAsync({ connector: injectedConnector });
+            console.log("✅ Connected via injected provider!");
+            return;
+          }
+        }
+
+        // 🔥 METHOD 2: Fallback to Coinbase Wallet
+        const coinbase = connectors.find((c) =>
+          c.name.toLowerCase().includes("coinbase")
         );
 
-        if (coinbaseConnector) {
-          console.log("🎨 Mini App: Auto-connecting to Coinbase Wallet...");
-          await connect({ connector: coinbaseConnector });
-        } else if (connectors[0]) {
-          // Fallback to first connector
-          console.log("🎨 Mini App: Auto-connecting to", connectors[0].name);
-          await connect({ connector: connectors[0] });
+        if (coinbase) {
+          console.log("🎨 Trying Coinbase Wallet...");
+          await connectAsync({ connector: coinbase });
+          console.log("✅ Connected via Coinbase!");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.log(
-          "🎨 Mini App: Auto-connect failed, user can manually connect:",
-          error
+          "🎨 Auto-connect failed (user can manually connect):",
+          error.message
         );
       }
     };
 
-    // Delay slightly to ensure connectors are ready
-    const timer = setTimeout(autoConnect, 500);
-
+    // Delay to ensure providers are loaded
+    const timer = setTimeout(autoConnect, 1000);
     return () => clearTimeout(timer);
-  }, [connect, connectors, isConnected, hasAttempted]);
+  }, [connectAsync, connectors, isConnected, attempted]);
 
   return null;
 }
@@ -190,7 +188,6 @@ export function Web3Provider({ children }: { children: ReactNode }) {
         >
           {mounted && (
             <>
-              {/* 🔥 NEW: Auto-connect in Mini App mode */}
               <AutoConnectMiniApp />
               {children}
             </>
