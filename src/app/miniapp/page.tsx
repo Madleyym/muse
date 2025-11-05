@@ -1,16 +1,15 @@
 "use client";
 
-import Header from "@/components/layout/Header";
+import MiniAppHeader from "@/components/layout/MiniAppHeader";
 import HeroSection from "@/components/sections/HeroSection";
 import PricingSection from "@/components/sections/PricingSection";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { useEffect } from "react";
-import Image from "next/image";
 
 export default function MiniAppPage() {
   const { environment, farcasterData, ready, isConnecting } = useFarcaster();
-  const { isReady: sdkReady, user: sdkUser } = useFarcasterSDK();
+  const { isReady: sdkReady } = useFarcasterSDK();
 
   useEffect(() => {
     if (sdkReady && farcasterData) {
@@ -50,14 +49,9 @@ export default function MiniAppPage() {
   }
 
   return (
-    <main
-      className={`
-        bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen
-        transition-all duration-300
-      `}
-    >
+    <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen transition-all duration-300">
       {process.env.NODE_ENV === "development" && (
-        <div className="fixed top-4 right-4 px-3 py-1 bg-black text-white text-xs rounded-full z-50 flex items-center gap-2">
+        <div className="fixed bottom-4 right-4 px-3 py-1 bg-black text-white text-xs rounded-full z-50 flex items-center gap-2">
           <span>{environment.toUpperCase()}</span>
           {farcasterData && (
             <span className="bg-green-600 px-2 py-0.5 rounded text-[10px]">
@@ -67,44 +61,10 @@ export default function MiniAppPage() {
         </div>
       )}
 
-      {/* ✅ Profile info banner when connected */}
-      {farcasterData && (
-        <div className="sticky top-0 z-40 bg-gradient-to-r from-purple-100 to-pink-100 backdrop-blur-sm border-b border-purple-200">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {farcasterData.pfpUrl && (
-                  <div className="relative w-8 h-8 rounded-full overflow-hidden border border-purple-300">
-                    <Image
-                      src={farcasterData.pfpUrl}
-                      alt={farcasterData.displayName}
-                      fill
-                      className="object-cover"
-                      sizes="32px"
-                    />
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm font-bold text-purple-900">
-                    {farcasterData.displayName}
-                  </p>
-                  <p className="text-xs text-purple-700">
-                    @{farcasterData.username} • FID: {farcasterData.fid}
-                  </p>
-                </div>
-              </div>
-              <div className="bg-green-100 border border-green-300 rounded-full px-3 py-1 flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-semibold text-green-700">
-                  Connected
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ✅ Mini App Header with Profile */}
+      <MiniAppHeader />
 
-      <Header />
+      {/* Content */}
       <HeroSection />
       <PricingSection />
     </main>
