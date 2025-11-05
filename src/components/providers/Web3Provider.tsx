@@ -33,9 +33,18 @@ const config = createConfig({
 
 export function Web3Provider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
+  const [isMiniApp, setIsMiniApp] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+
+    // Check if we're in mini app
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      const inMiniApp = path.startsWith("/miniapp");
+      setIsMiniApp(inMiniApp);
+      console.log("[Web3Provider] Path:", path, "isMiniApp:", inMiniApp);
+    }
   }, []);
 
   if (!mounted) {
@@ -45,9 +54,15 @@ export function Web3Provider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider modalSize="compact" initialChain={base}>
-          {children}
-        </RainbowKitProvider>
+        {isMiniApp ? (
+          // Mini App: NO RainbowKit modal
+          <>{children}</>
+        ) : (
+          // Website: WITH RainbowKit modal
+          <RainbowKitProvider modalSize="compact" initialChain={base}>
+            {children}
+          </RainbowKitProvider>
+        )}
       </QueryClientProvider>
     </WagmiProvider>
   );

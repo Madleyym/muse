@@ -51,9 +51,9 @@ export default function RootLayout({
         <link rel="canonical" href="https://muse.write3.fun" />
       </head>
       <body className={inter.className}>
-        {/* 🔥 WagmiProvider FIRST - before everything */}
+        {/* PENTING: WagmiProvider HARUS PERTAMA */}
         <Web3Provider>
-          {/* 🔥 Then FarcasterProvider */}
+          {/* KEMUDIAN: FarcasterProvider (yang pakai useConnect) */}
           <FarcasterProvider>
             <NavigationProgress>
               <TopBanner />
