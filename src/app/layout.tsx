@@ -1,32 +1,40 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { FarcasterProvider } from "@/contexts/FarcasterContext";
 import { Web3Provider } from "@/components/providers/Web3Provider";
-import { NavigationProgress } from "@/components/providers/NavigationProgress"; // 🔥 CHANGE: named import
+import { NavigationProgress } from "@/components/providers/NavigationProgress";
+import { FarcasterProvider } from "@/contexts/FarcasterContext";
+import TopBanner from "@/components/layout/TopBanner";
+import Footer from "@/components/layout/Footer";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Muse - Mint Your Mood NFT",
-  description: "Turn your vibe into collectible art on Base",
-  metadataBase: new URL("https://muse.write3.fun"),
+  description: "Turn your Farcaster vibe into collectible art on Base",
+  metadataBase: new URL("https://muse.write3.fun"), // 🔥 ADD
+  keywords: ["NFT", "Farcaster", "mood", "Base", "mint", "social"],
+  authors: [{ name: "Muse" }],
+  creator: "Muse",
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
+    // 🔥 ADD
     title: "Muse - Mint Your Mood NFT",
-    description: "Turn your vibe into collectible art on Base",
+    description: "Turn your Farcaster vibe into collectible art on Base",
     url: "https://muse.write3.fun",
+    siteName: "Muse",
     type: "website",
     images: [
       {
         url: "/assets/Logo/Muse.png",
         width: 1024,
         height: 1024,
-        alt: "Muse",
+        alt: "Muse Logo",
       },
     ],
-  },
-  // 🔥 Farcaster Mini App Meta Tags
-  other: {
-    "fc:frame": "vNext",
-    "fc:frame:image": "https://muse.write3.fun/assets/Logo/Muse.png",
-    "fc:frame:post_url": "https://muse.write3.fun/miniapp",
   },
 };
 
@@ -39,13 +47,20 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#8B5CF6" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="canonical" href="https://muse.write3.fun" />
       </head>
-      <body>
-        <FarcasterProvider>
-          <Web3Provider>
-            <NavigationProgress>{children}</NavigationProgress>
-          </Web3Provider>
-        </FarcasterProvider>
+      <body className={inter.className}>
+        <Web3Provider>
+          <NavigationProgress>
+            <FarcasterProvider>
+              <TopBanner />
+              <div className="page-transition">{children}</div>
+              <Footer />
+            </FarcasterProvider>
+          </NavigationProgress>
+        </Web3Provider>
       </body>
     </html>
   );
