@@ -17,8 +17,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Website config: with injected + others
-const websiteConfig = createConfig({
+const config = createConfig({
   chains: [base],
   connectors: [
     injected({
@@ -32,22 +31,7 @@ const websiteConfig = createConfig({
   },
 });
 
-// Mini app config: ONLY injected (Farcaster native wallet)
-const miniAppConfig = createConfig({
-  chains: [base],
-  connectors: [
-    injected({
-      shimDisconnect: true,
-    }),
-  ],
-  transports: {
-    [base.id]: http(
-      process.env.NEXT_PUBLIC_BASE_RPC || "https://mainnet.base.org"
-    ),
-  },
-});
-
-export function Web3Provider({ children }: { children: ReactNode }) {
+function Web3ProviderContent({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [isMiniApp, setIsMiniApp] = useState(false);
 
@@ -56,9 +40,7 @@ export function Web3Provider({ children }: { children: ReactNode }) {
 
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
-      const inMiniApp = path.startsWith("/miniapp");
-      setIsMiniApp(inMiniApp);
-      console.log("[Web3Provider] Path:", path, "isMiniApp:", inMiniApp);
+      setIsMiniApp(path.startsWith("/miniapp"));
     }
   }, []);
 
@@ -66,19 +48,14 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     return null;
   }
 
-  // Choose config based on environment
-  const config = isMiniApp ? miniAppConfig : websiteConfig;
-
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         {isMiniApp ? (
-          // Mini app: RainbowKit provider TANPA modal UI exposed
-          <RainbowKitProvider modalSize="compact" initialChain={base}>
-            {children}
-          </RainbowKitProvider>
+          // Mini App: NO RainbowKit at all
+          <>{children}</>
         ) : (
-          // Website: RainbowKit provider DENGAN modal UI
+          // Website: WITH RainbowKit
           <RainbowKitProvider modalSize="compact" initialChain={base}>
             {children}
           </RainbowKitProvider>
@@ -86,4 +63,8 @@ export function Web3Provider({ children }: { children: ReactNode }) {
       </QueryClientProvider>
     </WagmiProvider>
   );
+}
+
+export function Web3Provider({ children }: { children: ReactNode }) {
+  return <Web3ProviderContent>{children}</Web3ProviderContent>;
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useAccount, useDisconnect, useConnect } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
@@ -12,15 +12,12 @@ export default function Header() {
   const [showMiniAppInfo, setShowMiniAppInfo] = useState(true);
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
-  const { connect, connectors } = useConnect();
   const { farcasterData, hasFID, isMiniApp } = useFarcaster();
 
-  const handleManualConnect = async () => {
-    const injectedConnector = connectors.find(
-      (c) => c.id === "injected" || c.type === "injected"
-    );
-    if (injectedConnector) {
-      connect({ connector: injectedConnector });
+  const handleDismissMiniAppInfo = () => {
+    setShowMiniAppInfo(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("miniAppInfoDismissed", "true");
     }
   };
 
@@ -32,13 +29,6 @@ export default function Header() {
       }
     }
   }, []);
-
-  const handleDismissMiniAppInfo = () => {
-    setShowMiniAppInfo(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("miniAppInfoDismissed", "true");
-    }
-  };
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -172,54 +162,8 @@ export default function Header() {
               )}
               <div className="flex items-center gap-x-3 lg:gap-x-2">
                 <div className="hidden lg:flex items-center gap-2">
-                  {isMiniApp ? (
-                    // Mini app: Only Farcaster wallet button (NO modal)
-                    <>
-                      {isConnected ? (
-                        <div className="flex items-center gap-2">
-                          <Link
-                            href="#pricing"
-                            scroll={true}
-                            className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] gradient-bg text-white hover:opacity-90 px-3 py-2 rounded-[0.625rem] flex"
-                          >
-                            {hasFID ? "Mint Now" : "Setup FID"}
-                            <span className="ml-1 text-purple-200">- FREE</span>
-                          </Link>
-
-                          <button
-                            type="button"
-                            className="flex items-center gap-2 px-3 py-2 border border-purple-200 bg-white hover:bg-purple-50 rounded-[0.625rem] transition"
-                          >
-                            <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300">
-                              <Image
-                                src={
-                                  farcasterData?.pfpUrl ||
-                                  "/assets/images/layout/connected.png"
-                                }
-                                alt="Profile"
-                                fill
-                                sizes="24px"
-                                className="object-cover"
-                                quality={100}
-                              />
-                            </div>
-                            <span className="text-sm font-medium text-neutral-700">
-                              {farcasterData?.displayName || "Connected"}
-                            </span>
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={handleManualConnect}
-                          type="button"
-                          className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(139,92,246,0.25)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-purple-200 bg-white text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-[0.625rem] flex"
-                        >
-                          Connect Wallet
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    // Website: RainbowKit modal button
+                  {!isMiniApp ? (
+                    // WEBSITE ONLY: RainbowKit
                     <ConnectButton.Custom>
                       {({
                         account,
@@ -311,6 +255,44 @@ export default function Header() {
                         );
                       }}
                     </ConnectButton.Custom>
+                  ) : (
+                    // MINI APP: Simple status only
+                    <>
+                      {isConnected && (
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href="#pricing"
+                            scroll={true}
+                            className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all shadow-[0_2px_10px_0px_rgba(0,0,0,0.15)] gradient-bg text-white hover:opacity-90 px-3 py-2 rounded-[0.625rem] flex"
+                          >
+                            {hasFID ? "Mint Now" : "Setup FID"}
+                            <span className="ml-1 text-purple-200">- FREE</span>
+                          </Link>
+
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 px-3 py-2 border border-purple-200 bg-white hover:bg-purple-50 rounded-[0.625rem] transition"
+                          >
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-300">
+                              <Image
+                                src={
+                                  farcasterData?.pfpUrl ||
+                                  "/assets/images/layout/connected.png"
+                                }
+                                alt="Profile"
+                                fill
+                                sizes="24px"
+                                className="object-cover"
+                                quality={100}
+                              />
+                            </div>
+                            <span className="text-sm font-medium text-neutral-700">
+                              {farcasterData?.displayName || "Connected"}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
