@@ -8,12 +8,11 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 
 export default function Header() {
- 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMiniAppInfo, setShowMiniAppInfo] = useState(true);
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
-  const { farcasterData, hasFID, isMiniApp } = useFarcaster();
+  const { farcasterData, hasFID, isMiniApp, isAutoConnecting } = useFarcaster();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -177,9 +176,9 @@ export default function Header() {
                     }) => {
                       const ready = mounted;
                       const connected = ready && account && chain;
-                      const { isMiniApp, isAutoConnecting } = useFarcaster();
 
-                      // 🔥 DI FARCASTER: Hide connect button saat auto-connecting
+                      // 🔥 GUNAKAN variable dari top-level, bukan call hook lagi
+                      // DI FARCASTER: Hide connect button saat auto-connecting
                       if (isMiniApp && isAutoConnecting && !connected) {
                         return (
                           <div className="flex items-center gap-2 px-3 py-2 text-xs text-purple-600">
