@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useFarcaster } from "@/contexts/FarcasterContext";
+import { validatePfpUrl } from "@/lib/farcaster";
 
 export interface FarcasterSDKContext {
   user: {
@@ -31,65 +32,73 @@ export function useFarcasterSDK() {
           return;
         }
 
-        console.log("✅ Farcaster SDK loaded");
+        console.log("[Farcaster] SDK loaded successfully");
 
-        // Get Farcaster context (user info dari SDK)
+        // Get Farcaster context
         const context = await sdk.context;
-        console.log("👤 Farcaster SDK Context:", context);
+        console.log("[Farcaster] SDK Context:", context);
 
         if (context?.user) {
           const { fid, username, displayName, pfpUrl } = context.user;
 
-          console.log("🖼️ PFP URL dari SDK:", pfpUrl); // ✅ DEBUG
+          // Validate PFP URL
+          const validPfpUrl = validatePfpUrl(pfpUrl);
 
-          // ✅ Extract user data
+          console.log("[Farcaster] PFP URL from SDK:", {
+            original: pfpUrl,
+            validated: validPfpUrl,
+            isValid: !!validPfpUrl,
+          });
+
           const userData = {
             fid,
             username: username || "",
             displayName: displayName || username || `User ${fid}`,
-            pfpUrl: pfpUrl || "/assets/images/layout/connected.png", // ✅ FALLBACK
+            pfpUrl: validPfpUrl,
           };
 
-          console.log("📱 User Data Extracted:", userData);
+          console.log("[Farcaster] User Data Extracted:", userData);
 
-          // ✅ Store ke context
+          // Store to context
           setSdkContext({
             user: userData,
             client: context.client,
           });
 
-          // ✅ Update FarcasterContext dengan user data
+          // Update FarcasterContext
           setFarcasterData({
             fid,
             username: userData.username,
             displayName: userData.displayName,
             pfpUrl: userData.pfpUrl,
-            mood: "", // Will be set later after mood detection
+            mood: "",
             moodId: "",
             engagementScore: 0,
           });
 
-          console.log("✅ User profile stored in context:", userData);
+          console.log("[Farcaster] User profile stored in context");
         } else {
-          console.warn("⚠️ No user context found in SDK");
+          console.warn("[Farcaster] No user context found in SDK");
         }
 
-        // ✅ Hide splash screen
+        // Hide splash screen
         if (typeof sdk.actions?.ready === "function") {
           await sdk.actions.ready();
-          console.log("✅ Mini app splash screen hidden");
+          console.log("[Farcaster] Mini app splash screen hidden");
         }
 
         setIsReady(true);
       } catch (error: any) {
         const errorMsg = error?.message || "Failed to initialize Farcaster SDK";
-        console.log("ℹ️ Not in Farcaster mini app (web mode):", errorMsg);
+        console.log(
+          "[Farcaster] Not in Farcaster mini app (web mode):",
+          errorMsg
+        );
         setError(errorMsg);
         setIsReady(true);
       }
     };
 
-    // ✅ Only initialize in miniapp
     if (isMiniApp) {
       initializeSDK();
     } else {
