@@ -7,6 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { useConnect, useAccount } from "wagmi";
 
 export interface FarcasterData {
   fid: number;
@@ -40,6 +41,73 @@ const FarcasterContext = createContext<FarcasterContextType>({
 
 export function useFarcaster() {
   return useContext(FarcasterContext);
+}
+
+/**
+ * 🔥 Auto-connect component - HARUS di dalam provider agar ready = true
+ */
+function AutoConnectWallet() {
+  const { connect, connectors } = useConnect();
+  const { isMiniApp, isWarpcast, ready } = useFarcaster();
+  const { isConnected } = useAccount();
+  const [hasAttempted, setHasAttempted] = useState(false);
+
+  useEffect(() => {
+    if (!ready || isConnected || hasAttempted) {
+      if (!ready) {
+        console.log("⏳ Context not ready");
+      }
+      return;
+    }
+
+    if (!isMiniApp && !isWarpcast) {
+      console.log("ℹ️ Not in Farcaster mini app");
+      return;
+    }
+
+    setHasAttempted(true);
+    console.log("🔍 Starting auto-connect...");
+
+    const injectedConnector = connectors.find(
+      (c) => c.id === "injected" || c.type === "injected"
+    );
+
+    console.log("📊 Connector check:", {
+      found: !!injectedConnector,
+      windowEthereum: !!window.ethereum,
+      isMiniApp,
+      isWarpcast,
+      ready,
+    });
+
+    if (!injectedConnector) {
+      console.warn("⚠️ No injected connector");
+      return;
+    }
+
+    if (!window.ethereum) {
+      console.warn("⚠️ No window.ethereum");
+      return;
+    }
+
+    try {
+      console.log("🔗 Connecting wallet...");
+      connect({ connector: injectedConnector });
+      console.log("✅ Connect triggered");
+    } catch (error) {
+      console.error("❌ Error:", error);
+    }
+  }, [
+    ready,
+    isMiniApp,
+    isWarpcast,
+    isConnected,
+    connect,
+    connectors,
+    hasAttempted,
+  ]);
+
+  return null;
 }
 
 export function FarcasterProvider({ children }: { children: ReactNode }) {
@@ -107,6 +175,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         ready,
       }}
     >
+      {/* 🔥 AutoConnectWallet HARUS di sini - DALAM provider */}
+      <AutoConnectWallet />
       {children}
     </FarcasterContext.Provider>
   );
