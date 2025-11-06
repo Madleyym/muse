@@ -12,6 +12,13 @@ interface WalletConnection {
   disconnect: () => void;
 }
 
+// ✅ NEW: Define type for Frame check result
+interface FrameCheckResult {
+  address: string;
+  provider: any;
+  isFrame: boolean;
+}
+
 export const useFrameWallet = (): WalletConnection => {
   const [state, setState] = useState<{
     address: `0x${string}` | undefined;
@@ -30,19 +37,25 @@ export const useFrameWallet = (): WalletConnection => {
     console.log("[Frame Wallet] 🚀 Connecting...");
 
     try {
-      // Priority 1: Frame Wallet
+      // Priority 1: Frame Wallet (with timeout)
       if (sdk.wallet?.ethProvider) {
         const provider = sdk.wallet.ethProvider;
         console.log("[Frame Wallet] 🟣 Frame provider detected");
 
         try {
-          // Request accounts (will show approval popup)
-          const accounts = await provider.request({
+          // ✅ Add timeout to prevent hanging
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Frame wallet timeout")), 5000)
+          );
+
+          const connectPromise = provider.request({
             method: "eth_requestAccounts",
           });
 
-          if (accounts && accounts.length > 0) {
-            const address = accounts[0] as `0x${string}`;
+          const accounts = await Promise.race([connectPromise, timeoutPromise]);
+
+          if (accounts && (accounts as any[]).length > 0) {
+            const address = (accounts as any[])[0] as `0x${string}`;
             console.log("[Frame Wallet] ✅ Connected:", address);
 
             setState({
@@ -56,11 +69,17 @@ export const useFrameWallet = (): WalletConnection => {
           }
         } catch (frameError: any) {
           console.error("[Frame Wallet] ❌ Frame error:", frameError.message);
-          throw new Error("User rejected Frame wallet connection");
+
+          // ✅ If timeout, try browser wallet as fallback
+          if (frameError.message.includes("timeout")) {
+            console.log("[Frame Wallet] Frame timeout, trying browser...");
+          } else {
+            throw new Error("User rejected Frame wallet connection");
+          }
         }
       }
 
-      // Priority 2: Browser Wallet (fallback for desktop)
+      // Priority 2: Browser Wallet (fallback for desktop or if Frame fails)
       if (typeof window !== "undefined" && window.ethereum) {
         console.log("[Frame Wallet] 🦊 Using browser wallet");
 
@@ -102,36 +121,57 @@ export const useFrameWallet = (): WalletConnection => {
     });
   };
 
-  // ✅ Auto-check existing connection on mount
+  // ✅ Auto-check existing connection on mount (with timeout)
   useEffect(() => {
     let mounted = true;
 
     const checkExistingConnection = async () => {
       try {
-        // Check Frame wallet first
-        if (sdk.wallet?.ethProvider) {
-          const provider = sdk.wallet.ethProvider;
+        // ✅ Try Frame wallet FIRST (with timeout)
+        const timeoutPromise = new Promise<null>(
+          (_, reject) =>
+            setTimeout(() => reject(new Error("Check timeout")), 2000) // ✅ Faster timeout for check
+        );
 
-          const accounts = await provider.request({
-            method: "eth_accounts",
-          });
+        const checkFrame = async (): Promise<FrameCheckResult | null> => {
+          if (sdk.wallet?.ethProvider) {
+            const provider = sdk.wallet.ethProvider;
 
-          if (accounts && accounts.length > 0 && mounted) {
-            const address = accounts[0] as `0x${string}`;
-            console.log("[Frame Wallet] ✅ Already connected:", address);
-
-            setState({
-              address,
-              isConnected: true,
-              isFrameWallet: true,
-              provider,
+            const accounts = await provider.request({
+              method: "eth_accounts", // ✅ Check existing, no popup
             });
-            return;
-          }
-        }
 
-        // Check browser wallet
-        if (typeof window !== "undefined" && window.ethereum) {
+            if (accounts && accounts.length > 0) {
+              return { address: accounts[0], provider, isFrame: true };
+            }
+          }
+          return null;
+        };
+
+        const frameResult = await Promise.race([
+          checkFrame(),
+          timeoutPromise,
+        ]).catch(() => null);
+
+        if (frameResult && mounted) {
+          const address = frameResult.address as `0x${string}`;
+          console.log("[Frame Wallet] ✅ Frame auto-connected:", address);
+
+          setState({
+            address,
+            isConnected: true,
+            isFrameWallet: true,
+            provider: frameResult.provider,
+          });
+          return;
+        }
+      } catch (error: any) {
+        console.warn("[Frame Wallet] Frame check failed:", error.message);
+      }
+
+      // ✅ Fallback: Check browser wallet
+      try {
+        if (typeof window !== "undefined" && window.ethereum && mounted) {
           const accounts = await window.ethereum.request({
             method: "eth_accounts",
           });
@@ -152,7 +192,7 @@ export const useFrameWallet = (): WalletConnection => {
           }
         }
       } catch (error: any) {
-        console.warn("[Frame Wallet] Check failed:", error.message);
+        console.warn("[Frame Wallet] Browser check failed:", error.message);
       }
     };
 
