@@ -20,7 +20,7 @@ export default function HeroSection() {
     setIsReady(true);
   }, []);
 
-  // 🔧 FIX 1: Use current mood's gradient length
+  // ✅ Gradient animation for current mood
   useEffect(() => {
     if (!isReady || !proMoods[featuredIndex]) return;
 
@@ -34,23 +34,29 @@ export default function HeroSection() {
     return () => clearInterval(interval);
   }, [isReady, featuredIndex, proMoods]);
 
-  // Auto-rotate featured mood
+  // ✅ FIX: Better transition timing
   useEffect(() => {
     if (!isReady || proMoods.length === 0) return;
 
     const interval = setInterval(() => {
       setIsTransitioning(true);
+
+      // ✅ Wait for fade out animation
       setTimeout(() => {
         setFeaturedIndex((prev) => (prev + 1) % proMoods.length);
         setFeaturedGradientIndex(0);
-        setIsTransitioning(false);
-      }, 300);
+
+        // ✅ Shorter fade-in delay
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 100);
+      }, 400); // ✅ Increased fade-out duration
     }, 6000);
 
     return () => clearInterval(interval);
   }, [isReady, proMoods.length]);
 
-  // Keyboard navigation
+  // ✅ Keyboard navigation with better animation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
@@ -60,15 +66,15 @@ export default function HeroSection() {
             (prev) => (prev - 1 + proMoods.length) % proMoods.length
           );
           setFeaturedGradientIndex(0);
-          setIsTransitioning(false);
-        }, 150);
+          setTimeout(() => setIsTransitioning(false), 100);
+        }, 300);
       } else if (e.key === "ArrowRight") {
         setIsTransitioning(true);
         setTimeout(() => {
           setFeaturedIndex((prev) => (prev + 1) % proMoods.length);
           setFeaturedGradientIndex(0);
-          setIsTransitioning(false);
-        }, 150);
+          setTimeout(() => setIsTransitioning(false), 100);
+        }, 300);
       }
     };
 
@@ -101,7 +107,7 @@ export default function HeroSection() {
       : `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`;
   };
 
-  // 🔧 FIX 2: Safety checks
+  // Safety checks
   if (!isReady || proMoods.length === 0) {
     return null;
   }
@@ -149,12 +155,12 @@ export default function HeroSection() {
               {/* Shimmer overlay */}
               <div className="absolute inset-0 animate-shimmer pointer-events-none opacity-30" />
 
-              {/* NFT Character */}
+              {/* ✅ FIX: Better transition animation */}
               <div
-                className={`absolute inset-0 flex items-center justify-center pb-20 sm:pb-24 pt-6 px-4 sm:px-6 transition-all duration-300 pointer-events-none ${
+                className={`absolute inset-0 flex items-center justify-center pb-20 sm:pb-24 pt-6 px-4 sm:px-6 pointer-events-none transition-all duration-500 ease-in-out ${
                   isTransitioning
-                    ? "opacity-0 scale-95"
-                    : "opacity-100 scale-100"
+                    ? "opacity-0 scale-90 blur-sm"
+                    : "opacity-100 scale-100 blur-0"
                 }`}
               >
                 <div className="relative w-full h-full max-w-[260px] max-h-[260px] sm:max-w-[300px] sm:max-h-[300px] lg:max-w-[350px] lg:max-h-[350px] group-hover:scale-105 transition-transform duration-500">
@@ -198,8 +204,14 @@ export default function HeroSection() {
                 </div>
               )}
 
-              {/* Info Bar */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 lg:p-6 bg-gradient-to-t from-black/95 via-black/75 to-transparent backdrop-blur-md">
+              {/* ✅ FIX: Info Bar with transition */}
+              <div
+                className={`absolute bottom-0 left-0 right-0 p-4 sm:p-5 lg:p-6 bg-gradient-to-t from-black/95 via-black/75 to-transparent backdrop-blur-md transition-all duration-500 ease-in-out ${
+                  isTransitioning
+                    ? "opacity-0 translate-y-4"
+                    : "opacity-100 translate-y-0"
+                }`}
+              >
                 <div className="flex items-end justify-between gap-2 sm:gap-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-white font-bold text-base sm:text-lg lg:text-2xl mb-1 truncate">
@@ -210,8 +222,7 @@ export default function HeroSection() {
                     </p>
                   </div>
                   <div className="flex-shrink-0">
-                    {/* 🔧 FIX 3: Equal padding for PRO badge */}
-                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg p-2 sm:p-2.5 shadow-lg">
+                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg px-2 py-1.5 sm:px-2.5 sm:py-2 shadow-lg">
                       <span className="text-white text-[10px] sm:text-xs font-bold leading-none">
                         PRO
                       </span>
@@ -225,6 +236,8 @@ export default function HeroSection() {
                 <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] animate-pulse" />
               </div>
             </div>
+
+            {/* ✅ REMOVED: Bullet indicators */}
           </div>
 
           {/* TEXT CONTENT */}
@@ -288,7 +301,6 @@ export default function HeroSection() {
               className="mt-8 lg:mt-12 flex flex-row items-center gap-2 sm:gap-3 justify-center lg:justify-start animate-fade-in-up w-full sm:w-auto"
               style={{ animationDelay: "0.5s" }}
             >
-              {/* 🔧 FIX 4: Added scroll={true} */}
               <Link
                 href="#how-it-works"
                 scroll={true}
