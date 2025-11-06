@@ -6,7 +6,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { nftMoods } from "@/data/nftMoods";
-import { useMintNFTWebsite } from "@/hooks/useMintNFT.website"; // ✅ DIRECT IMPORT
+import { useMintNFTWebsite } from "@/hooks/useMintNFT.website";
 import { getTransactionUrl } from "@/config/contracts";
 
 const isValidImageUrl = (url: string | undefined | null): boolean => {
@@ -23,7 +23,6 @@ export default function PricingWebsite() {
   const { isConnected } = useAccount();
   const { farcasterData, setFarcasterData } = useFarcaster();
 
-  // ✅ USE WEBSITE HOOK DIRECTLY
   const {
     mintFree,
     mintHD,
@@ -70,6 +69,20 @@ export default function PricingWebsite() {
   }, [farcasterData]);
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
+
+  // ✅ DEBUG: Log currentMood when it changes
+  useEffect(() => {
+    if (currentMood && farcasterData) {
+      console.log("🎨 Current Mood Debug:", {
+        moodId: farcasterData.moodId,
+        moodName: currentMood.name,
+        ogImage: currentMood.ogImage,
+        fullUrl: `https://muse.write3.fun${
+          currentMood.ogImage || "/og/fire-starter.png"
+        }`,
+      });
+    }
+  }, [currentMood, farcasterData]);
 
   useEffect(() => {
     const checkMinted = async () => {
@@ -319,7 +332,9 @@ export default function PricingWebsite() {
   };
 
   const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    const result = /^#?([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})$/i.exec(
+      hex
+    );
     return result
       ? {
           r: parseInt(result[1], 16),
@@ -340,6 +355,28 @@ export default function PricingWebsite() {
     return viaRgb
       ? `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${viaRgb.r},${viaRgb.g},${viaRgb.b}) 50%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`
       : `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`;
+  };
+
+  // ✅ Generate share URL with debug
+  const getShareUrl = () => {
+    const ogImagePath = currentMood?.ogImage || "/og/fire-starter.png";
+    const fullImageUrl = `https://muse.write3.fun${ogImagePath}`;
+    const text = `Just minted my ${
+      farcasterData?.mood || "Creative Mind"
+    } mood NFT! 🎨✨\n\nPowered by Muse on Base ⚡\n\nMint yours: https://muse.write3.fun`;
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
+      text
+    )}&embeds[]=${encodeURIComponent(fullImageUrl)}`;
+
+    console.log("🚀 Share URL Generated:", {
+      moodId: farcasterData?.moodId,
+      moodName: farcasterData?.mood,
+      ogImagePath,
+      fullImageUrl,
+      shareUrl,
+    });
+
+    return shareUrl;
   };
 
   return (
@@ -1031,6 +1068,7 @@ export default function PricingWebsite() {
           </>
         )}
 
+        {/* ✅ SUCCESS NOTIFICATION with FIXED Share Button */}
         {showSuccessNotification && isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -1058,17 +1096,9 @@ export default function PricingWebsite() {
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
 
-                {/* ✅ Share to Warpcast Button di Website */}
+                {/* ✅ FIXED: Share Button with Static OG Image */}
                 <a
-                  href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
-                    `Just minted my ${
-                      farcasterData?.mood || "Creative Mind"
-                    } mood NFT! 🎨✨\n\nPowered by Muse on @base.base.eth \n\nMint yours: https://muse.write3.fun`
-                  )}&embeds[]=${encodeURIComponent(
-                    `https://muse.write3.fun${
-                      currentMood?.ogImage || "/og/fire-starter.png"
-                    }` 
-                  )}`}
+                  href={getShareUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full text-center bg-purple-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-700 transition font-medium mb-2"
@@ -1076,14 +1106,14 @@ export default function PricingWebsite() {
                   Share on Warpcast 🎨
                 </a>
 
-                {/* <a
+                <a
                   href={getTransactionUrl(hash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full text-center border-2 border-purple-200 text-purple-600 text-xs py-2 px-3 rounded-lg hover:bg-purple-50 transition font-medium"
                 >
                   View on Basescan
-                </a> */}
+                </a>
 
                 <p className="text-xs text-slate-500 text-center mt-2">
                   Each FID can only mint once
@@ -1118,6 +1148,7 @@ export default function PricingWebsite() {
           </div>
         )}
 
+        {/* ✅ ERROR NOTIFICATION */}
         {showErrorNotification && (mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
