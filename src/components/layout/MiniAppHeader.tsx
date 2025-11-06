@@ -92,7 +92,7 @@ export default function MiniAppHeader() {
     setIsSidebarOpen(false);
   };
 
-  // ✅ FIXED: Share function with multiple fallback methods
+  // ✅ FIXED: Single embed URL (no duplicates)
   const handleShare = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
 
@@ -109,6 +109,7 @@ export default function MiniAppHeader() {
         (window as any).sdk?.actions?.openUrl
       ) {
         console.log("[Share] Using window.sdk.actions.openUrl");
+        // ✅ FIX: Use single embed parameter
         await (window as any).sdk.actions.openUrl(
           `https://warpcast.com/~/compose?text=${encodeURIComponent(
             text
@@ -122,6 +123,7 @@ export default function MiniAppHeader() {
       console.log("[Share] Trying dynamic SDK import...");
       const { default: sdk } = await import("@farcaster/frame-sdk");
 
+      // ✅ FIX: Use single embed parameter
       await sdk.actions.openUrl(
         `https://warpcast.com/~/compose?text=${encodeURIComponent(
           text
@@ -137,6 +139,7 @@ export default function MiniAppHeader() {
         window.parent.postMessage(
           {
             type: "fc:frame:openUrl",
+            // ✅ FIX: Use single embed parameter
             url: `https://warpcast.com/~/compose?text=${encodeURIComponent(
               text
             )}&embeds[]=${encodeURIComponent(embedUrl)}`,
