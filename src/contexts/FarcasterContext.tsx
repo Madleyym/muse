@@ -85,8 +85,7 @@ function AutoConnectInFarcaster() {
 
         if (injectedConnector) {
           await connect({ connector: injectedConnector });
-        } else if (connectors.length > 0) {
-          await connect({ connector: connectors[0] });
+          console.log("[AutoConnect] ✅ Connected!");
         }
       } catch (error: any) {
         console.error("[AutoConnect] ❌ Error:", error?.message);
@@ -126,7 +125,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const { isConnecting } = useAccount();
 
   useEffect(() => {
-    // ✅ SAFE DETECTION - No crashes
     const detectEnvironment = () => {
       try {
         if (typeof window === "undefined") {
@@ -144,54 +142,62 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           );
         const detectedIsDesktop = !detectedIsMobile;
 
-        // Warpcast detection
+        // Warpcast/Farcaster indicators
         const fromWarpcast = document.referrer.includes("warpcast.com");
         const hasWarpcastUA = navigator.userAgent.includes("Warpcast");
+        const hasFarcasterUA = navigator.userAgent.includes("Farcaster");
         const isIframe = window.self !== window.top;
         const warpcastParam = url.searchParams.get("fc") === "true";
-        const detectedIsWarpcast =
-          fromWarpcast || hasWarpcastUA || isIframe || warpcastParam;
 
-        // Path detection
-        const isMiniAppRoute =
-          url.pathname.startsWith("/miniapp") ||
-          url.searchParams.has("frameContext");
+        // Path check
+        const isMiniAppRoute = url.pathname.startsWith("/miniapp");
 
-        // ✅ SAFE: Check SDK without importing (avoid crash)
+        // ✅ CRITICAL: Check for Farcaster SDK
         let hasFarcasterSDK = false;
         try {
-          if (
-            typeof window !== "undefined" &&
-            (window as any).farcaster !== undefined
-          ) {
+          // Check if window.farcaster exists (injected by Farcaster app)
+          if ((window as any).farcaster !== undefined) {
             hasFarcasterSDK = true;
-            console.log(
-              "[FarcasterContext] ✅ SDK detected via window.farcaster"
-            );
+            console.log("[FarcasterContext] ✅ SDK found via window.farcaster");
           }
         } catch (e) {
-          console.log("[FarcasterContext] SDK check safe fail");
+          console.log("[FarcasterContext] SDK check failed");
         }
 
-        // Final decision
+        const detectedIsWarpcast =
+          fromWarpcast ||
+          hasWarpcastUA ||
+          hasFarcasterUA ||
+          isIframe ||
+          warpcastParam;
+
+        // ✅ KEY LOGIC: MiniApp = /miniapp path AND (SDK exists OR Warpcast indicators)
         const finalIsMiniApp =
           isMiniAppRoute && (hasFarcasterSDK || detectedIsWarpcast);
 
         let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
-        if (detectedIsWarpcast && hasFarcasterSDK) {
-          finalEnvironment = "warpcast";
-        } else if (finalIsMiniApp) {
-          finalEnvironment = "miniapp";
+
+        if (finalIsMiniApp) {
+          if (detectedIsWarpcast && hasFarcasterSDK) {
+            finalEnvironment = "warpcast";
+          } else {
+            finalEnvironment = "miniapp";
+          }
         }
 
-        console.log("[FarcasterContext] 🎯 Detection:", {
+        console.log("[FarcasterContext] 🎯 Detection Result:", {
           pathname: url.pathname,
           isMiniAppRoute,
           hasFarcasterSDK,
+          hasWarpcastUA,
+          hasFarcasterUA,
+          fromWarpcast,
+          isIframe,
           detectedIsWarpcast,
           detectedIsMobile,
           finalIsMiniApp,
           finalEnvironment,
+          userAgent: userAgent.substring(0, 50),
         });
 
         setEnvironment(finalEnvironment);
@@ -210,8 +216,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
         setReady(true);
       } catch (error: any) {
-        console.error("[FarcasterContext] ❌ Detection error:", error);
-        // ✅ SAFE: Set defaults on error
+        console.error("[FarcasterContext] ❌ Error:", error);
         setEnvironment("web");
         setIsMiniApp(false);
         setReady(true);

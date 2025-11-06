@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { nftMoods } from "@/data/nftMoods";
-import { useMintNFT } from "@/hooks/useMintNFT";
+import { useMintNFTMiniApp } from "@/hooks/useMintNFT.miniapp"; // ✅ DIRECT IMPORT
 import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { useFrameWallet } from "@/hooks/useFrameWallet";
 import { getTransactionUrl } from "@/config/contracts";
@@ -24,6 +24,7 @@ export default function PricingMiniApp() {
   const { farcasterData, setFarcasterData } = useFarcaster();
   const { isReady: sdkReady, user: sdkUser } = useFarcasterSDK();
 
+  // ✅ USE MINIAPP HOOK DIRECTLY
   const {
     mintFree,
     mintHD,
@@ -36,7 +37,7 @@ export default function PricingMiniApp() {
     isDevAddress,
     error: mintError,
     hash,
-  } = useMintNFT();
+  } = useMintNFTMiniApp();
 
   const [selectedTier, setSelectedTier] = useState<"free" | "hd">("free");
   const [gradientIndex, setGradientIndex] = useState(0);
@@ -427,89 +428,81 @@ export default function PricingMiniApp() {
         </div>
 
         {farcasterData && currentMood && (
-          <div className="max-w-3xl mx-auto mb-6 sm:mb-8 px-4">
-            <div
-              className="rounded-2xl p-3 sm:p-6 text-white shadow-xl transition-all duration-500"
-              style={{
-                background: getGradientStyle(
-                  currentMood.gradients[gradientIndex]
-                ),
-              }}
-            >
-              {/* ✅ ALWAYS HORIZONTAL LAYOUT */}
-              <div className="flex flex-row items-center gap-3 sm:gap-6">
-                {/* ✅ LEFT: Image - Smaller on mobile */}
-                <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-48 md:h-48 flex-shrink-0">
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
-                  <div className="relative w-full h-full p-2 sm:p-3 md:p-4">
-                    <Image
-                      src={currentMood.baseImage}
-                      alt={currentMood.name}
-                      fill
-                      className="object-contain drop-shadow-2xl"
-                      sizes="(max-width: 640px) 96px, (max-width: 768px) 144px, 192px"
-                      priority
-                    />
+          <div className="max-w-md mx-auto mb-6 px-4">
+            <div className="rounded-3xl p-[2px] bg-white/20 shadow-2xl">
+              <div
+                className="rounded-3xl p-4 text-white transition-all duration-500"
+                style={{
+                  background: getGradientStyle(
+                    currentMood.gradients[gradientIndex]
+                  ),
+                }}
+              >
+                <div className="flex items-center gap-2.5 mb-3.5">
+                  <div className="relative w-11 h-11 rounded-full overflow-hidden border-2 border-white/50 bg-white/20 shadow-lg flex-shrink-0">
+                    {hasValidPfp && farcasterData.pfpUrl ? (
+                      <Image
+                        src={farcasterData.pfpUrl}
+                        alt={farcasterData.displayName}
+                        fill
+                        className="object-cover"
+                        sizes="44px"
+                        unoptimized
+                        onError={handlePfpError}
+                      />
+                    ) : (
+                      <FallbackAvatar />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold truncate leading-tight">
+                      {farcasterData.displayName}
+                    </h3>
+                    <p className="text-white/80 text-xs truncate leading-tight">
+                      @{farcasterData.username} · FID {farcasterData.fid}
+                    </p>
                   </div>
                 </div>
 
-                {/* ✅ RIGHT: Info - Text left, smaller on mobile */}
-                <div className="flex-1 text-left min-w-0">
-                  {/* Profile Header */}
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                    <div className="relative w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-white/30 bg-white/20 flex-shrink-0">
-                      {hasValidPfp && farcasterData.pfpUrl ? (
-                        <Image
-                          src={farcasterData.pfpUrl}
-                          alt={farcasterData.displayName}
-                          fill
-                          className="object-cover"
-                          sizes="48px"
-                          unoptimized
-                          onError={handlePfpError}
-                        />
-                      ) : (
-                        <FallbackAvatar />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base md:text-lg font-bold truncate">
-                        {farcasterData.displayName}
-                      </h3>
-                      <p className="text-white/80 text-[10px] sm:text-xs truncate">
-                        @{farcasterData.username} · FID {farcasterData.fid}
-                      </p>
+                <div className="mb-3.5 flex justify-center">
+                  <div className="relative w-36 h-36">
+                    <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl"></div>
+                    <div className="relative w-full h-full p-3">
+                      <Image
+                        src={currentMood.baseImage}
+                        alt={currentMood.name}
+                        fill
+                        className="object-contain drop-shadow-2xl"
+                        sizes="144px"
+                        priority
+                      />
                     </div>
                   </div>
+                </div>
 
-                  {/* Mood Info */}
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 sm:p-3 md:p-4">
-                    <div className="text-base sm:text-xl md:text-2xl font-bold mb-0.5 sm:mb-1 truncate">
-                      {currentMood.name}
-                    </div>
-                    <div className="text-[10px] sm:text-xs md:text-sm text-white/80 mb-2 line-clamp-2">
+                <div className="mb-3.5">
+                  <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg">
+                    <p className="text-[11px] text-white/90 leading-relaxed text-center line-clamp-3">
                       {currentMood.description}
-                    </div>
+                    </p>
+                  </div>
+                </div>
 
-                    {/* Stats Row */}
-                    <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                      <div>
-                        <div className="text-[9px] sm:text-xs text-white/70">
-                          Engagement
-                        </div>
-                        <div className="text-sm sm:text-lg md:text-xl font-bold">
-                          {farcasterData.engagementScore.toLocaleString()}
-                        </div>
-                      </div>
-                      <div className="h-6 sm:h-8 w-px bg-white/30"></div>
-                      <div>
-                        <div className="text-[9px] sm:text-xs text-white/70">
-                          Category
-                        </div>
-                        <div className="text-sm sm:text-lg md:text-xl font-bold uppercase">
-                          {currentMood.category}
-                        </div>
-                      </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="bg-white/20 backdrop-blur-md rounded-xl px-2.5 py-2 border border-white/30 shadow-lg text-center">
+                    <div className="text-[8px] text-white/70 uppercase tracking-wider leading-tight mb-1">
+                      Engagement
+                    </div>
+                    <div className="text-lg font-bold leading-tight">
+                      {farcasterData.engagementScore.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-md rounded-xl px-2.5 py-2 border border-white/30 shadow-lg text-center">
+                    <div className="text-[8px] text-white/70 uppercase tracking-wider leading-tight mb-1">
+                      Category
+                    </div>
+                    <div className="text-lg font-bold uppercase leading-tight">
+                      {currentMood.category}
                     </div>
                   </div>
                 </div>
@@ -819,37 +812,28 @@ export default function PricingMiniApp() {
               {!checkingMinted && hasMinted && "Already Minted"}
               {!checkingMinted &&
                 !hasMinted &&
-                !isConnected &&
-                "Connect Wallet First"}
-              {!checkingMinted &&
-                !hasMinted &&
-                isConnected &&
                 uploadingToIPFS &&
                 mintType === "free" &&
                 "Uploading..."}
               {!checkingMinted &&
                 !hasMinted &&
-                isConnected &&
                 isPending &&
                 mintType === "free" &&
                 !uploadingToIPFS &&
                 "Confirming..."}
               {!checkingMinted &&
                 !hasMinted &&
-                isConnected &&
                 isConfirming &&
                 mintType === "free" &&
                 !uploadingToIPFS &&
                 "Minting..."}
               {!checkingMinted &&
                 !hasMinted &&
-                isConnected &&
                 isSuccess &&
                 mintType === "free" &&
                 "Minted!"}
               {!checkingMinted &&
                 !hasMinted &&
-                isConnected &&
                 ((!uploadingToIPFS &&
                   !isPending &&
                   !isConfirming &&
@@ -921,37 +905,28 @@ export default function PricingMiniApp() {
               {!checkingMinted && hasMinted && "Already Minted"}
               {!checkingMinted &&
                 !hasMinted &&
-                !isConnected &&
-                "Connect Wallet First"}
-              {!checkingMinted &&
-                !hasMinted &&
-                isConnected &&
                 uploadingToIPFS &&
                 mintType === "hd" &&
                 "Uploading..."}
               {!checkingMinted &&
                 !hasMinted &&
-                isConnected &&
                 isPending &&
                 mintType === "hd" &&
                 !uploadingToIPFS &&
                 "Confirming..."}
               {!checkingMinted &&
                 !hasMinted &&
-                isConnected &&
                 isConfirming &&
                 mintType === "hd" &&
                 !uploadingToIPFS &&
                 "Minting..."}
               {!checkingMinted &&
                 !hasMinted &&
-                isConnected &&
                 isSuccess &&
                 mintType === "hd" &&
                 "Minted!"}
               {!checkingMinted &&
                 !hasMinted &&
-                isConnected &&
                 ((!uploadingToIPFS &&
                   !isPending &&
                   !isConfirming &&

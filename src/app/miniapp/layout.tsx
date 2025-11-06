@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { ReactNode } from "react";
+import { FarcasterProvider } from "@/contexts/FarcasterContext";
 
 export const metadata: Metadata = {
-  title: "Muse - Mint Your Mood NFT",
-  description: "Mint NFTs based on your Farcaster social activity",
+  title: "Muse - Mint Your Mood | Farcaster MiniApp",
+  description: "Transform your Farcaster vibe into unique mood NFTs on Base",
   openGraph: {
-    title: "Muse - Mint Your Mood NFT",
-    description: "Mint NFTs based on your Farcaster social activity",
+    title: "Muse - Mint Your Mood | Farcaster MiniApp",
+    description: "Transform your Farcaster vibe into unique mood NFTs on Base",
     url: "https://muse.write3.fun/miniapp",
     type: "website",
     images: [
@@ -28,6 +28,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MiniAppLayout({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+export default function MiniAppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased">
+        {/* ✅ ONLY FarcasterProvider - NO Web3Provider/RainbowKit! */}
+        <FarcasterProvider>{children}</FarcasterProvider>
+      </body>
+    </html>
+  );
 }

@@ -4,7 +4,7 @@ import { useFarcaster } from "@/contexts/FarcasterContext";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
-// ✅ Dynamic import to prevent SSR issues
+// ✅ Dynamic imports to prevent SSR issues
 const PricingMiniApp = dynamic(() => import("./PricingMiniApp"), {
   ssr: false,
   loading: () => <LoadingSpinner />,
@@ -32,13 +32,19 @@ function LoadingSpinner() {
 }
 
 export default function PricingSection() {
-  const { isMiniApp, ready } = useFarcaster();
+  const { isMiniApp, ready, environment } = useFarcaster();
 
+  console.log("[PricingSection] 🔍 Render state:", {
+    isMiniApp,
+    environment,
+    ready,
+    willRender: isMiniApp ? "MiniApp (Auto FID)" : "Website (Manual FID)",
+  });
+
+  // Wait for detection to complete
   if (!ready) {
     return <LoadingSpinner />;
   }
-
-  console.log("[PricingSection] Rendering:", isMiniApp ? "MiniApp" : "Website");
 
   return (
     <Suspense fallback={<LoadingSpinner />}>

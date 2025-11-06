@@ -10,13 +10,14 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[MiniApp Error]:", error);
+    console.error("[MiniApp Error Boundary]:", error);
   }, [error]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 sm:p-8 border-2 border-red-200">
         <div className="text-center">
+          {/* Error Icon */}
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
               className="w-8 h-8 text-red-600"
@@ -33,6 +34,7 @@ export default function Error({
             </svg>
           </div>
 
+          {/* Error Message */}
           <h2 className="text-xl font-bold text-slate-900 mb-2">
             Oops! Something went wrong
           </h2>
@@ -41,7 +43,8 @@ export default function Error({
             {error.message || "An unexpected error occurred"}
           </p>
 
-          <div className="flex gap-3">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={reset}
               className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 rounded-xl hover:opacity-90 transition font-medium text-sm"
@@ -56,12 +59,13 @@ export default function Error({
             </a>
           </div>
 
+          {/* Dev Error Details */}
           {process.env.NODE_ENV === "development" && (
             <details className="mt-4 text-left">
-              <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700">
+              <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-700 font-medium">
                 Error Details (Dev Only)
               </summary>
-              <pre className="mt-2 text-[10px] bg-slate-100 p-2 rounded overflow-auto max-h-40">
+              <pre className="mt-2 text-[10px] bg-slate-100 p-3 rounded overflow-auto max-h-40 text-left font-mono">
                 {error.stack}
               </pre>
             </details>

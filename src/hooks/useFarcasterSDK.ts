@@ -19,20 +19,30 @@ export function useFarcasterSDK() {
 
     const initSDK = async () => {
       try {
-        // ✅ SAFE: Dynamic import to avoid crash
-        const sdk = await import("@farcaster/frame-sdk").then((m) => m.default);
+        console.log("[FarcasterSDK] 🚀 Starting initialization...");
+
+        // ✅ Check if running in browser
+        if (typeof window === "undefined") {
+          console.log("[FarcasterSDK] Not in browser");
+          setIsReady(true);
+          return;
+        }
+
+        // ✅ Dynamic import to avoid SSR issues
+        const { default: sdk } = await import("@farcaster/frame-sdk");
 
         if (!mounted) return;
 
-        console.log("[Farcaster SDK] Starting init...");
-
+        // Wait for SDK ready with timeout
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("SDK timeout")), 5000)
+          setTimeout(() => reject(new Error("SDK timeout (5s)")), 5000)
         );
 
         await Promise.race([sdk.actions.ready(), timeoutPromise]);
 
         if (!mounted) return;
+
+        console.log("[FarcasterSDK] ✅ SDK ready, getting context...");
 
         const context = await sdk.context;
 
@@ -44,16 +54,15 @@ export function useFarcasterSDK() {
             pfpUrl: context.user.pfpUrl || undefined,
           };
 
-          console.log("[Farcaster SDK] ✅ User:", userData);
+          console.log("[FarcasterSDK] ✅ User detected:", userData);
           setUser(userData);
           setIsReady(true);
         } else {
-          throw new Error("No user in context");
+          throw new Error("No user in SDK context");
         }
       } catch (err: any) {
-        console.error("[Farcaster SDK] ❌ Error:", err.message);
+        console.error("[FarcasterSDK] ❌ Init failed:", err.message);
 
-        // ✅ SAFE: Set ready even on error
         if (mounted) {
           setError(err.message);
           setIsReady(true);
@@ -62,7 +71,6 @@ export function useFarcasterSDK() {
       }
     };
 
-    // ✅ SAFE: Only init in browser
     if (typeof window !== "undefined") {
       initSDK();
     } else {

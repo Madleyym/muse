@@ -6,7 +6,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { nftMoods } from "@/data/nftMoods";
-import { useMintNFT } from "@/hooks/useMintNFT";
+import { useMintNFTWebsite } from "@/hooks/useMintNFT.website"; // ✅ DIRECT IMPORT
 import { getTransactionUrl } from "@/config/contracts";
 
 const isValidImageUrl = (url: string | undefined | null): boolean => {
@@ -23,6 +23,7 @@ export default function PricingWebsite() {
   const { isConnected } = useAccount();
   const { farcasterData, setFarcasterData } = useFarcaster();
 
+  // ✅ USE WEBSITE HOOK DIRECTLY
   const {
     mintFree,
     mintHD,
@@ -35,7 +36,7 @@ export default function PricingWebsite() {
     isDevAddress,
     error: mintError,
     hash,
-  } = useMintNFT();
+  } = useMintNFTWebsite();
 
   const [step, setStep] = useState<"connect" | "fid" | "preview">("connect");
   const [fid, setFid] = useState("");
@@ -304,7 +305,7 @@ export default function PricingWebsite() {
     if (farcasterData?.fid && checkIfAlreadyMinted) {
       checkedFidRef.current = null;
 
-      checkIfAlreadyMinted(farcasterData.fid).then((minted) => {
+      checkIfAlreadyMinted(farcasterData.fid).then((minted: boolean) => {
         setHasMinted(minted);
         checkedFidRef.current = farcasterData.fid;
         console.log("[Website] 🔄 Re-checked FID status:", minted);
