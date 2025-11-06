@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png", // ✅ Your OG image
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Muse - Mint Your Mood NFT",
@@ -37,7 +37,6 @@ export const metadata: Metadata = {
     title: "Muse - Mint Your Mood NFT",
     description: "Turn your Farcaster vibe into collectible art on Base",
     images: ["/og-image.png"],
-    creator: "@muse", // ✅ Your Twitter handle
   },
 };
 
