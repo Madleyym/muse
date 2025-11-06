@@ -42,7 +42,7 @@ export default function MiniAppHeader() {
 
       return () => clearTimeout(timer);
     }
-  }, []); // ✅ Only run once on mount
+  }, []);
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -95,13 +95,24 @@ export default function MiniAppHeader() {
     console.log("[MiniAppHeader] Wallet disconnected");
   };
 
-  // ✅ NEW: Smooth scroll to pricing function (prevent navigation leak)
+  // ✅ Smooth scroll to pricing function
   const handleScrollToPricing = () => {
     const pricingElement = document.getElementById("pricing");
     if (pricingElement) {
       pricingElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     setIsSidebarOpen(false);
+  };
+
+  // ✅ NEW: Generate share cast URL
+  const getShareCastUrl = () => {
+    const baseUrl = "https://warpcast.com/~/compose";
+    const text = encodeURIComponent(
+      `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on Base.\n\nFree SD or Premium HD editions available!\n\nTry it now: https://muse.write3.fun/miniapp`
+    );
+    const embedUrl = encodeURIComponent("https://muse.write3.fun/og-image.png");
+
+    return `${baseUrl}?text=${text}&embeds[]=${embedUrl}`;
   };
 
   return (
@@ -132,6 +143,30 @@ export default function MiniAppHeader() {
             <div className="flex-1"></div>
 
             <div className="flex items-center gap-x-3">
+              {/* ✅ NEW: Share Cast Button (Desktop) */}
+              <a
+                href={getShareCastUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-[0.625rem] transition shadow-md text-sm font-semibold"
+                title="Share on Warpcast"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                  />
+                </svg>
+                <span>Share</span>
+              </a>
+
               {farcasterData ? (
                 <>
                   {/* Desktop Profile Button */}
@@ -317,7 +352,32 @@ export default function MiniAppHeader() {
 
             <div className="px-4 py-4">
               <div className="space-y-3">
-                {/* ✅ FIXED: Change Link to Button with scroll function */}
+                {/* ✅ NEW: Share Cast Button (Mobile - in Sidebar) */}
+                <a
+                  href={getShareCastUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="block w-full text-center px-4 py-3.5 text-sm font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 rounded-xl transition shadow-lg"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                      />
+                    </svg>
+                    <span>Share on Warpcast</span>
+                  </div>
+                </a>
+
                 {isConnected ? (
                   <button
                     onClick={handleScrollToPricing}
@@ -334,7 +394,7 @@ export default function MiniAppHeader() {
                   </button>
                 )}
 
-                {/* ✅ Show wallet address if connected */}
+                {/* Show wallet address if connected */}
                 {address && (
                   <div className="bg-purple-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-neutral-600 mb-1">
@@ -346,7 +406,7 @@ export default function MiniAppHeader() {
                   </div>
                 )}
 
-                {/* ✅ Disconnect button - Only show if connected */}
+                {/* Disconnect button - Only show if connected */}
                 {isConnected && (
                   <button
                     onClick={handleDisconnect}
@@ -356,7 +416,7 @@ export default function MiniAppHeader() {
                   </button>
                 )}
 
-                {/* ✅ NEW: Admin Showcase Button */}
+                {/* Admin Showcase Button */}
                 {farcasterData?.fid === 1346047 && (
                   <Link
                     href="/showcase"
