@@ -7,7 +7,6 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { useConnect, useAccount } from "wagmi";
 
 export interface FarcasterData {
   fid: number;
@@ -29,9 +28,6 @@ export interface FarcasterContextType {
   isDesktop: boolean;
   environment: "web" | "miniapp" | "warpcast";
   ready: boolean;
-  isAutoConnecting: boolean;
-  isConnecting: boolean;
-  connectionError: string | null;
 }
 
 const FarcasterContext = createContext<FarcasterContextType>({
@@ -44,67 +40,10 @@ const FarcasterContext = createContext<FarcasterContextType>({
   isDesktop: false,
   environment: "web",
   ready: false,
-  isAutoConnecting: false,
-  isConnecting: false,
-  connectionError: null,
 });
 
 export function useFarcaster() {
   return useContext(FarcasterContext);
-}
-
-let autoConnectAttempted = false;
-
-function AutoConnectInFarcaster() {
-  const { connect, connectors } = useConnect();
-  const { isConnected, isConnecting } = useAccount();
-  const { isMiniApp, isMobile, ready } = useFarcaster();
-
-  useEffect(() => {
-    if (
-      autoConnectAttempted ||
-      isConnected ||
-      !ready ||
-      !isMiniApp ||
-      isConnecting ||
-      !isMobile
-    ) {
-      return;
-    }
-
-    console.log("[AutoConnect] 🚀 Starting...");
-    autoConnectAttempted = true;
-
-    const timer = setTimeout(async () => {
-      try {
-        if (connectors.length === 0) return;
-
-        const injectedConnector = connectors.find(
-          (c) => c.id === "injected" || c.type === "injected"
-        );
-
-        if (injectedConnector) {
-          await connect({ connector: injectedConnector });
-          console.log("[AutoConnect] ✅ Connected!");
-        }
-      } catch (error: any) {
-        console.error("[AutoConnect] ❌ Error:", error?.message);
-        autoConnectAttempted = false;
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [
-    ready,
-    isMiniApp,
-    isMobile,
-    isConnected,
-    isConnecting,
-    connect,
-    connectors,
-  ]);
-
-  return null;
 }
 
 export function FarcasterProvider({ children }: { children: ReactNode }) {
@@ -119,10 +58,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     "web" | "miniapp" | "warpcast"
   >("web");
   const [ready, setReady] = useState(false);
-  const [isAutoConnecting, setIsAutoConnecting] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-
-  const { isConnecting } = useAccount();
 
   useEffect(() => {
     const detectEnvironment = () => {
@@ -152,10 +87,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         // Path check
         const isMiniAppRoute = url.pathname.startsWith("/miniapp");
 
-        // ✅ CRITICAL: Check for Farcaster SDK
+        // Check for Farcaster SDK
         let hasFarcasterSDK = false;
         try {
-          // Check if window.farcaster exists (injected by Farcaster app)
           if ((window as any).farcaster !== undefined) {
             hasFarcasterSDK = true;
             console.log("[FarcasterContext] ✅ SDK found via window.farcaster");
@@ -171,7 +105,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           isIframe ||
           warpcastParam;
 
-        // ✅ KEY LOGIC: MiniApp = /miniapp path AND (SDK exists OR Warpcast indicators)
         const finalIsMiniApp =
           isMiniAppRoute && (hasFarcasterSDK || detectedIsWarpcast);
 
@@ -189,15 +122,10 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           pathname: url.pathname,
           isMiniAppRoute,
           hasFarcasterSDK,
-          hasWarpcastUA,
-          hasFarcasterUA,
-          fromWarpcast,
-          isIframe,
           detectedIsWarpcast,
           detectedIsMobile,
           finalIsMiniApp,
           finalEnvironment,
-          userAgent: userAgent.substring(0, 50),
         });
 
         setEnvironment(finalEnvironment);
@@ -205,7 +133,6 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         setIsWarpcast(detectedIsWarpcast);
         setIsMobile(detectedIsMobile);
         setIsDesktop(detectedIsDesktop);
-        setIsAutoConnecting(finalIsMiniApp && detectedIsMobile);
 
         document.body.classList.remove(
           "web-mode",
@@ -238,12 +165,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         isDesktop,
         environment,
         ready,
-        isAutoConnecting,
-        isConnecting,
-        connectionError,
       }}
     >
-      <AutoConnectInFarcaster />
       {children}
     </FarcasterContext.Provider>
   );

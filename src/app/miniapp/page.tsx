@@ -9,7 +9,8 @@ import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { useEffect } from "react";
 
 export default function MiniAppPage() {
-  const { environment, farcasterData, ready, isConnecting } = useFarcaster();
+  // ✅ REMOVED: isConnecting (no longer exists in context)
+  const { environment, farcasterData, ready } = useFarcaster();
   const { isReady: sdkReady } = useFarcasterSDK();
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function MiniAppPage() {
     }
   }, [sdkReady, farcasterData, environment]);
 
+  // ✅ Single loading state (combined SDK + context ready)
   if (!sdkReady || !ready) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
@@ -32,23 +34,12 @@ export default function MiniAppPage() {
     );
   }
 
-  if (isConnecting) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
-        <div className="text-center">
-          <div className="animate-spin mb-4 mx-auto w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full"></div>
-          <p className="text-gray-600">🔌 Connecting wallet...</p>
-        </div>
-      </div>
-    );
-  }
-
- return (
-   <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
-     <MiniAppHeader />
-     <HeroSection />
-     <PricingSection />
-     <Footer />
-   </main>
- );
+  return (
+    <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
+      <MiniAppHeader />
+      <HeroSection />
+      <PricingSection />
+      <Footer />
+    </main>
+  );
 }
