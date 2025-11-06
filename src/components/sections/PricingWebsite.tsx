@@ -1058,11 +1058,27 @@ export default function PricingWebsite() {
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
 
+                {/* ✅ NEW: Share to Warpcast Button */}
+                <a
+                  href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
+                    `Just minted my mood NFT on @muse! 🎨\n\nMood: ${
+                      farcasterData?.mood || "Creative Mind"
+                    }\nMinted on Base Network ⚡\n\nMint yours: https://muse.write3.fun`
+                  )}&embeds[]=${encodeURIComponent(
+                    `https://basescan.org/tx/${hash}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center bg-purple-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-700 transition font-medium mb-2"
+                >
+                  Share on Warpcast 🚀
+                </a>
+
                 <a
                   href={getTransactionUrl(hash)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full text-center gradient-bg text-white text-xs py-2 px-3 rounded-lg hover:opacity-90 transition font-medium"
+                  className="block w-full text-center border-2 border-purple-200 text-purple-600 text-xs py-2 px-3 rounded-lg hover:bg-purple-50 transition font-medium"
                 >
                   View on Basescan
                 </a>

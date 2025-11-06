@@ -5,21 +5,22 @@ export const metadata: Metadata = {
   description: "Transform your Farcaster vibe into unique mood NFTs on Base",
   openGraph: {
     title: "Muse - Mint Your Mood | Farcaster MiniApp",
-    description: "Transform your Farcaster vibe into unique mood NFTs on Base",
+    description:
+      "Transform your Farcaster vibe into unique mood NFTs on Base. Free SD or Premium HD editions.",
     url: "https://muse.write3.fun/miniapp",
     type: "website",
     images: [
       {
-        url: "https://muse.write3.fun/assets/Logo/Muse.png",
-        width: 1024,
-        height: 1024,
-        alt: "Muse Logo",
+        url: "https://muse.write3.fun/og-image.png", // ✅ Updated to use proper OG image
+        width: 1200,
+        height: 630,
+        alt: "Muse - Mint Your Mood NFT",
       },
     ],
   },
   other: {
     "fc:frame": "vNext",
-    "fc:frame:image": "https://muse.write3.fun/assets/Logo/Muse.png",
+    "fc:frame:image": "https://muse.write3.fun/og-image.png", // ✅ Updated here too
     "fc:frame:post_url": "https://muse.write3.fun/miniapp",
     "fc:frame:button:1": "Start Minting",
     "fc:frame:button:1:action": "link",

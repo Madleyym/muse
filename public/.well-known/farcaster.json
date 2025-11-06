@@ -3,8 +3,7 @@
     "header": "eyJmaWQiOjEzNDYwNDcsInR5cGUiOiJhdXRoIiwia2V5IjoiMHgyZjdBRDNGMTFjNmQ2NTkwOWJmYmRDMGM5YTRDZDhCNTEyYmMwMzM0In0",
     "payload": "eyJkb21haW4iOiJtdXNlLndyaXRlMy5mdW4ifQ",
     "signature": "jm5UHEom/LnirUH91G8j8ksUtdOs9mrunDFuKYaqN+tDPopA9mwdLH6svCC+Z4TfGoV/RLG7LLlO/Jf/7m3IRBw="
-  }
-    ,
+  },
   "miniapp": {
     "version": "1",
     "name": "Muse - Mint Your Mood",
@@ -12,17 +11,11 @@
     "homeUrl": "https://muse.write3.fun/miniapp",
     "imageUrl": "https://muse.write3.fun/og-image.png",
     "buttonTitle": "Start Minting",
-    "splashImageUrl": "https://muse.write3.fun/assets/Logo/Muse.png",
-    "splashBackgroundColor": "#8B5CF6",
     "subtitle": "Mint your vibe",
     "description": "Connect your wallet, enter your Farcaster ID, and mint unique mood NFTs based on your social activity. Free SD or Premium HD editions on Base.",
     "requiredChains": ["eip155:8453"],
     "primaryCategory": "social",
     "tags": ["nft", "art", "social", "mint"],
-    "tagline": "Mint Your Mood NFT",
-    "screenshotUrls": [
-      "https://muse.write3.fun/screenshot-1.png",
-      "https://muse.write3.fun/screenshot-2.png"
-    ]
+    "tagline": "Mint Your Mood NFT"
   }
 }

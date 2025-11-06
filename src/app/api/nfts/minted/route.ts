@@ -88,10 +88,36 @@ async function batchFetchPfps(fids: number[]): Promise<Map<number, string>> {
   return pfpMap;
 }
 
+// ✅ Helper function to check if NFT was minted today (UTC)
+function isMintedToday(mintedAt: string): boolean {
+  const mintDate = new Date(mintedAt);
+  const today = new Date();
+
+  // Set both dates to start of day (UTC)
+  const mintDay = new Date(
+    Date.UTC(
+      mintDate.getUTCFullYear(),
+      mintDate.getUTCMonth(),
+      mintDate.getUTCDate()
+    )
+  );
+
+  const todayDay = new Date(
+    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+  );
+
+  return mintDay.getTime() === todayDay.getTime();
+}
+
 export async function GET(request: Request) {
   try {
+    // ✅ Get filter parameter from query string
+    const { searchParams } = new URL(request.url);
+    const filter = searchParams.get("filter") || "all"; // "today" or "all"
+
     console.log("🔄 Fetching FRESH NFT data from contract...", {
       timestamp: new Date().toISOString(),
+      filter: filter,
     });
 
     // Step 1: Get total minted
@@ -110,6 +136,7 @@ export async function GET(request: Request) {
           success: true,
           totalMinted: 0,
           nfts: [],
+          filter: filter,
           timestamp: new Date().toISOString(),
         },
         {
@@ -207,17 +234,27 @@ export async function GET(request: Request) {
     });
 
     // Step 6: Sort by newest first
-    const sortedNFTs = nftData.sort(
+    let sortedNFTs = nftData.sort(
       (a, b) => new Date(b.mintedAt).getTime() - new Date(a.mintedAt).getTime()
     );
 
-    console.log(`✅ Successfully fetched ${sortedNFTs.length} FRESH NFTs`);
+    // ✅ Step 7: Apply filter if "today"
+    if (filter === "today") {
+      sortedNFTs = sortedNFTs.filter((nft) => isMintedToday(nft.mintedAt));
+      console.log(`🎯 Filtered to ${sortedNFTs.length} NFTs minted today`);
+    }
+
+    console.log(
+      `✅ Successfully fetched ${sortedNFTs.length} FRESH NFTs (filter: ${filter})`
+    );
 
     return NextResponse.json(
       {
         success: true,
         totalMinted: total,
+        filteredCount: sortedNFTs.length,
         nfts: sortedNFTs,
+        filter: filter,
         timestamp: new Date().toISOString(),
       },
       {
