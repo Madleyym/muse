@@ -8,6 +8,20 @@ import {
   ReactNode,
 } from "react";
 
+// ✅ ADD: Load SDK dynamically and make it global
+if (typeof window !== "undefined") {
+  import("@farcaster/frame-sdk")
+    .then((module) => {
+      const sdk = module.default;
+      (window as any).sdk = sdk;
+      (window as any).farcaster = sdk;
+      console.log("[FarcasterContext] ✅ SDK loaded and made global");
+    })
+    .catch((err) => {
+      console.warn("[FarcasterContext] ⚠️ SDK import failed:", err);
+    });
+}
+
 export interface FarcasterData {
   fid: number;
   username: string;
@@ -66,7 +80,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         console.warn("[FarcasterContext] ⏰ Force ready after timeout");
         setReady(true);
       }
-    }, 200); // ✅ Reduced from implicit wait
+    }, 200);
 
     const detectEnvironment = () => {
       try {
@@ -116,7 +130,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
 
         // ✅ FIX: If on /miniapp route, assume miniapp EVEN IF NO SDK YET
         const finalIsMiniApp =
-          isMiniAppRoute && (hasFarcasterSDK || detectedIsWarpcast || true); // ✅ Force true if on /miniapp
+          isMiniAppRoute && (hasFarcasterSDK || detectedIsWarpcast || true);
 
         let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
 
@@ -152,7 +166,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         document.body.classList.add(`${finalEnvironment}-mode`);
 
         setReady(true);
-        clearTimeout(forceReadyTimeout); // ✅ Clear timeout if detection done
+        clearTimeout(forceReadyTimeout);
       } catch (error: any) {
         console.error("[FarcasterContext] ❌ Error:", error);
         setEnvironment("web");
