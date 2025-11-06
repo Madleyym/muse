@@ -70,7 +70,7 @@ export default function PricingMiniApp() {
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
-  // ✅ FIXED: Share from notification with multiple fallback methods
+  // ✅ FIXED: Single embed URL (no duplicates)
   const handleShareFromNotification = async (
     e: React.MouseEvent<HTMLAnchorElement>
   ) => {
@@ -97,6 +97,7 @@ export default function PricingMiniApp() {
         (window as any).sdk?.actions?.openUrl
       ) {
         console.log("[Share] Using window.sdk.actions.openUrl");
+        // ✅ FIX: Use single embed parameter
         await (window as any).sdk.actions.openUrl(
           `https://warpcast.com/~/compose?text=${encodeURIComponent(
             text
@@ -110,6 +111,7 @@ export default function PricingMiniApp() {
       console.log("[Share] Trying dynamic SDK import...");
       const { default: sdk } = await import("@farcaster/frame-sdk");
 
+      // ✅ FIX: Use single embed parameter
       await sdk.actions.openUrl(
         `https://warpcast.com/~/compose?text=${encodeURIComponent(
           text
@@ -125,6 +127,7 @@ export default function PricingMiniApp() {
         window.parent.postMessage(
           {
             type: "fc:frame:openUrl",
+            // ✅ FIX: Use single embed parameter
             url: `https://warpcast.com/~/compose?text=${encodeURIComponent(
               text
             )}&embeds[]=${encodeURIComponent(embedUrl)}`,
