@@ -121,6 +121,30 @@ export default function FooterWebsite() {
               >
                 About
               </Link>
+              {/* ✅ NEW: OpenSea Collection Link */}
+              <a
+                className="flex items-center gap-x-2 whitespace-nowrap text-sm font-medium text-neutral-500 hover:text-blue-600 transition group"
+                href={`https://opensea.io/assets/base/${
+                  process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
+                  "0x4A8F23ADdEA57Ba5f09e4345CE8D40883Cda0F61"
+                }`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                OpenSea Collection
+                <svg
+                  className="h-3 text-neutral-400 group-hover:text-blue-600 transition"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.25 3.75H19.5a.75.75 0 0 1 .75.75v11.25a.75.75 0 0 1-1.5 0V6.31L5.03 20.03a.75.75 0 0 1-1.06-1.06L17.69 5.25H8.25a.75.75 0 0 1 0-1.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </a>
             </div>
           </div>
         </div>
