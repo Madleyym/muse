@@ -1,7 +1,7 @@
 "use client";
 
 import { useFarcaster } from "@/contexts/FarcasterContext";
-import { usePathname } from "next/navigation"; // ✅ ADD THIS
+import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
@@ -33,9 +33,9 @@ function LoadingSpinner() {
 
 export default function PricingSection() {
   const { isMiniApp, ready, environment } = useFarcaster();
-  const pathname = usePathname(); // ✅ ADD PATHNAME CHECK
+  const pathname = usePathname();
 
-  // ✅ CRITICAL: Check pathname FIRST (immediate, no async)
+  // ✅ CRITICAL FIX: Pathname check OVERRIDES everything
   const isOnMiniAppRoute = pathname?.startsWith("/miniapp");
 
   console.log("[PricingSection] 🔍 Render state:", {
@@ -44,12 +44,16 @@ export default function PricingSection() {
     isMiniApp,
     environment,
     ready,
-    willRender: isOnMiniAppRoute || isMiniApp ? "MiniApp" : "Website",
+    willRender: isOnMiniAppRoute
+      ? "MiniApp (FORCED)"
+      : isMiniApp
+      ? "MiniApp (Context)"
+      : "Website",
   });
 
-  // ✅ If on /miniapp route, ALWAYS use MiniApp (even if context not ready)
+  // ✅ FIX 1: If pathname is /miniapp, ALWAYS use MiniApp (EVEN IF CONTEXT NOT READY)
   if (isOnMiniAppRoute) {
-    console.log("[PricingSection] ✅ Force MiniApp (pathname match)");
+    console.log("[PricingSection] ✅ FORCED MiniApp (pathname match)");
     return (
       <Suspense fallback={<LoadingSpinner />}>
         <PricingMiniApp />
@@ -57,12 +61,14 @@ export default function PricingSection() {
     );
   }
 
-  // ✅ For other routes, wait for context ready
+  // ✅ FIX 2: For non-miniapp routes, wait for context ready
   if (!ready) {
+    console.log("[PricingSection] ⏳ Waiting for context...");
     return <LoadingSpinner />;
   }
 
-  // ✅ Use context detection for non-miniapp routes
+  // ✅ FIX 3: Only use context detection for non-miniapp routes
+  console.log("[PricingSection] Using context detection:", { isMiniApp });
   return (
     <Suspense fallback={<LoadingSpinner />}>
       {isMiniApp ? <PricingMiniApp /> : <PricingWebsite />}
