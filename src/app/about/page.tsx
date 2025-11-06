@@ -1,9 +1,9 @@
 "use client";
 
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer"; // ✅ ADDED
 import Link from "next/link";
 import { useState } from "react";
-import Image from "next/image";
 
 type FilterType = "all" | "mission" | "values" | "story" | "tech";
 
@@ -362,6 +362,9 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* ✅ FOOTER ADDED */}
+      <Footer />
     </main>
   );
 }
