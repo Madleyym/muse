@@ -1058,18 +1058,16 @@ export default function PricingWebsite() {
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
 
-                {/* ✅ UPDATED: Share with Dynamic OG Image */}
+                {/* ✅ UPDATED: Share dengan Static OG Image */}
                 <a
                   href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
                     `Just minted my ${
                       farcasterData?.mood || "Creative Mind"
                     } mood NFT! 🎨✨\n\nPowered by Muse on Base ⚡\n\nMint yours: https://muse.write3.fun`
                   )}&embeds[]=${encodeURIComponent(
-                    `https://muse.write3.fun/api/og?mood=${encodeURIComponent(
-                      farcasterData?.moodId || "fire-starter"
-                    )}&username=${encodeURIComponent(
-                      farcasterData?.username || "Anon"
-                    )}&tx=${hash}`
+                    `https://muse.write3.fun${
+                      currentMood?.ogImage || "/og/fire-starter.png"
+                    }`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"

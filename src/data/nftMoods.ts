@@ -3,6 +3,7 @@ export interface NFTMood {
   name: string;
   category: "free" | "pro";
   baseImage: string;
+  ogImage: string; 
   gradients: {
     from: string;
     via?: string;
@@ -12,13 +13,13 @@ export interface NFTMood {
 }
 
 export const nftMoods: NFTMood[] = [
-  // ========== PRO MOODS - PIXEL ART STYLE GRADIENTS ==========
 
   {
     id: "chaos-energy",
     name: "Chaos Energy",
     category: "pro",
     baseImage: "/assets/images/Pro/chaos-energy.png",
+    ogImage: "/og/chaos-energy.png", // ✅ TAMBAH
     gradients: [
       { from: "#FF0066", via: "#CC00FF", to: "#6600CC" },
       { from: "#FF0099", via: "#FF00FF", to: "#9900FF" },
@@ -38,6 +39,7 @@ export const nftMoods: NFTMood[] = [
     name: "Chaostic Expression",
     category: "pro",
     baseImage: "/assets/images/Pro/chaostic-expression.png",
+    ogImage: "/og/chaostic-expression.png", // ✅ TAMBAH
     gradients: [
       { from: "#FF1493", via: "#FF0099", to: "#DD00DD" },
       { from: "#FF69B4", via: "#FF1493", to: "#CC00FF" },
@@ -57,6 +59,7 @@ export const nftMoods: NFTMood[] = [
     name: "Creative Mind",
     category: "pro",
     baseImage: "/assets/images/Pro/creative-mind.png",
+    ogImage: "/og/creative-mind.png", // ✅ TAMBAH
     gradients: [
       { from: "#FF0000", via: "#FFFF00", to: "#0000FF" },
       { from: "#FF00FF", via: "#00FFFF", to: "#FFFF00" },
@@ -76,6 +79,7 @@ export const nftMoods: NFTMood[] = [
     name: "Fire Starter",
     category: "pro",
     baseImage: "/assets/images/Pro/fire-starter.png",
+    ogImage: "/og/fire-starter.png", // ✅ TAMBAH
     gradients: [
       { from: "#FFFF00", via: "#FF6600", to: "#FF0000" },
       { from: "#FFD700", via: "#FF4500", to: "#DD0000" },
@@ -95,6 +99,7 @@ export const nftMoods: NFTMood[] = [
     name: "Green Peace",
     category: "pro",
     baseImage: "/assets/images/Pro/green-peace.png",
+    ogImage: "/og/green-peace.png", // ✅ TAMBAH
     gradients: [
       { from: "#AAFF00", via: "#00DD00", to: "#006600" },
       { from: "#99FF00", via: "#00FF00", to: "#008800" },
@@ -114,6 +119,7 @@ export const nftMoods: NFTMood[] = [
     name: "Moon Mission",
     category: "pro",
     baseImage: "/assets/images/Pro/moon-mission.png",
+    ogImage: "/og/moon-mission.png", // ✅ TAMBAH
     gradients: [
       { from: "#00FFFF", via: "#0088FF", to: "#000088" },
       { from: "#00DDFF", via: "#0066FF", to: "#000066" },
@@ -133,6 +139,7 @@ export const nftMoods: NFTMood[] = [
     name: "Morning Mom",
     category: "pro",
     baseImage: "/assets/images/Pro/morning-mom.png",
+    ogImage: "/og/morning-mom.png", // ✅ TAMBAH
     gradients: [
       { from: "#FFDD00", via: "#FF6600", to: "#FF1493" },
       { from: "#FFD700", via: "#FF7700", to: "#FF0099" },
@@ -152,6 +159,7 @@ export const nftMoods: NFTMood[] = [
     name: "Mysterious",
     category: "pro",
     baseImage: "/assets/images/Pro/mysterious.png",
+    ogImage: "/og/mysterious.png", // ✅ TAMBAH
     gradients: [
       { from: "#EEEEFF", via: "#9966FF", to: "#00FFFF" },
       { from: "#DDDDFF", via: "#AA77FF", to: "#00DDFF" },
@@ -171,6 +179,7 @@ export const nftMoods: NFTMood[] = [
     name: "Ocean Lady",
     category: "pro",
     baseImage: "/assets/images/Pro/ocean-lady.png",
+    ogImage: "/og/ocean-lady.png", // ✅ TAMBAH
     gradients: [
       { from: "#00FFFF", via: "#0088CC", to: "#001155" },
       { from: "#00EEFF", via: "#0066AA", to: "#000088" },
@@ -190,6 +199,7 @@ export const nftMoods: NFTMood[] = [
     name: "Pink to Rose",
     category: "pro",
     baseImage: "/assets/images/Pro/pink-to-rose.png",
+    ogImage: "/og/pink-to-rose.png", // ✅ TAMBAH
     gradients: [
       { from: "#FFB6C1", via: "#FF1493", to: "#880055" },
       { from: "#FFC0CB", via: "#FF0099", to: "#CC0077" },
@@ -209,6 +219,7 @@ export const nftMoods: NFTMood[] = [
     name: "Relaxed Mode",
     category: "pro",
     baseImage: "/assets/images/Pro/relaxed-mode.png",
+    ogImage: "/og/relaxed-mode.png", // ✅ TAMBAH
     gradients: [
       { from: "#99DDFF", via: "#AA88FF", to: "#DD99FF" },
       { from: "#AADDFF", via: "#9966FF", to: "#EE99FF" },
@@ -230,6 +241,7 @@ export const nftMoods: NFTMood[] = [
     name: "Art Free",
     category: "free",
     baseImage: "/assets/images/Free/art-free.png",
+    ogImage: "/og/art-free.png", // ✅ TAMBAH
     gradients: [
       { from: "#FFD700", via: "#FFA500", to: "#FF6347" },
       { from: "#FF6B6B", via: "#FFB347", to: "#FFEE66" },
