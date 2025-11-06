@@ -15,6 +15,11 @@ export const getContractUrl = () =>
 export const getTokenUrl = (tokenId: number) =>
   `${BASESCAN_URL}/token/${MUSE_NFT_CONTRACT.address}?a=${tokenId}`;
 
+// ✅ NEW: OpenSea URL Generator
+export const OPENSEA_BASE_URL = "https://opensea.io/assets/base";
+export const getOpenSeaUrl = (tokenId: number | string) =>
+  `${OPENSEA_BASE_URL}/${MUSE_NFT_CONTRACT.address}/${tokenId}`;
+
 // ✅ RPC ENDPOINTS WITH FALLBACK
 export const BASE_RPC_ENDPOINTS = [
   process.env.NEXT_PUBLIC_BASE_RPC || "https://mainnet.base.org",
