@@ -363,7 +363,7 @@ export default function PricingWebsite() {
     const fullImageUrl = `https://muse.write3.fun${ogImagePath}`;
     const text = `Just minted my ${
       farcasterData?.mood || "Creative Mind"
-    } mood NFT! 🎨✨\n\nPowered by Muse on Base ⚡\n\nMint yours: https://muse.write3.fun`;
+    } mood NFT! 🎨✨\n\nPowered by Muse on @base.base.eth \n\nMint yours: https://muse.write3.fun`;
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text
     )}&embeds[]=${encodeURIComponent(fullImageUrl)}`;
