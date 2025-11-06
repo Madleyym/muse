@@ -4,10 +4,10 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { nftMoods } from "@/data/nftMoods";
-import { useMintNFTMiniApp } from "@/hooks/useMintNFT.miniapp"; // ✅ DIRECT IMPORT
+import { useMintNFTMiniApp } from "@/hooks/useMintNFT.miniapp";
 import { useFarcasterSDK } from "@/hooks/useFarcasterSDK";
 import { useFrameWallet } from "@/hooks/useFrameWallet";
-import { getTransactionUrl } from "@/config/contracts";
+import { getTransactionUrl, getOpenSeaUrl } from "@/config/contracts";
 
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
@@ -24,7 +24,6 @@ export default function PricingMiniApp() {
   const { farcasterData, setFarcasterData } = useFarcaster();
   const { isReady: sdkReady, user: sdkUser } = useFarcasterSDK();
 
-  // ✅ USE MINIAPP HOOK DIRECTLY
   const {
     mintFree,
     mintHD,
@@ -37,6 +36,7 @@ export default function PricingMiniApp() {
     isDevAddress,
     error: mintError,
     hash,
+    tokenId,
   } = useMintNFTMiniApp();
 
   const [selectedTier, setSelectedTier] = useState<"free" | "hd">("free");
@@ -48,6 +48,7 @@ export default function PricingMiniApp() {
   const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [hasMinted, setHasMinted] = useState(false);
   const [checkingMinted, setCheckingMinted] = useState(false);
+  const [inspiredByUsername, setInspiredByUsername] = useState<string>("");
 
   const checkedFidRef = useRef<number | null>(null);
 
@@ -68,6 +69,26 @@ export default function PricingMiniApp() {
   }, [farcasterData]);
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
+
+  const getWarpcastShareUrl = () => {
+    const baseUrl = "https://warpcast.com/~/compose";
+
+    const inspiredText = inspiredByUsername
+      ? `\n\nInspired by @${inspiredByUsername} ✨`
+      : "";
+
+    const text = encodeURIComponent(
+      `Just minted my ${
+        farcasterData?.mood || "Creative Mind"
+      } mood NFT! 🎨✨\n\nPowered by Muse on @base${inspiredText}`
+    );
+
+    const embedUrl = encodeURIComponent(
+      `https://muse.write3.fun${currentMood?.ogImage || "/og/fire-starter.png"}`
+    );
+
+    return `${baseUrl}?text=${text}&embeds[]=${embedUrl}`;
+  };
 
   useEffect(() => {
     const checkMinted = async () => {
@@ -314,6 +335,7 @@ export default function PricingMiniApp() {
         moodName: farcasterData.mood,
         farcasterUsername: farcasterData.username,
         engagementScore: farcasterData.engagementScore,
+        inspiredBy: inspiredByUsername || undefined,
       });
     } catch (err: any) {
       console.error("[MiniApp] Mint error:", err);
@@ -339,6 +361,7 @@ export default function PricingMiniApp() {
         moodName: farcasterData.mood,
         farcasterUsername: farcasterData.username,
         engagementScore: farcasterData.engagementScore,
+        inspiredBy: inspiredByUsername || undefined,
       });
     } catch (err: any) {
       console.error("[MiniApp] Mint error:", err);
@@ -507,6 +530,28 @@ export default function PricingMiniApp() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {!hasMinted && isConnected && (
+          <div className="max-w-md mx-auto mb-6 px-4">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-md border border-purple-200">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Tag someone who inspires this mint (optional) ✨
+              </label>
+              <input
+                type="text"
+                placeholder="@username"
+                value={inspiredByUsername}
+                onChange={(e) =>
+                  setInspiredByUsername(e.target.value.replace("@", ""))
+                }
+                className="w-full px-4 py-2.5 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm transition-all"
+              />
+              <p className="text-xs text-slate-500 mt-2">
+                They'll be mentioned when you share your mint on Warpcast! 💜
+              </p>
             </div>
           </div>
         )}
@@ -964,23 +1009,28 @@ export default function PricingMiniApp() {
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
 
-                {/* ✅ Line ~800+ - Share to Warpcast Button di MiniApp */}
-                <a
-                  href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
-                    `Just minted my ${
-                      farcasterData?.mood || "Creative Mind"
-                    } mood NFT! 🎨✨\n\nPowered by Muse on @base.base.eth`
-                  )}&embeds[]=${encodeURIComponent(
-                    `https://muse.write3.fun${
-                      currentMood?.ogImage || "/og/fire-starter.png"
-                    }`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center bg-purple-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-700 transition font-medium mb-2"
-                >
-                  Share on Warpcast 🎨
-                </a>
+                <div className="space-y-2">
+                  {tokenId && (
+                    <a
+                      href={getOpenSeaUrl(tokenId)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full text-center bg-blue-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                    >
+                      View on OpenSea 🌊
+                    </a>
+                  )}
+
+                  <a
+                    href={getWarpcastShareUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full text-center bg-purple-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                  >
+                    Share on Warpcast 🎨
+                  </a>
+                </div>
+
                 <p className="text-xs text-slate-500 text-center mt-2">
                   Each FID can only mint once
                 </p>
