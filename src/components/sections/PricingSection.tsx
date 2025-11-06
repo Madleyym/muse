@@ -1,10 +1,10 @@
 "use client";
 
 import { useFarcaster } from "@/contexts/FarcasterContext";
+import { usePathname } from "next/navigation"; // ✅ ADD THIS
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
-// ✅ Dynamic imports to prevent SSR issues
 const PricingMiniApp = dynamic(() => import("./PricingMiniApp"), {
   ssr: false,
   loading: () => <LoadingSpinner />,
@@ -33,19 +33,36 @@ function LoadingSpinner() {
 
 export default function PricingSection() {
   const { isMiniApp, ready, environment } = useFarcaster();
+  const pathname = usePathname(); // ✅ ADD PATHNAME CHECK
+
+  // ✅ CRITICAL: Check pathname FIRST (immediate, no async)
+  const isOnMiniAppRoute = pathname?.startsWith("/miniapp");
 
   console.log("[PricingSection] 🔍 Render state:", {
+    pathname,
+    isOnMiniAppRoute,
     isMiniApp,
     environment,
     ready,
-    willRender: isMiniApp ? "MiniApp (Auto FID)" : "Website (Manual FID)",
+    willRender: isOnMiniAppRoute || isMiniApp ? "MiniApp" : "Website",
   });
 
-  // Wait for detection to complete
+  // ✅ If on /miniapp route, ALWAYS use MiniApp (even if context not ready)
+  if (isOnMiniAppRoute) {
+    console.log("[PricingSection] ✅ Force MiniApp (pathname match)");
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <PricingMiniApp />
+      </Suspense>
+    );
+  }
+
+  // ✅ For other routes, wait for context ready
   if (!ready) {
     return <LoadingSpinner />;
   }
 
+  // ✅ Use context detection for non-miniapp routes
   return (
     <Suspense fallback={<LoadingSpinner />}>
       {isMiniApp ? <PricingMiniApp /> : <PricingWebsite />}
