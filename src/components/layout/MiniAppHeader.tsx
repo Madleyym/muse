@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { useFrameWallet } from "@/hooks/useFrameWallet";
+import sdk from "@farcaster/frame-sdk";
 
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
@@ -92,33 +93,64 @@ export default function MiniAppHeader() {
     setIsSidebarOpen(false);
   };
 
-  // ✅ FIXED: Direct Warpcast Share (NO browser picker)
-  const handleShare = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  // ✅ FIXED: Direct Warpcast Share using Farcaster SDK
+  const handleShare = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
 
     const text =
       "Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base\n\nFree SD or Premium HD editions available!";
     const embedUrl = "https://muse.write3.fun/og-image.png";
 
-    // ✅ Use Farcaster SDK Share (if available in MiniApp context)
-    if (typeof window !== "undefined" && (window as any).farcaster) {
-      console.log("[Share] Using Farcaster SDK");
-      (window as any).farcaster.actions.openComposer({
-        text: text,
-        embeds: [embedUrl],
-      });
-      return;
+    try {
+      console.log("[Share] Opening Warpcast composer...");
+
+      // Method 1: Cek SDK dari context
+      if (
+        typeof window !== "undefined" &&
+        (window as any).sdk?.actions?.openUrl
+      ) {
+        await (window as any).sdk.actions.openUrl(
+          `https://warpcast.com/~/compose?text=${encodeURIComponent(
+            text
+          )}&embeds[]=${encodeURIComponent(embedUrl)}`
+        );
+        console.log("[Share] Opened via sdk.actions.openUrl");
+        return;
+      }
+
+      // Method 2: Cek farcaster global
+      if (
+        typeof window !== "undefined" &&
+        (window as any).farcaster?.actions?.openUrl
+      ) {
+        await (window as any).farcaster.actions.openUrl(
+          `https://warpcast.com/~/compose?text=${encodeURIComponent(
+            text
+          )}&embeds[]=${encodeURIComponent(embedUrl)}`
+        );
+        console.log("[Share] Opened via farcaster.actions.openUrl");
+        return;
+      }
+
+      // Method 3: Direct openComposer
+      if (
+        typeof window !== "undefined" &&
+        (window as any).farcaster?.actions?.openComposer
+      ) {
+        await (window as any).farcaster.actions.openComposer({
+          text: text,
+          embeds: [embedUrl],
+        });
+        console.log("[Share] Opened via openComposer");
+        return;
+      }
+
+      console.warn("[Share] No Farcaster SDK found");
+      alert("Please make sure you're using this in Warpcast app");
+    } catch (error) {
+      console.error("[Share] Failed to open composer:", error);
+      alert("Unable to open cast composer. Please try again.");
     }
-
-    // ✅ Fallback: Direct intent URL (works in Warpcast mobile)
-    const intentUrl = `intent://warpcast.com/~/compose?text=${encodeURIComponent(
-      text
-    )}&embeds[]=${encodeURIComponent(
-      embedUrl
-    )}#Intent;scheme=https;package=com.farcaster.mobile;end`;
-
-    console.log("[Share] Using intent URL:", intentUrl);
-    window.location.href = intentUrl;
   };
 
   return (
