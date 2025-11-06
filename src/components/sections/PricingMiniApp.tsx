@@ -70,8 +70,8 @@ export default function PricingMiniApp() {
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
-  // ✅ FIXED: Direct share handler (no browser)
-  const handleShareFromNotification = (
+  // ✅ FIXED: Share from notification with multiple fallback methods
+  const handleShareFromNotification = async (
     e: React.MouseEvent<HTMLAnchorElement>
   ) => {
     e.preventDefault();
@@ -88,25 +88,54 @@ export default function PricingMiniApp() {
       currentMood?.ogImage || "/og/fire-starter.png"
     }`;
 
-    // Use Farcaster SDK if available
-    if (typeof window !== "undefined" && (window as any).farcaster) {
-      console.log("[Share] Using Farcaster SDK from notification");
-      (window as any).farcaster.actions.openComposer({
-        text: text,
-        embeds: [embedUrl],
-      });
-      return;
+    console.log("[Share] Attempting to share from notification...");
+
+    try {
+      // Method 1: Try window.sdk
+      if (
+        typeof window !== "undefined" &&
+        (window as any).sdk?.actions?.openUrl
+      ) {
+        console.log("[Share] Using window.sdk.actions.openUrl");
+        await (window as any).sdk.actions.openUrl(
+          `https://warpcast.com/~/compose?text=${encodeURIComponent(
+            text
+          )}&embeds[]=${encodeURIComponent(embedUrl)}`
+        );
+        console.log("[Share] ✅ Success via window.sdk");
+        return;
+      }
+
+      // Method 2: Dynamic import
+      console.log("[Share] Trying dynamic SDK import...");
+      const { default: sdk } = await import("@farcaster/frame-sdk");
+
+      await sdk.actions.openUrl(
+        `https://warpcast.com/~/compose?text=${encodeURIComponent(
+          text
+        )}&embeds[]=${encodeURIComponent(embedUrl)}`
+      );
+      console.log("[Share] ✅ Success via dynamic import");
+    } catch (error) {
+      console.error("[Share] SDK methods failed:", error);
+
+      // Method 3: PostMessage fallback
+      try {
+        console.log("[Share] Trying postMessage fallback...");
+        window.parent.postMessage(
+          {
+            type: "fc:frame:openUrl",
+            url: `https://warpcast.com/~/compose?text=${encodeURIComponent(
+              text
+            )}&embeds[]=${encodeURIComponent(embedUrl)}`,
+          },
+          "*"
+        );
+        console.log("[Share] ✅ PostMessage sent");
+      } catch (fallbackError) {
+        console.error("[Share] ❌ All methods failed:", fallbackError);
+      }
     }
-
-    // Fallback: Intent URL
-    const intentUrl = `intent://warpcast.com/~/compose?text=${encodeURIComponent(
-      text
-    )}&embeds[]=${encodeURIComponent(
-      embedUrl
-    )}#Intent;scheme=https;package=com.farcaster.mobile;end`;
-
-    console.log("[Share] Using intent URL from notification");
-    window.location.href = intentUrl;
   };
 
   const getWarpcastShareUrl = () => {
