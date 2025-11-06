@@ -11,6 +11,7 @@ export default function ConditionalWeb3Provider({
 }) {
   const pathname = usePathname();
 
+  // ✅ Check if current route is miniapp
   const isMiniAppRoute = pathname?.startsWith("/miniapp");
 
   console.log("[ConditionalWeb3Provider]", {
@@ -19,6 +20,7 @@ export default function ConditionalWeb3Provider({
     willWrapWithWeb3: !isMiniAppRoute,
   });
 
+  // ✅ If miniapp route: no Web3Provider
   if (isMiniAppRoute) {
     console.log(
       "[ConditionalWeb3Provider] ✅ Skipping Web3Provider for miniapp"
@@ -26,6 +28,7 @@ export default function ConditionalWeb3Provider({
     return <>{children}</>;
   }
 
+  // ✅ If other routes: wrap with Web3Provider
   console.log("[ConditionalWeb3Provider] ✅ Using Web3Provider for website");
   return <Web3Provider>{children}</Web3Provider>;
 }
