@@ -70,6 +70,45 @@ export default function PricingMiniApp() {
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
+  // ✅ FIXED: Direct share handler (no browser)
+  const handleShareFromNotification = (
+    e: React.MouseEvent<HTMLAnchorElement>
+  ) => {
+    e.preventDefault();
+
+    const inspiredText = inspiredByUsername
+      ? `\n\nInspired by @${inspiredByUsername} ✨`
+      : "";
+
+    const text = `Just minted my ${
+      farcasterData?.mood || "Creative Mind"
+    } mood NFT! 🎨✨\n\nPowered by Muse on @base${inspiredText}`;
+
+    const embedUrl = `https://muse.write3.fun${
+      currentMood?.ogImage || "/og/fire-starter.png"
+    }`;
+
+    // Use Farcaster SDK if available
+    if (typeof window !== "undefined" && (window as any).farcaster) {
+      console.log("[Share] Using Farcaster SDK from notification");
+      (window as any).farcaster.actions.openComposer({
+        text: text,
+        embeds: [embedUrl],
+      });
+      return;
+    }
+
+    // Fallback: Intent URL
+    const intentUrl = `intent://warpcast.com/~/compose?text=${encodeURIComponent(
+      text
+    )}&embeds[]=${encodeURIComponent(
+      embedUrl
+    )}#Intent;scheme=https;package=com.farcaster.mobile;end`;
+
+    console.log("[Share] Using intent URL from notification");
+    window.location.href = intentUrl;
+  };
+
   const getWarpcastShareUrl = () => {
     const baseUrl = "https://warpcast.com/~/compose";
 
@@ -982,6 +1021,7 @@ export default function PricingMiniApp() {
           </div>
         </div>
 
+        {/* ✅ SUCCESS NOTIFICATION - FIXED SHARE BUTTON */}
         {showSuccessNotification && isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -1021,10 +1061,10 @@ export default function PricingMiniApp() {
                     </a>
                   )}
 
+                  {/* ✅ FIXED: Use onClick handler instead of href */}
                   <a
-                    href={getWarpcastShareUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="#"
+                    onClick={handleShareFromNotification}
                     className="block w-full text-center bg-purple-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-700 transition font-medium"
                   >
                     Share on Warpcast 🎨
@@ -1064,6 +1104,7 @@ export default function PricingMiniApp() {
           </div>
         )}
 
+        {/* ERROR NOTIFICATION */}
         {showErrorNotification && (mintError || localMintError) && (
           <div className="fixed bottom-4 right-4 max-w-md bg-white border-2 border-red-500 rounded-xl p-4 shadow-2xl z-50 animate-slide-in">
             <div className="flex items-start gap-3">
