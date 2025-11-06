@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { FarcasterProvider } from "@/contexts/FarcasterContext";
 
 export const metadata: Metadata = {
   title: "Muse - Mint Your Mood | Farcaster MiniApp",
@@ -33,11 +32,5 @@ export default function MiniAppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
-        <FarcasterProvider>{children}</FarcasterProvider>
-      </body>
-    </html>
-  );
+  return <>{children}</>;
 }
