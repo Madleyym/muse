@@ -26,15 +26,16 @@ export default function FooterMiniApp() {
           </p>
         </div>
 
-        {/* Quick Info - NO EXTERNAL LINKS */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <span className="text-[11px] font-medium text-neutral-500">
-            Farcaster MiniApp
-          </span>
-          <span className="text-neutral-400">•</span>
-          <span className="text-[11px] font-medium text-purple-600">
-            Powered by Base
-          </span>
+        {/* ✅ UPDATED: Website Link */}
+        <div className="text-center mb-6">
+          <a
+            href="https://muse.write3.fun/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-medium text-purple-600 hover:text-purple-700 transition hover:underline"
+          >
+            Website: https://muse.write3.fun/
+          </a>
         </div>
 
         {/* Bottom - WITH ICONS */}
