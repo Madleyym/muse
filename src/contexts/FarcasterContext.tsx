@@ -8,7 +8,6 @@ import {
   ReactNode,
 } from "react";
 import { useConnect, useAccount } from "wagmi";
-import sdk from "@farcaster/frame-sdk";
 
 export interface FarcasterData {
   fid: number;
@@ -62,59 +61,32 @@ function AutoConnectInFarcaster() {
   const { isMiniApp, isMobile, ready } = useFarcaster();
 
   useEffect(() => {
-    if (autoConnectAttempted) {
-      console.log("[AutoConnect] Already attempted");
+    if (
+      autoConnectAttempted ||
+      isConnected ||
+      !ready ||
+      !isMiniApp ||
+      isConnecting ||
+      !isMobile
+    ) {
       return;
     }
 
-    if (isConnected) {
-      console.log("[AutoConnect] ✅ Already connected");
-      return;
-    }
-
-    if (!ready || !isMiniApp) {
-      console.log("[AutoConnect] Not ready or not miniapp");
-      return;
-    }
-
-    if (isConnecting) {
-      console.log("[AutoConnect] Already connecting");
-      return;
-    }
-
-    if (!isMobile) {
-      console.log("[AutoConnect] Desktop - skip auto-connect");
-      autoConnectAttempted = true;
-      return;
-    }
-
-    console.log("[AutoConnect] 🚀 Starting auto-connect (Mobile)...");
+    console.log("[AutoConnect] 🚀 Starting...");
     autoConnectAttempted = true;
 
     const timer = setTimeout(async () => {
       try {
-        if (connectors.length === 0) {
-          console.error("[AutoConnect] ❌ No connectors available");
-          return;
-        }
-
-        console.log(
-          "[AutoConnect] Available connectors:",
-          connectors.map((c) => ({ id: c.id, name: c.name }))
-        );
+        if (connectors.length === 0) return;
 
         const injectedConnector = connectors.find(
           (c) => c.id === "injected" || c.type === "injected"
         );
 
         if (injectedConnector) {
-          console.log("[AutoConnect] 🔌 Connecting with injected...");
           await connect({ connector: injectedConnector });
-          console.log("[AutoConnect] ✅ Connected!");
         } else if (connectors.length > 0) {
-          console.log("[AutoConnect] Using fallback:", connectors[0].name);
           await connect({ connector: connectors[0] });
-          console.log("[AutoConnect] ✅ Connected with fallback!");
         }
       } catch (error: any) {
         console.error("[AutoConnect] ❌ Error:", error?.message);
@@ -154,135 +126,99 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const { isConnecting } = useAccount();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // ✅ ADD: Mounted flag untuk cleanup
-    let mounted = true;
-    let sdkCheckAborted = false;
-
-    const detectEnvironment = async () => {
-      const url = new URL(window.location.href);
-
-      // ✅ DETECTION 1: Device type
-      const userAgent = navigator.userAgent.toLowerCase();
-      const detectedIsMobile =
-        /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
-          userAgent
-        );
-      const detectedIsDesktop = !detectedIsMobile;
-
-      // ✅ DETECTION 2: Warpcast indicators
-      const fromWarpcast = document.referrer.includes("warpcast.com");
-      const hasWarpcastUA = navigator.userAgent.includes("Warpcast");
-      const isIframe = window.self !== window.top;
-      const warpcastParam = url.searchParams.get("fc") === "true";
-
-      // ✅ DETECTION 3: Path
-      const isMiniAppRoute =
-        url.pathname.startsWith("/miniapp") ||
-        url.searchParams.has("frameContext");
-
-      // ✅ DETECTION 4: Farcaster SDK (with cleanup)
-      let hasFarcasterSDK = false;
+    // ✅ SAFE DETECTION - No crashes
+    const detectEnvironment = () => {
       try {
-        if (typeof sdk !== "undefined" && sdk.context) {
-          // ✅ ADD: AbortController for cleanup
-          const abortController = new AbortController();
+        if (typeof window === "undefined") {
+          setReady(true);
+          return;
+        }
 
-          const timeoutPromise = new Promise((_, reject) => {
-            const timer = setTimeout(() => {
-              sdkCheckAborted = true;
-              reject(new Error("SDK timeout"));
-            }, 2000);
+        const url = new URL(window.location.href);
 
-            // Cleanup timeout if aborted
-            abortController.signal.addEventListener("abort", () => {
-              clearTimeout(timer);
-            });
-          });
+        // Device detection
+        const userAgent = navigator.userAgent.toLowerCase();
+        const detectedIsMobile =
+          /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+            userAgent
+          );
+        const detectedIsDesktop = !detectedIsMobile;
 
-          const contextPromise = sdk.context;
+        // Warpcast detection
+        const fromWarpcast = document.referrer.includes("warpcast.com");
+        const hasWarpcastUA = navigator.userAgent.includes("Warpcast");
+        const isIframe = window.self !== window.top;
+        const warpcastParam = url.searchParams.get("fc") === "true";
+        const detectedIsWarpcast =
+          fromWarpcast || hasWarpcastUA || isIframe || warpcastParam;
 
-          const context = await Promise.race([contextPromise, timeoutPromise]);
+        // Path detection
+        const isMiniAppRoute =
+          url.pathname.startsWith("/miniapp") ||
+          url.searchParams.has("frameContext");
 
-          // ✅ CHECK: Only update if still mounted
-          if (!mounted || sdkCheckAborted) {
-            console.log(
-              "[FarcasterContext] Component unmounted, skipping SDK result"
-            );
-            return;
-          }
-
-          if (context && (context as any).user) {
+        // ✅ SAFE: Check SDK without importing (avoid crash)
+        let hasFarcasterSDK = false;
+        try {
+          if (
+            typeof window !== "undefined" &&
+            (window as any).farcaster !== undefined
+          ) {
             hasFarcasterSDK = true;
-            console.log("[FarcasterContext] ✅ SDK verified with user data");
+            console.log(
+              "[FarcasterContext] ✅ SDK detected via window.farcaster"
+            );
           }
+        } catch (e) {
+          console.log("[FarcasterContext] SDK check safe fail");
         }
-      } catch (sdkError) {
-        if (!sdkCheckAborted) {
-          console.log("[FarcasterContext] SDK not available:", sdkError);
-        }
-        hasFarcasterSDK = false;
-      }
 
-      // ✅ CHECK: Only update state if still mounted
-      if (!mounted) {
-        console.log(
-          "[FarcasterContext] Component unmounted, skipping state update"
+        // Final decision
+        const finalIsMiniApp =
+          isMiniAppRoute && (hasFarcasterSDK || detectedIsWarpcast);
+
+        let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
+        if (detectedIsWarpcast && hasFarcasterSDK) {
+          finalEnvironment = "warpcast";
+        } else if (finalIsMiniApp) {
+          finalEnvironment = "miniapp";
+        }
+
+        console.log("[FarcasterContext] 🎯 Detection:", {
+          pathname: url.pathname,
+          isMiniAppRoute,
+          hasFarcasterSDK,
+          detectedIsWarpcast,
+          detectedIsMobile,
+          finalIsMiniApp,
+          finalEnvironment,
+        });
+
+        setEnvironment(finalEnvironment);
+        setIsMiniApp(finalIsMiniApp);
+        setIsWarpcast(detectedIsWarpcast);
+        setIsMobile(detectedIsMobile);
+        setIsDesktop(detectedIsDesktop);
+        setIsAutoConnecting(finalIsMiniApp && detectedIsMobile);
+
+        document.body.classList.remove(
+          "web-mode",
+          "miniapp-mode",
+          "warpcast-mode"
         );
-        return;
+        document.body.classList.add(`${finalEnvironment}-mode`);
+
+        setReady(true);
+      } catch (error: any) {
+        console.error("[FarcasterContext] ❌ Detection error:", error);
+        // ✅ SAFE: Set defaults on error
+        setEnvironment("web");
+        setIsMiniApp(false);
+        setReady(true);
       }
-
-      const detectedIsWarpcast =
-        fromWarpcast || hasWarpcastUA || isIframe || warpcastParam;
-
-      const finalIsMiniApp =
-        isMiniAppRoute && (hasFarcasterSDK || detectedIsWarpcast);
-
-      let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
-
-      if (detectedIsWarpcast && hasFarcasterSDK) {
-        finalEnvironment = "warpcast";
-      } else if (finalIsMiniApp) {
-        finalEnvironment = "miniapp";
-      }
-
-      console.log("[FarcasterContext] 🔍 Detection Result:", {
-        pathname: url.pathname,
-        isMiniAppRoute,
-        hasFarcasterSDK,
-        detectedIsWarpcast,
-        detectedIsMobile,
-        detectedIsDesktop,
-        finalIsMiniApp,
-        finalEnvironment,
-      });
-
-      setEnvironment(finalEnvironment);
-      setIsMiniApp(finalIsMiniApp);
-      setIsWarpcast(detectedIsWarpcast);
-      setIsMobile(detectedIsMobile);
-      setIsDesktop(detectedIsDesktop);
-      setIsAutoConnecting(finalIsMiniApp && detectedIsMobile);
-
-      document.body.classList.remove(
-        "web-mode",
-        "miniapp-mode",
-        "warpcast-mode"
-      );
-      document.body.classList.add(`${finalEnvironment}-mode`);
-
-      setReady(true);
     };
 
     detectEnvironment();
-
-    // ✅ ADD: Cleanup function
-    return () => {
-      mounted = false;
-      sdkCheckAborted = true;
-      console.log("[FarcasterContext] Cleanup - component unmounted");
-    };
   }, []);
 
   return (
