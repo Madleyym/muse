@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
@@ -15,6 +15,9 @@ const isValidImageUrl = (url: string | undefined | null): boolean => {
     return false;
   }
 };
+
+// ✅ Outside component to prevent recreation
+let isSharing = false;
 
 export default function MiniAppHeader() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -34,7 +37,7 @@ export default function MiniAppHeader() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isConnected, address, connect]);
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -92,66 +95,79 @@ export default function MiniAppHeader() {
     setIsSidebarOpen(false);
   };
 
-  // ✅ FIXED: Single embed URL (no duplicates)
-  const handleShare = async (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  // ✅ FIXED: Prevent double execution with useCallback
+  const handleShare = useCallback(
+    async (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      e.stopPropagation(); // ✅ Prevent event bubbling
 
-    const text =
-      "Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base\n\nFree SD or Premium HD editions available!";
-    const embedUrl = "https://muse.write3.fun/og-image.png";
+      // ✅ Prevent double call
+      if (isSharing) {
+        console.log("[Share] Already sharing, skipping...");
+        return;
+      }
 
-    console.log("[Share] Attempting to share...");
+      isSharing = true;
 
-    try {
-      // Method 1: Try window.sdk (if already loaded)
-      if (
-        typeof window !== "undefined" &&
-        (window as any).sdk?.actions?.openUrl
-      ) {
-        console.log("[Share] Using window.sdk.actions.openUrl");
-        // ✅ FIX: Use single embed parameter
-        await (window as any).sdk.actions.openUrl(
+      const text =
+        "Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base\n\nFree SD or Premium HD editions available!";
+      const embedUrl = "https://muse.write3.fun/og-image.png";
+
+      console.log("[Share] Starting share flow...");
+
+      try {
+        // Method 1: Try window.sdk first
+        if (
+          typeof window !== "undefined" &&
+          (window as any).sdk?.actions?.openUrl
+        ) {
+          console.log("[Share] Using window.sdk");
+          await (window as any).sdk.actions.openUrl(
+            `https://warpcast.com/~/compose?text=${encodeURIComponent(
+              text
+            )}&embeds[]=${encodeURIComponent(embedUrl)}`
+          );
+          console.log("[Share] ✅ Success");
+          return;
+        }
+
+        // Method 2: Dynamic import
+        console.log("[Share] Using dynamic import");
+        const { default: sdk } = await import("@farcaster/frame-sdk");
+
+        await sdk.actions.openUrl(
           `https://warpcast.com/~/compose?text=${encodeURIComponent(
             text
           )}&embeds[]=${encodeURIComponent(embedUrl)}`
         );
-        console.log("[Share] ✅ Success via window.sdk");
-        return;
+        console.log("[Share] ✅ Success");
+      } catch (error) {
+        console.error("[Share] Failed:", error);
+
+        // Fallback: postMessage
+        try {
+          console.log("[Share] Trying postMessage...");
+          window.parent.postMessage(
+            {
+              type: "fc:frame:openUrl",
+              url: `https://warpcast.com/~/compose?text=${encodeURIComponent(
+                text
+              )}&embeds[]=${encodeURIComponent(embedUrl)}`,
+            },
+            "*"
+          );
+        } catch (e) {
+          console.error("[Share] All methods failed");
+        }
+      } finally {
+        // ✅ Reset after 2 seconds
+        setTimeout(() => {
+          isSharing = false;
+        }, 2000);
       }
-
-      // Method 2: Try dynamic import
-      console.log("[Share] Trying dynamic SDK import...");
-      const { default: sdk } = await import("@farcaster/frame-sdk");
-
-      // ✅ FIX: Use single embed parameter
-      await sdk.actions.openUrl(
-        `https://warpcast.com/~/compose?text=${encodeURIComponent(
-          text
-        )}&embeds[]=${encodeURIComponent(embedUrl)}`
-      );
-      console.log("[Share] ✅ Success via dynamic import");
-    } catch (error) {
-      console.error("[Share] SDK methods failed:", error);
-
-      // Method 3: Fallback to postMessage (iframe communication)
-      try {
-        console.log("[Share] Trying postMessage fallback...");
-        window.parent.postMessage(
-          {
-            type: "fc:frame:openUrl",
-            // ✅ FIX: Use single embed parameter
-            url: `https://warpcast.com/~/compose?text=${encodeURIComponent(
-              text
-            )}&embeds[]=${encodeURIComponent(embedUrl)}`,
-          },
-          "*"
-        );
-        console.log("[Share] ✅ PostMessage sent");
-      } catch (fallbackError) {
-        console.error("[Share] ❌ All methods failed:", fallbackError);
-      }
-    }
-  };
+    },
+    []
+  );
 
   return (
     <>
