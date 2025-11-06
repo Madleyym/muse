@@ -92,19 +92,46 @@ export default function MiniAppHeader() {
     setIsSidebarOpen(false);
   };
 
-  // ✅ FIXED: Remove URL from text, only use embeds[]
+  // ✅ UPDATED: Use Warpcast deep link (works in mobile app directly)
   const getShareCastUrl = () => {
-    const baseUrl = "https://warpcast.com/~/compose";
     const text = encodeURIComponent(
-      `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base.base.eth \n\nFree SD or Premium HD editions available!`
+      `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base\n\nFree SD or Premium HD editions available!`
     );
-    // Option 1: Embed static OG image
     const embedUrl = encodeURIComponent("https://muse.write3.fun/og-image.png");
 
-    // Option 2: Embed MiniApp URL (will auto-fetch OG from manifest)
-    // const embedUrl = encodeURIComponent("https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse");
+    // Use warpcast:// deep link for mobile app, fallback to web
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    return `${baseUrl}?text=${text}&embeds[]=${embedUrl}`;
+    if (isMobile) {
+      // Deep link for mobile app (opens directly in Warpcast)
+      return `warpcast://~/compose?text=${text}&embeds[]=${embedUrl}`;
+    }
+
+    // Web URL for desktop
+    return `https://warpcast.com/~/compose?text=${text}&embeds[]=${embedUrl}`;
+  };
+
+  // ✅ Handle share button click
+  const handleShare = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      e.preventDefault();
+      const deepLink = getShareCastUrl();
+
+      // Try to open deep link
+      window.location.href = deepLink;
+
+      // Fallback to web URL after 2 seconds if app doesn't open
+      setTimeout(() => {
+        const webUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
+          `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base\n\nFree SD or Premium HD editions available!`
+        )}&embeds[]=${encodeURIComponent(
+          "https://muse.write3.fun/og-image.png"
+        )}`;
+        window.open(webUrl, "_blank");
+      }, 2000);
+    }
   };
 
   return (
@@ -138,6 +165,7 @@ export default function MiniAppHeader() {
               {/* Share Cast Button (Desktop) */}
               <a
                 href={getShareCastUrl()}
+                onClick={handleShare}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden md:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-[0.625rem] transition shadow-md text-sm font-semibold"
@@ -345,9 +373,12 @@ export default function MiniAppHeader() {
                 {/* Share Cast Button (Mobile) */}
                 <a
                   href={getShareCastUrl()}
+                  onClick={(e) => {
+                    handleShare(e);
+                    setIsSidebarOpen(false);
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => setIsSidebarOpen(false)}
                   className="block w-full text-center px-4 py-3.5 text-sm font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 rounded-xl transition shadow-lg"
                 >
                   <div className="flex items-center justify-center gap-2">
