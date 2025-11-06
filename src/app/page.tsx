@@ -2,7 +2,7 @@ import { Web3Provider } from "@/components/providers/Web3Provider";
 import { NavigationProgress } from "@/components/providers/NavigationProgress";
 import TopBanner from "@/components/layout/TopBanner";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import FooterWebsite from "@/components/layout/FooterWebsite"; // ✅ CHANGED
 import HeroSection from "@/components/sections/HeroSection";
 import HowItWorksSection from "@/components/sections/HowItWorksSection";
 import PricingSection from "@/components/sections/PricingSection";
@@ -17,7 +17,7 @@ export default function HomePage() {
           <HeroSection />
           <HowItWorksSection />
           <PricingSection />
-          <Footer />
+          <FooterWebsite /> {/* ✅ CHANGED */}
         </main>
       </NavigationProgress>
     </Web3Provider>

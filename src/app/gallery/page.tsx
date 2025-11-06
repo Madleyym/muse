@@ -4,7 +4,7 @@ import { Web3Provider } from "@/components/providers/Web3Provider";
 import { NavigationProgress } from "@/components/providers/NavigationProgress";
 import TopBanner from "@/components/layout/TopBanner";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import FooterWebsite from "@/components/layout/FooterWebsite";
 import Link from "next/link";
 import { useState, useEffect, memo } from "react";
 import Image from "next/image";
@@ -484,7 +484,7 @@ export default function GalleryPage() {
             </div>
           </section>
 
-          <Footer />
+          <FooterWebsite />
 
           {showModal && selectedNFT && (
             <div

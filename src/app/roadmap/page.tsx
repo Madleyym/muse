@@ -4,7 +4,7 @@ import { Web3Provider } from "@/components/providers/Web3Provider";
 import { NavigationProgress } from "@/components/providers/NavigationProgress";
 import TopBanner from "@/components/layout/TopBanner";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import FooterWebsite from "@/components/layout/FooterWebsite"; 
 import Link from "next/link";
 import { useState } from "react";
 
@@ -101,7 +101,6 @@ export default function RoadmapPage() {
         <TopBanner />
         <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
           <Header />
-
           <section className="pt-12 sm:pt-16 pb-12 sm:pb-16">
             <div className="max-w-5xl mx-auto px-4 xl:px-0">
               <div className="max-w-xl mx-auto text-center lg:text-balance">
@@ -170,7 +169,6 @@ export default function RoadmapPage() {
               </div>
             </div>
           </section>
-
           <section className="pb-16 sm:pb-20">
             <div className="max-w-4xl mx-auto px-4">
               <div className="relative">
@@ -280,7 +278,6 @@ export default function RoadmapPage() {
               </div>
             </div>
           </section>
-
           <section className="py-20 bg-gradient-to-br from-purple-600 to-blue-600">
             <div className="max-w-4xl mx-auto px-4 text-center">
               <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
@@ -307,8 +304,7 @@ export default function RoadmapPage() {
               </div>
             </div>
           </section>
-
-          <Footer />
+          <FooterWebsite />
         </main>
       </NavigationProgress>
     </Web3Provider>
