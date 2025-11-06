@@ -36,7 +36,6 @@ export default function MiniAppLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        {/* ✅ ONLY FarcasterProvider - NO Web3Provider/RainbowKit! */}
         <FarcasterProvider>{children}</FarcasterProvider>
       </body>
     </html>

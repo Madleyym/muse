@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ConditionalWeb3Provider from "@/components/providers/ConditionalWeb3Provider";
-import { NavigationProgress } from "@/components/providers/NavigationProgress";
 import { FarcasterProvider } from "@/contexts/FarcasterContext";
-import TopBanner from "@/components/layout/TopBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,15 +47,7 @@ export default function RootLayout({
         <link rel="canonical" href="https://muse.write3.fun" />
       </head>
       <body className={inter.className}>
-        {/* Conditional provider wraps everything */}
-        <ConditionalWeb3Provider>
-          <FarcasterProvider>
-            <NavigationProgress>
-              <TopBanner />
-              <div className="page-transition">{children}</div>
-            </NavigationProgress>
-          </FarcasterProvider>
-        </ConditionalWeb3Provider>
+        <FarcasterProvider>{children}</FarcasterProvider>
       </body>
     </html>
   );

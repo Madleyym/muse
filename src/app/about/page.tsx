@@ -1,7 +1,10 @@
 "use client";
 
+import { Web3Provider } from "@/components/providers/Web3Provider";
+import { NavigationProgress } from "@/components/providers/NavigationProgress";
+import TopBanner from "@/components/layout/TopBanner";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer"; // ✅ ADDED
+import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -131,240 +134,249 @@ export default function AboutPage() {
       : sections.filter((section) => section.category === filter);
 
   return (
-    <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
-      <Header />
+    <Web3Provider>
+      <NavigationProgress>
+        <TopBanner />
+        <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
+          <Header />
 
-      {/* Hero Section */}
-      <section className="pt-12 sm:pt-16 pb-12 sm:pb-16">
-        <div className="max-w-5xl mx-auto px-4 xl:px-0">
-          <div className="text-center">
-            <div className="inline-flex items-center gradient-bg text-white px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium shadow-lg mb-4">
-              About Muse
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-text mb-4 leading-tight">
-              Building a Social Art Experiment
-            </h1>
-
-            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mb-8">
-              Where every interaction becomes collectible. Transforming
-              ephemeral social moments into permanent, meaningful digital art on
-              Base blockchain.
-            </p>
-
-            {/* Live Stats */}
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-8">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-md">
-                <div className="text-xl sm:text-2xl font-bold gradient-text">
-                  1,589
+          {/* Hero Section */}
+          <section className="pt-12 sm:pt-16 pb-12 sm:pb-16">
+            <div className="max-w-5xl mx-auto px-4 xl:px-0">
+              <div className="text-center">
+                <div className="inline-flex items-center gradient-bg text-white px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium shadow-lg mb-4">
+                  About Muse
                 </div>
-                <div className="text-xs text-slate-500">Total Mints</div>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-md">
-                <div className="text-xl sm:text-2xl font-bold gradient-text">
-                  735
-                </div>
-                <div className="text-xs text-slate-500">Active Users</div>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-md">
-                <div className="text-xl sm:text-2xl font-bold gradient-text">
-                  Q2 2025
-                </div>
-                <div className="text-xs text-slate-500">Launched</div>
-              </div>
-            </div>
 
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-              {/* Mobile: Only All */}
-              <button
-                onClick={() => setFilter("all")}
-                className="md:hidden px-4 py-2 text-xs sm:text-sm font-medium rounded-lg bg-slate-900 text-white shadow-lg"
-              >
-                All Stories
-              </button>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-text mb-4 leading-tight">
+                  Building a Social Art Experiment
+                </h1>
 
-              {/* Desktop: All Filters */}
-              <div className="hidden md:flex flex-wrap justify-center gap-2 sm:gap-3">
-                <button
-                  onClick={() => setFilter("all")}
-                  className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
-                    filter === "all"
-                      ? "bg-slate-900 text-white shadow-lg"
-                      : "bg-white text-slate-700 hover:bg-slate-50 shadow"
-                  }`}
-                >
-                  All Stories
-                </button>
-                <button
-                  onClick={() => setFilter("mission")}
-                  className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
-                    filter === "mission"
-                      ? "bg-purple-500 text-white shadow-lg"
-                      : "bg-white text-slate-700 hover:bg-purple-50 shadow"
-                  }`}
-                >
-                  Mission
-                </button>
-                <button
-                  onClick={() => setFilter("values")}
-                  className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
-                    filter === "values"
-                      ? "bg-blue-500 text-white shadow-lg"
-                      : "bg-white text-slate-700 hover:bg-blue-50 shadow"
-                  }`}
-                >
-                  Values
-                </button>
-                <button
-                  onClick={() => setFilter("story")}
-                  className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
-                    filter === "story"
-                      ? "bg-pink-500 text-white shadow-lg"
-                      : "bg-white text-slate-700 hover:bg-pink-50 shadow"
-                  }`}
-                >
-                  Story
-                </button>
-                <button
-                  onClick={() => setFilter("tech")}
-                  className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
-                    filter === "tech"
-                      ? "bg-indigo-500 text-white shadow-lg"
-                      : "bg-white text-slate-700 hover:bg-indigo-50 shadow"
-                  }`}
-                >
-                  Technology
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+                <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mb-8">
+                  Where every interaction becomes collectible. Transforming
+                  ephemeral social moments into permanent, meaningful digital
+                  art on Base blockchain.
+                </p>
 
-      {/* Content Grid */}
-      <section className="pb-16 sm:pb-20">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid gap-6 md:grid-cols-2">
-            {filteredSections.map((section) => (
-              <article
-                key={section.id}
-                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-purple-100/50"
-              >
-                {/* Visual Header */}
-                <div
-                  className={`relative h-48 bg-gradient-to-br ${section.gradient} flex items-center justify-center`}
-                >
-                  <div className="absolute inset-0 bg-black/5"></div>
-                  {section.icon}
-
-                  {/* Badge */}
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-slate-700 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                    {section.badge}
+                {/* Live Stats */}
+                <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-8">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-md">
+                    <div className="text-xl sm:text-2xl font-bold gradient-text">
+                      1,589
+                    </div>
+                    <div className="text-xs text-slate-500">Total Mints</div>
+                  </div>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-md">
+                    <div className="text-xl sm:text-2xl font-bold gradient-text">
+                      735
+                    </div>
+                    <div className="text-xs text-slate-500">Active Users</div>
+                  </div>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-md">
+                    <div className="text-xl sm:text-2xl font-bold gradient-text">
+                      Q2 2025
+                    </div>
+                    <div className="text-xs text-slate-500">Launched</div>
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">
-                    {section.title}
-                  </h3>
+                {/* Filter Buttons */}
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+                  {/* Mobile: Only All */}
+                  <button
+                    onClick={() => setFilter("all")}
+                    className="md:hidden px-4 py-2 text-xs sm:text-sm font-medium rounded-lg bg-slate-900 text-white shadow-lg"
+                  >
+                    All Stories
+                  </button>
 
-                  <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                    {section.description}
+                  {/* Desktop: All Filters */}
+                  <div className="hidden md:flex flex-wrap justify-center gap-2 sm:gap-3">
+                    <button
+                      onClick={() => setFilter("all")}
+                      className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                        filter === "all"
+                          ? "bg-slate-900 text-white shadow-lg"
+                          : "bg-white text-slate-700 hover:bg-slate-50 shadow"
+                      }`}
+                    >
+                      All Stories
+                    </button>
+                    <button
+                      onClick={() => setFilter("mission")}
+                      className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                        filter === "mission"
+                          ? "bg-purple-500 text-white shadow-lg"
+                          : "bg-white text-slate-700 hover:bg-purple-50 shadow"
+                      }`}
+                    >
+                      Mission
+                    </button>
+                    <button
+                      onClick={() => setFilter("values")}
+                      className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                        filter === "values"
+                          ? "bg-blue-500 text-white shadow-lg"
+                          : "bg-white text-slate-700 hover:bg-blue-50 shadow"
+                      }`}
+                    >
+                      Values
+                    </button>
+                    <button
+                      onClick={() => setFilter("story")}
+                      className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                        filter === "story"
+                          ? "bg-pink-500 text-white shadow-lg"
+                          : "bg-white text-slate-700 hover:bg-pink-50 shadow"
+                      }`}
+                    >
+                      Story
+                    </button>
+                    <button
+                      onClick={() => setFilter("tech")}
+                      className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+                        filter === "tech"
+                          ? "bg-indigo-500 text-white shadow-lg"
+                          : "bg-white text-slate-700 hover:bg-indigo-50 shadow"
+                      }`}
+                    >
+                      Technology
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Content Grid */}
+          <section className="pb-16 sm:pb-20">
+            <div className="max-w-6xl mx-auto px-4">
+              <div className="grid gap-6 md:grid-cols-2">
+                {filteredSections.map((section) => (
+                  <article
+                    key={section.id}
+                    className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-purple-100/50"
+                  >
+                    {/* Visual Header */}
+                    <div
+                      className={`relative h-48 bg-gradient-to-br ${section.gradient} flex items-center justify-center`}
+                    >
+                      <div className="absolute inset-0 bg-black/5"></div>
+                      {section.icon}
+
+                      {/* Badge */}
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-slate-700 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                        {section.badge}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-slate-900 mb-3">
+                        {section.title}
+                      </h3>
+
+                      <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                        {section.description}
+                      </p>
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-200">
+                        {section.stats.map((stat, idx) => (
+                          <div key={idx} className="text-center">
+                            <div className="text-lg font-bold gradient-text">
+                              {stat.value}
+                            </div>
+                            <div className="text-[10px] text-slate-500">
+                              {stat.label}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {/* Why Muse Card */}
+              <div className="mt-12 bg-gradient-to-br from-purple-100 to-blue-100 border-2 border-purple-200 rounded-2xl p-6 sm:p-8">
+                <div className="max-w-3xl mx-auto text-center">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-purple-600 mb-2">
+                    Why Muse Matters
+                  </p>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">
+                    Social Identity Meets Blockchain
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
+                    Social identity is fragmented across platforms. Muse creates
+                    a unified, on-chain representation of your digital
+                    personality—owned by YOU, not corporations. With Base's low
+                    fees and Farcaster's growing community, now is the perfect
+                    time to build the future of social art.
                   </p>
 
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-200">
-                    {section.stats.map((stat, idx) => (
-                      <div key={idx} className="text-center">
-                        <div className="text-lg font-bold gradient-text">
-                          {stat.value}
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          {stat.label}
-                        </div>
+                  <div className="grid sm:grid-cols-3 gap-4 text-center">
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="text-2xl font-bold gradient-text mb-1">
+                        100%
                       </div>
-                    ))}
+                      <div className="text-xs text-slate-600">
+                        On-Chain Ownership
+                      </div>
+                    </div>
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="text-2xl font-bold gradient-text mb-1">
+                        FREE
+                      </div>
+                      <div className="text-xs text-slate-600">
+                        To Start Minting
+                      </div>
+                    </div>
+                    <div className="bg-white/50 rounded-xl p-4">
+                      <div className="text-2xl font-bold gradient-text mb-1">
+                        Forever
+                      </div>
+                      <div className="text-xs text-slate-600">
+                        Yours to Keep
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {/* Why Muse Card */}
-          <div className="mt-12 bg-gradient-to-br from-purple-100 to-blue-100 border-2 border-purple-200 rounded-2xl p-6 sm:p-8">
-            <div className="max-w-3xl mx-auto text-center">
-              <p className="text-xs font-semibold uppercase tracking-wide text-purple-600 mb-2">
-                Why Muse Matters
-              </p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">
-                Social Identity Meets Blockchain
-              </h3>
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
-                Social identity is fragmented across platforms. Muse creates a
-                unified, on-chain representation of your digital
-                personality—owned by YOU, not corporations. With Base's low fees
-                and Farcaster's growing community, now is the perfect time to
-                build the future of social art.
-              </p>
-
-              <div className="grid sm:grid-cols-3 gap-4 text-center">
-                <div className="bg-white/50 rounded-xl p-4">
-                  <div className="text-2xl font-bold gradient-text mb-1">
-                    100%
-                  </div>
-                  <div className="text-xs text-slate-600">
-                    On-Chain Ownership
-                  </div>
-                </div>
-                <div className="bg-white/50 rounded-xl p-4">
-                  <div className="text-2xl font-bold gradient-text mb-1">
-                    FREE
-                  </div>
-                  <div className="text-xs text-slate-600">To Start Minting</div>
-                </div>
-                <div className="bg-white/50 rounded-xl p-4">
-                  <div className="text-2xl font-bold gradient-text mb-1">
-                    Forever
-                  </div>
-                  <div className="text-xs text-slate-600">Yours to Keep</div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-600 to-blue-600">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
-            Join the Movement
-          </h2>
-          <p className="text-xl text-purple-100 mb-8">
-            Be part of the future where social interactions become timeless art
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link
-              href="/#pricing"
-              scroll={true}
-              className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] bg-white text-purple-600 hover:bg-purple-50 px-4 py-2.5 rounded-[0.625rem] flex"
-            >
-              Start Minting FREE
-            </Link>
-            <Link
-              href="/gallery"
-              className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-white/30 bg-purple-500/30 text-white hover:bg-purple-400/40 px-4 py-2.5 rounded-[0.625rem] flex"
-            >
-              View Gallery
-            </Link>
-          </div>
-        </div>
-      </section>
+          {/* CTA Section */}
+          <section className="py-20 bg-gradient-to-br from-purple-600 to-blue-600">
+            <div className="max-w-4xl mx-auto px-4 text-center">
+              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
+                Join the Movement
+              </h2>
+              <p className="text-xl text-purple-100 mb-8">
+                Be part of the future where social interactions become timeless
+                art
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Link
+                  href="/#pricing"
+                  scroll={true}
+                  className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] bg-white text-purple-600 hover:bg-purple-50 px-4 py-2.5 rounded-[0.625rem] flex"
+                >
+                  Start Minting FREE
+                </Link>
+                <Link
+                  href="/gallery"
+                  className="items-center justify-center whitespace-nowrap text-sm font-medium transition-all focus:shadow-[0_0px_0px_2px_rgba(255,255,255,0.25),0_2px_10px_0px_rgba(0,0,0,0.05)] shadow-[0_2px_10px_0px_rgba(0,0,0,0.05)] border border-white/30 bg-purple-500/30 text-white hover:bg-purple-400/40 px-4 py-2.5 rounded-[0.625rem] flex"
+                >
+                  View Gallery
+                </Link>
+              </div>
+            </div>
+          </section>
 
-      {/* ✅ FOOTER ADDED */}
-      <Footer />
-    </main>
+          <Footer />
+        </main>
+      </NavigationProgress>
+    </Web3Provider>
   );
 }
