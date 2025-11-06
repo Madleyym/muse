@@ -26,15 +26,26 @@ export default function FooterMiniApp() {
           </p>
         </div>
 
-        {/* ✅ UPDATED: Website Link */}
-        <div className="text-center mb-6">
+        {/* ✅ UPDATED: Links Section */}
+        <div className="text-center mb-6 space-y-2">
           <a
             href="https://muse.write3.fun/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] font-medium text-purple-600 hover:text-purple-700 transition hover:underline"
+            className="block text-[11px] font-medium text-purple-600 hover:text-purple-700 transition hover:underline"
           >
-            Website: https://muse.write3.fun/
+            Visit Full Website
+          </a>
+          <a
+            href={`https://opensea.io/assets/base/${
+              process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ||
+              "0x4A8F23ADdEA57Ba5f09e4345CE8D40883Cda0F61"
+            }`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-[11px] font-medium text-blue-600 hover:text-blue-700 transition hover:underline"
+          >
+            View on OpenSea
           </a>
         </div>
 
