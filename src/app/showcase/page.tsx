@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { nftMoods } from "@/data/nftMoods";
 import { useFarcaster } from "@/contexts/FarcasterContext";
+import { useRouter } from "next/navigation";
 
 interface MintedNFT {
   id: number;
@@ -118,11 +119,23 @@ const NFTShowcaseCard = memo(
 NFTShowcaseCard.displayName = "NFTShowcaseCard";
 
 export default function ShowcasePage() {
-  const { farcasterData } = useFarcaster();
+  const { farcasterData, ready } = useFarcaster();
+  const router = useRouter();
   const [recentMints, setRecentMints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [globalGradientIndex, setGlobalGradientIndex] = useState(0);
-  const [filter, setFilter] = useState<"today" | "all">("today"); // ✅ New: Filter state
+  const [filter, setFilter] = useState<"today" | "all">("today");
+
+  // ✅ NEW: Check if user is admin
+  const isAdmin = farcasterData?.fid === 1346047;
+
+  // ✅ NEW: Redirect non-admin users
+  useEffect(() => {
+    if (ready && !isAdmin) {
+      console.log("[Showcase] Access denied - redirecting to home");
+      router.push("/");
+    }
+  }, [ready, isAdmin, router]);
 
   const getDefaultAvatar = (username: string) => {
     const firstLetter = username.charAt(0).toUpperCase();
@@ -148,7 +161,6 @@ export default function ShowcasePage() {
     const fetchRecent = async () => {
       try {
         setLoading(true);
-        // ✅ Update: Use filter parameter
         const response = await fetch(`/api/nfts/minted?filter=${filter}`);
         const data = await response.json();
 
@@ -173,7 +185,7 @@ export default function ShowcasePage() {
     };
 
     fetchRecent();
-  }, [filter]); // ✅ Refetch when filter changes
+  }, [filter]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -185,13 +197,12 @@ export default function ShowcasePage() {
   const generateWarpcastPost = () => {
     const topMoods = recentMints
       .slice(0, 3)
-      .map((nft) => `✨ ${nft.moodName} by @${nft.username}`)
+      .map((nft) => `${nft.moodName} by @${nft.username}`)
       .join("\n");
 
-    // ✅ Update: Use Farcaster MiniApp URL
-    const text = `🎨 Fresh mood NFTs minted ${
+    const text = `Fresh mood NFTs minted ${
       filter === "today" ? "today" : "recently"
-    } on miniapp muse!\n\n${topMoods}\n\n🔥 Total: ${
+    } on miniapp muse!\n\n${topMoods}\n\nTotal: ${
       recentMints.length
     } moods minted\n\nMint your vibe: https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse`;
 
@@ -202,8 +213,64 @@ export default function ShowcasePage() {
     )}`;
   };
 
-  // Check if user is admin
-  const isAdmin = farcasterData?.fid === 1346047;
+  // ✅ NEW: Show loading while checking admin status
+  if (!ready) {
+    return (
+      <Web3Provider>
+        <NavigationProgress>
+          <TopBanner />
+          <main className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin mx-auto w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full mb-4"></div>
+              <p className="text-slate-600">Loading...</p>
+            </div>
+          </main>
+        </NavigationProgress>
+      </Web3Provider>
+    );
+  }
+
+  // ✅ NEW: Show access denied if not admin
+  if (!isAdmin) {
+    return (
+      <Web3Provider>
+        <NavigationProgress>
+          <TopBanner />
+          <main className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
+            <div className="text-center max-w-md mx-auto px-4">
+              <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-8 mb-4">
+                <svg
+                  className="w-16 h-16 text-red-500 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <h1 className="text-2xl font-bold text-red-900 mb-2">
+                  Access Denied
+                </h1>
+                <p className="text-red-700 mb-6">
+                  This page is only accessible to administrators.
+                </p>
+                <Link
+                  href="/"
+                  className="inline-block gradient-bg text-white px-6 py-3 rounded-xl hover:opacity-90 transition font-medium"
+                >
+                  Back to Home
+                </Link>
+              </div>
+            </div>
+          </main>
+        </NavigationProgress>
+      </Web3Provider>
+    );
+  }
 
   return (
     <Web3Provider>
@@ -230,13 +297,13 @@ export default function ShowcasePage() {
                       d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
                     />
                   </svg>
-                  <span>Showcase</span>
+                  <span>Admin Showcase</span>
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl font-bold gradient-text mb-4">
                   {filter === "today"
-                    ? "Today's Fresh Mints 🎨"
-                    : "All Minted NFTs 🎨"}
+                    ? "Today's Fresh Mints"
+                    : "All Minted NFTs"}
                 </h1>
                 <p className="text-slate-600 mb-6 max-w-2xl mx-auto">
                   Share these amazing mood NFTs with the Farcaster community!
@@ -294,7 +361,7 @@ export default function ShowcasePage() {
                 </a>
               </div>
 
-              {/* ✅ NEW: Filter Selector - Mint Today / All Mints */}
+              {/* Filter Selector */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-slate-700">
                   Recent NFTs
@@ -308,7 +375,7 @@ export default function ShowcasePage() {
                         : "bg-white text-slate-600 border border-purple-200 hover:bg-purple-50"
                     }`}
                   >
-                    🔥 Mint Today
+                    Mint Today
                   </button>
                   <button
                     onClick={() => setFilter("all")}
@@ -318,7 +385,7 @@ export default function ShowcasePage() {
                         : "bg-white text-slate-600 border border-purple-200 hover:bg-purple-50"
                     }`}
                   >
-                    📚 All Mints
+                    All Mints
                   </button>
                 </div>
               </div>
@@ -342,9 +409,7 @@ export default function ShowcasePage() {
               ) : recentMints.length === 0 ? (
                 <div className="text-center py-20">
                   <p className="text-slate-600 mb-4">
-                    {filter === "today"
-                      ? "No mints today yet 🌅"
-                      : "No mints yet"}
+                    {filter === "today" ? "No mints today yet" : "No mints yet"}
                   </p>
                   <Link
                     href="/#pricing"
@@ -372,7 +437,7 @@ export default function ShowcasePage() {
                     href="/gallery"
                     className="inline-block border-2 border-purple-200 text-purple-600 px-6 py-3 rounded-xl hover:bg-purple-50 transition font-medium"
                   >
-                    View Full Gallery →
+                    View Full Gallery
                   </Link>
                   <Link
                     href="/#pricing"
