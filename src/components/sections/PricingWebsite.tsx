@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { nftMoods } from "@/data/nftMoods";
 import { useMintNFTWebsite } from "@/hooks/useMintNFT.website";
-import { getTransactionUrl } from "@/config/contracts";
+import { getTransactionUrl, getOpenSeaUrl } from "@/config/contracts";
 
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
@@ -35,6 +35,7 @@ export default function PricingWebsite() {
     isDevAddress,
     error: mintError,
     hash,
+    tokenId, // ✅ Get tokenId from hook
   } = useMintNFTWebsite();
 
   const [step, setStep] = useState<"connect" | "fid" | "preview">("connect");
@@ -49,6 +50,7 @@ export default function PricingWebsite() {
   const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [hasMinted, setHasMinted] = useState(false);
   const [checkingMinted, setCheckingMinted] = useState(false);
+  const [inspiredByUsername, setInspiredByUsername] = useState<string>(""); // ✅ NEW
 
   const checkedFidRef = useRef<number | null>(null);
 
@@ -70,7 +72,6 @@ export default function PricingWebsite() {
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
-  // ✅ DEBUG: Log currentMood when it changes
   useEffect(() => {
     if (currentMood && farcasterData) {
       console.log("🎨 Current Mood Debug:", {
@@ -284,6 +285,7 @@ export default function PricingWebsite() {
         moodName: farcasterData.mood,
         farcasterUsername: farcasterData.username,
         engagementScore: farcasterData.engagementScore,
+        inspiredBy: inspiredByUsername || undefined, // ✅ Pass inspired username
       });
     } catch (err: any) {
       console.error("[WebsiteSection] Mint error:", err);
@@ -305,6 +307,7 @@ export default function PricingWebsite() {
         moodName: farcasterData.mood,
         farcasterUsername: farcasterData.username,
         engagementScore: farcasterData.engagementScore,
+        inspiredBy: inspiredByUsername || undefined, // ✅ Pass inspired username
       });
     } catch (err: any) {
       console.error("[WebsiteSection] Mint error:", err);
@@ -357,13 +360,19 @@ export default function PricingWebsite() {
       : `linear-gradient(135deg, rgb(${fromRgb.r},${fromRgb.g},${fromRgb.b}) 0%, rgb(${toRgb.r},${toRgb.g},${toRgb.b}) 100%)`;
   };
 
-  // ✅ Generate share URL with debug
+  // ✅ Generate share URL with inspired by
   const getShareUrl = () => {
     const ogImagePath = currentMood?.ogImage || "/og/fire-starter.png";
     const fullImageUrl = `https://muse.write3.fun${ogImagePath}`;
+
+    const inspiredText = inspiredByUsername
+      ? `\n\nInspired by @${inspiredByUsername} ✨`
+      : "";
+
     const text = `Just minted my ${
       farcasterData?.mood || "Creative Mind"
-    } mood NFT! 🎨✨\n\nPowered by Muse on @base.base.eth \n\nMint yours: https://muse.write3.fun`;
+    } mood NFT! 🎨✨\n\nPowered by Muse on @base\n\nMint yours: https://muse.write3.fun${inspiredText}`;
+
     const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(
       text
     )}&embeds[]=${encodeURIComponent(fullImageUrl)}`;
@@ -373,6 +382,7 @@ export default function PricingWebsite() {
       moodName: farcasterData?.mood,
       ogImagePath,
       fullImageUrl,
+      inspiredBy: inspiredByUsername,
       shareUrl,
     });
 
@@ -625,6 +635,30 @@ export default function PricingWebsite() {
               </div>
             )}
 
+            {/* ✅ NEW: Inspired By Input */}
+            {!hasMinted && isConnected && (
+              <div className="max-w-2xl mx-auto mb-6">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-md border border-purple-200">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Tag someone who inspires this mint (optional) ✨
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="@username"
+                    value={inspiredByUsername}
+                    onChange={(e) =>
+                      setInspiredByUsername(e.target.value.replace("@", ""))
+                    }
+                    className="w-full px-4 py-2.5 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm transition-all"
+                  />
+                  <p className="text-xs text-slate-500 mt-2">
+                    They'll be mentioned when you share your mint on Warpcast!
+                    💜
+                  </p>
+                </div>
+              </div>
+            )}
+
             {hasMinted && !checkingMinted && (
               <div className="max-w-2xl mx-auto mb-6">
                 <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-2xl p-6 shadow-lg">
@@ -657,6 +691,7 @@ export default function PricingWebsite() {
               </div>
             )}
 
+            {/* Mobile tier selector */}
             <div className="max-w-4xl mx-auto mb-6">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-md md:hidden">
                 <div className="grid grid-cols-2 gap-2">
@@ -687,6 +722,7 @@ export default function PricingWebsite() {
               </div>
             </div>
 
+            {/* Mobile cards */}
             <div className="md:hidden max-w-md mx-auto">
               {selectedTier === "free" ? (
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border-2 border-purple-200">
@@ -871,7 +907,9 @@ export default function PricingWebsite() {
               )}
             </div>
 
+            {/* Desktop cards (sama seperti mobile, tapi untuk desktop) - COPY dari mobile dan sesuaikan className */}
             <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Free Card - sama seperti mobile */}
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border-2 border-purple-200 hover:border-purple-300 hover:shadow-xl transition-all">
                 <div className="text-sm font-medium text-purple-600 mb-2">
                   FREE MINT
@@ -955,6 +993,7 @@ export default function PricingWebsite() {
                 </button>
               </div>
 
+              {/* HD Card - sama seperti mobile */}
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-purple-500 hover:border-purple-600 hover:shadow-2xl transition-all relative">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                   MOST POPULAR
@@ -1068,7 +1107,7 @@ export default function PricingWebsite() {
           </>
         )}
 
-        {/* ✅ SUCCESS NOTIFICATION with FIXED Share Button */}
+        {/* ✅ SUCCESS NOTIFICATION with OpenSea + Share */}
         {showSuccessNotification && isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -1096,16 +1135,31 @@ export default function PricingWebsite() {
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
 
-                {/* ✅ FIXED: Share Button with Static OG Image */}
-                <a
-                  href={getShareUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center bg-purple-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-700 transition font-medium mb-2"
-                >
-                  Share on Warpcast 🎨
-                </a>
-                    <p className="text-xs text-slate-500 text-center mt-2">
+                <div className="space-y-2">
+                  {/* ✅ OpenSea Link */}
+                  {tokenId && (
+                    <a
+                      href={getOpenSeaUrl(tokenId)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full text-center bg-blue-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                    >
+                      View on OpenSea 🌊
+                    </a>
+                  )}
+
+                  {/* ✅ Share on Warpcast */}
+                  <a
+                    href={getShareUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full text-center bg-purple-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                  >
+                    Share on Warpcast 🎨
+                  </a>
+                </div>
+
+                <p className="text-xs text-slate-500 text-center mt-2">
                   Each FID can only mint once
                 </p>
               </div>
