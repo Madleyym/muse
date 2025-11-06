@@ -191,7 +191,7 @@ export default function ShowcasePage() {
     // ✅ Update: Use Farcaster MiniApp URL
     const text = `🎨 Fresh mood NFTs minted ${
       filter === "today" ? "today" : "recently"
-    } on @muse!\n\n${topMoods}\n\n🔥 Total: ${
+    } on miniapp muse!\n\n${topMoods}\n\n🔥 Total: ${
       recentMints.length
     } moods minted\n\nMint your vibe: https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse`;
 
