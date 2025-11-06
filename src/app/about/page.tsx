@@ -94,7 +94,7 @@ export default function AboutPage() {
         </svg>
       ),
       stats: [
-        { label: "Launched", value: "Q2 2025" },
+        { label: "Launched", value: "Q3 2025" },
         { label: "Network", value: "Base" },
       ],
     },
