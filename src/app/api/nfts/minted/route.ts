@@ -4,6 +4,11 @@ import { base } from "viem/chains";
 import { MUSE_NFT_CONTRACT } from "@/config/contracts";
 import type { Abi } from "viem";
 
+// ✅ FORCE NO CACHE
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const runtime = "nodejs";
+
 // Multiple RPC endpoints for reliability
 const transports = fallback([
   http("https://mainnet.base.org"),
@@ -19,13 +24,7 @@ const client = createPublicClient({
   },
 });
 
-// ✅ USE ENV VARIABLE (NOT hardcoded)
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY!;
-
-// In-memory cache
-let cachedNFTs: any[] = [];
-let lastFetchTime = 0;
-const CACHE_DURATION = 20000; // 20 seconds
 
 function getDefaultAvatar(fid: number): string {
   const colors = [
@@ -59,7 +58,7 @@ async function batchFetchPfps(fids: number[]): Promise<Map<number, string>> {
           accept: "application/json",
           api_key: NEYNAR_API_KEY,
         },
-        signal: AbortSignal.timeout(10000), // 10s timeout
+        signal: AbortSignal.timeout(10000),
       }
     );
 
@@ -91,27 +90,9 @@ async function batchFetchPfps(fids: number[]): Promise<Map<number, string>> {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const forceRefresh = searchParams.get("refresh") === "true";
-
-    // Return cache if fresh
-    const now = Date.now();
-    if (
-      !forceRefresh &&
-      cachedNFTs.length > 0 &&
-      now - lastFetchTime < CACHE_DURATION
-    ) {
-      console.log(`✅ Returning ${cachedNFTs.length} cached NFTs`);
-      return NextResponse.json({
-        success: true,
-        totalMinted: cachedNFTs.length,
-        nfts: cachedNFTs,
-        cached: true,
-        timestamp: new Date(lastFetchTime).toISOString(),
-      });
-    }
-
-    console.log("🔄 Fetching fresh NFT data from contract...");
+    console.log("🔄 Fetching FRESH NFT data from contract...", {
+      timestamp: new Date().toISOString(),
+    });
 
     // Step 1: Get total minted
     const totalMinted = await client.readContract({
@@ -124,12 +105,22 @@ export async function GET(request: Request) {
     console.log(`📊 Total minted: ${total}`);
 
     if (total === 0) {
-      return NextResponse.json({
-        success: true,
-        totalMinted: 0,
-        nfts: [],
-        cached: false,
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          totalMinted: 0,
+          nfts: [],
+          timestamp: new Date().toISOString(),
+        },
+        {
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "CDN-Cache-Control": "no-store",
+            "Vercel-CDN-Cache-Control": "no-store",
+            Pragma: "no-cache",
+          },
+        }
+      );
     }
 
     // Step 2: Batch fetch ALL metadata and owners using multicall
@@ -154,7 +145,7 @@ export async function GET(request: Request) {
       } as const);
     }
 
-    // Execute multicall (much faster than individual calls)
+    // Execute multicall
     const [metadataResults, ownerResults] = await Promise.all([
       client.multicall({ contracts: metadataCalls as any, allowFailure: true }),
       client.multicall({ contracts: ownerCalls as any, allowFailure: true }),
@@ -220,46 +211,41 @@ export async function GET(request: Request) {
       (a, b) => new Date(b.mintedAt).getTime() - new Date(a.mintedAt).getTime()
     );
 
-    // Update cache
-    cachedNFTs = sortedNFTs;
-    lastFetchTime = now;
+    console.log(`✅ Successfully fetched ${sortedNFTs.length} FRESH NFTs`);
 
-    console.log(`✅ Successfully fetched and cached ${sortedNFTs.length} NFTs`);
-
-    return NextResponse.json({
-      success: true,
-      totalMinted: total,
-      nfts: sortedNFTs,
-      cached: false,
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        totalMinted: total,
+        nfts: sortedNFTs,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        headers: {
+          // ✅ DISABLE ALL CACHING
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+          "CDN-Cache-Control": "no-store",
+          "Vercel-CDN-Cache-Control": "no-store",
+          Pragma: "no-cache",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("❌ Failed to fetch minted NFTs:", error);
-
-    // Return stale cache on error
-    if (cachedNFTs.length > 0) {
-      console.log("⚠️ Returning stale cache due to error");
-      return NextResponse.json({
-        success: true,
-        totalMinted: cachedNFTs.length,
-        nfts: cachedNFTs,
-        cached: true,
-        stale: true,
-        error: error.message,
-      });
-    }
 
     return NextResponse.json(
       {
         success: false,
         error: error.message,
         nfts: [],
+        timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
     );
   }
 }
-
-// Enable caching at edge
-export const runtime = "nodejs";
-export const revalidate = 20; // Revalidate every 20 seconds
