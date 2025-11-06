@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { nftMoods } from "@/data/nftMoods";
@@ -18,6 +18,9 @@ const isValidImageUrl = (url: string | undefined | null): boolean => {
     return false;
   }
 };
+
+// ✅ Outside component to prevent recreation
+let isSharingNotification = false;
 
 export default function PricingMiniApp() {
   const { isConnected } = useFrameWallet();
@@ -70,76 +73,87 @@ export default function PricingMiniApp() {
 
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
-  // ✅ FIXED: Single embed URL (no duplicates)
-  const handleShareFromNotification = async (
-    e: React.MouseEvent<HTMLAnchorElement>
-  ) => {
-    e.preventDefault();
+  // ✅ FIXED: Prevent double execution with useCallback
+  const handleShareFromNotification = useCallback(
+    async (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      e.stopPropagation(); // ✅ Prevent event bubbling
 
-    const inspiredText = inspiredByUsername
-      ? `\n\nInspired by @${inspiredByUsername} ✨`
-      : "";
+      // ✅ Prevent double call
+      if (isSharingNotification) {
+        console.log("[Share] Already sharing, skipping...");
+        return;
+      }
 
-    const text = `Just minted my ${
-      farcasterData?.mood || "Creative Mind"
-    } mood NFT! 🎨✨\n\nPowered by Muse on @base${inspiredText}`;
+      isSharingNotification = true;
 
-    const embedUrl = `https://muse.write3.fun${
-      currentMood?.ogImage || "/og/fire-starter.png"
-    }`;
+      const inspiredText = inspiredByUsername
+        ? `\n\nInspired by @${inspiredByUsername} ✨`
+        : "";
 
-    console.log("[Share] Attempting to share from notification...");
+      const text = `Just minted my ${
+        farcasterData?.mood || "Creative Mind"
+      } mood NFT! 🎨✨\n\nPowered by Muse on @base${inspiredText}`;
 
-    try {
-      // Method 1: Try window.sdk
-      if (
-        typeof window !== "undefined" &&
-        (window as any).sdk?.actions?.openUrl
-      ) {
-        console.log("[Share] Using window.sdk.actions.openUrl");
-        // ✅ FIX: Use single embed parameter
-        await (window as any).sdk.actions.openUrl(
+      const embedUrl = `https://muse.write3.fun${
+        currentMood?.ogImage || "/og/fire-starter.png"
+      }`;
+
+      console.log("[Share] Starting share from notification...");
+
+      try {
+        // Method 1: Try window.sdk
+        if (
+          typeof window !== "undefined" &&
+          (window as any).sdk?.actions?.openUrl
+        ) {
+          console.log("[Share] Using window.sdk");
+          await (window as any).sdk.actions.openUrl(
+            `https://warpcast.com/~/compose?text=${encodeURIComponent(
+              text
+            )}&embeds[]=${encodeURIComponent(embedUrl)}`
+          );
+          console.log("[Share] ✅ Success");
+          return;
+        }
+
+        // Method 2: Dynamic import
+        console.log("[Share] Using dynamic import");
+        const { default: sdk } = await import("@farcaster/frame-sdk");
+
+        await sdk.actions.openUrl(
           `https://warpcast.com/~/compose?text=${encodeURIComponent(
             text
           )}&embeds[]=${encodeURIComponent(embedUrl)}`
         );
-        console.log("[Share] ✅ Success via window.sdk");
-        return;
+        console.log("[Share] ✅ Success");
+      } catch (error) {
+        console.error("[Share] Failed:", error);
+
+        // Fallback: postMessage
+        try {
+          console.log("[Share] Trying postMessage...");
+          window.parent.postMessage(
+            {
+              type: "fc:frame:openUrl",
+              url: `https://warpcast.com/~/compose?text=${encodeURIComponent(
+                text
+              )}&embeds[]=${encodeURIComponent(embedUrl)}`,
+            },
+            "*"
+          );
+        } catch (e) {
+          console.error("[Share] All methods failed");
+        }
+      } finally {
+        // ✅ Reset after 2 seconds
+        setTimeout(() => {
+          isSharingNotification = false;
+        }, 2000);
       }
-
-      // Method 2: Dynamic import
-      console.log("[Share] Trying dynamic SDK import...");
-      const { default: sdk } = await import("@farcaster/frame-sdk");
-
-      // ✅ FIX: Use single embed parameter
-      await sdk.actions.openUrl(
-        `https://warpcast.com/~/compose?text=${encodeURIComponent(
-          text
-        )}&embeds[]=${encodeURIComponent(embedUrl)}`
-      );
-      console.log("[Share] ✅ Success via dynamic import");
-    } catch (error) {
-      console.error("[Share] SDK methods failed:", error);
-
-      // Method 3: PostMessage fallback
-      try {
-        console.log("[Share] Trying postMessage fallback...");
-        window.parent.postMessage(
-          {
-            type: "fc:frame:openUrl",
-            // ✅ FIX: Use single embed parameter
-            url: `https://warpcast.com/~/compose?text=${encodeURIComponent(
-              text
-            )}&embeds[]=${encodeURIComponent(embedUrl)}`,
-          },
-          "*"
-        );
-        console.log("[Share] ✅ PostMessage sent");
-      } catch (fallbackError) {
-        console.error("[Share] ❌ All methods failed:", fallbackError);
-      }
-    }
-  };
+    },
+    [inspiredByUsername, farcasterData?.mood, currentMood?.ogImage]
+  );
 
   const getWarpcastShareUrl = () => {
     const baseUrl = "https://warpcast.com/~/compose";
@@ -1053,7 +1067,7 @@ export default function PricingMiniApp() {
           </div>
         </div>
 
-        {/* ✅ SUCCESS NOTIFICATION - FIXED SHARE BUTTON */}
+        {/* ✅ SUCCESS NOTIFICATION */}
         {showSuccessNotification && isSuccess && hash && (
           <div className="fixed top-4 right-4 max-w-sm bg-white rounded-xl p-4 shadow-xl z-50 border-2 border-green-500 animate-slide-in">
             <div className="flex items-start gap-3">
@@ -1093,7 +1107,7 @@ export default function PricingMiniApp() {
                     </a>
                   )}
 
-                  {/* ✅ FIXED: Use onClick handler instead of href */}
+                  {/* ✅ FIXED: Use onClick handler */}
                   <a
                     href="#"
                     onClick={handleShareFromNotification}
