@@ -107,7 +107,7 @@ export default function MiniAppHeader() {
 const getShareCastUrl = () => {
   const baseUrl = "https://warpcast.com/~/compose";
   const text = encodeURIComponent(
-    `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on Base.\n\nFree SD or Premium HD editions available!\n\nTry it now: https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse`
+    `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base.base.eth.\n\nFree SD or Premium HD editions available!\n\nTry it now: https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse`
   );
   const embedUrl = encodeURIComponent("https://muse.write3.fun/og-image.png");
 
