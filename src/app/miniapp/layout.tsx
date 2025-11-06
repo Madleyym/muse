@@ -11,22 +11,14 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://muse.write3.fun/og-image.png", // ✅ Updated to use proper OG image
+        url: "https://muse.write3.fun/og-image.png",
         width: 1200,
         height: 630,
         alt: "Muse - Mint Your Mood NFT",
       },
     ],
   },
-  other: {
-    "fc:frame": "vNext",
-    "fc:frame:image": "https://muse.write3.fun/og-image.png", // ✅ Updated here too
-    "fc:frame:post_url": "https://muse.write3.fun/miniapp",
-    "fc:frame:button:1": "Start Minting",
-    "fc:frame:button:1:action": "link",
-    "fc:frame:button:1:target": "https://muse.write3.fun/miniapp",
-  },
-};
+ };
 
 export default function MiniAppLayout({
   children,
