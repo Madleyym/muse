@@ -19,6 +19,7 @@ export interface MintParams {
   moodName: string;
   farcasterUsername: string;
   engagementScore: number;
+  inspiredBy?: string; // ✅ NEW: Optional inspired username
 }
 
 const DEV_ADDRESSES = ["0x9b5f284fd3f9e9d35311d4061200873e817472dc"];
@@ -104,6 +105,7 @@ async function retryWithFallback<T>(
 export function useMintNFTWebsite() {
   const [mintType, setMintType] = useState<"free" | "hd" | null>(null);
   const [uploadingToIPFS, setUploadingToIPFS] = useState(false);
+  const [tokenId, setTokenId] = useState<string | undefined>(undefined); // ✅ NEW: Store tokenId
 
   const { address } = useAccount();
   const { data: balance } = useBalance({ address });
@@ -169,9 +171,52 @@ export function useMintNFTWebsite() {
     }
   };
 
+  // ✅ NEW: Extract TokenId from transaction receipt
+  useEffect(() => {
+    const extractTokenId = async () => {
+      if (!isSuccess || !hash || !publicClient) return;
+
+      try {
+        console.log("[Website] Extracting tokenId from tx:", hash);
+
+        const receipt = await publicClient.getTransactionReceipt({
+          hash,
+        });
+
+        console.log("[Website] Transaction receipt logs:", receipt.logs);
+
+        // Fallback: Use totalMinted from contract
+        const totalMinted = await retryWithFallback(async (rpcUrl) => {
+          const client = createPublicClient({
+            chain: base,
+            transport: http(rpcUrl),
+          });
+
+          return await client.readContract({
+            address: MUSE_NFT_CONTRACT.address,
+            abi: MUSE_NFT_CONTRACT.abi,
+            functionName: "totalMinted",
+          });
+        });
+
+        const extractedTokenId = (totalMinted as bigint).toString();
+        setTokenId(extractedTokenId);
+        console.log(
+          "[Website] ✅ Extracted TokenId (totalMinted):",
+          extractedTokenId
+        );
+      } catch (error) {
+        console.error("[Website] Failed to extract tokenId:", error);
+      }
+    };
+
+    extractTokenId();
+  }, [isSuccess, hash, publicClient]);
+
   const mintFree = async (params: MintParams) => {
     setMintType("free");
     setUploadingToIPFS(true);
+    setTokenId(undefined); // ✅ Reset tokenId
 
     try {
       console.log("[Website] Step 1: Checking if FID already minted...");
@@ -194,6 +239,7 @@ export function useMintNFTWebsite() {
           engagementScore: params.engagementScore,
           isHD: false,
           imageUrl: `/assets/images/Pro/${params.moodId}.png`,
+          inspiredBy: params.inspiredBy, // ✅ Pass inspired username
         }),
       });
 
@@ -230,6 +276,7 @@ export function useMintNFTWebsite() {
   const mintHD = async (params: MintParams) => {
     setMintType("hd");
     setUploadingToIPFS(true);
+    setTokenId(undefined); // ✅ Reset tokenId
 
     try {
       console.log("[Website] Step 1: Checking if FID already minted...");
@@ -252,6 +299,7 @@ export function useMintNFTWebsite() {
           engagementScore: params.engagementScore,
           isHD: true,
           imageUrl: `/assets/images/Pro/${params.moodId}.png`,
+          inspiredBy: params.inspiredBy, // ✅ Pass inspired username
         }),
       });
 
@@ -301,5 +349,6 @@ export function useMintNFTWebsite() {
     isCheckingDev,
     error,
     hash,
+    tokenId, // ✅ NEW: Export tokenId
   };
 }
