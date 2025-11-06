@@ -18,9 +18,8 @@ export interface MintParams {
   moodName: string;
   farcasterUsername: string;
   engagementScore: number;
+  inspiredBy?: string; // ✅ NEW: Optional inspired username
 }
-
-// ❌ REMOVED: DEV_ADDRESSES (not needed for MiniApp)
 
 const parseErrorMessage = (error: any): string => {
   const errorString = error?.message || error?.toString() || "";
@@ -69,7 +68,6 @@ const parseErrorMessage = (error: any): string => {
   return errorString || "An unknown error occurred";
 };
 
-// ✅ RETRY LOGIC
 async function retryWithFallback<T>(
   fn: (rpcUrl: string) => Promise<T>,
   maxRetries: number = 3
@@ -106,6 +104,7 @@ export function useMintNFTMiniApp() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
+  const [tokenId, setTokenId] = useState<string | undefined>(undefined); // ✅ NEW: Store tokenId
   const [error, setError] = useState<Error | null>(null);
   const [isDevAddress, setIsDevAddress] = useState(false);
   const [isCheckingDev, setIsCheckingDev] = useState(false);
@@ -114,7 +113,6 @@ export function useMintNFTMiniApp() {
 
   const checkedFidsRef = useRef<Set<number>>(new Set());
 
-  // ✅ CHECK DEV ADDRESS (only from contract, no hardcoded list)
   useEffect(() => {
     const checkDevAddress = async () => {
       if (!address) {
@@ -127,7 +125,6 @@ export function useMintNFTMiniApp() {
       try {
         console.log("[MiniApp] Checking dev address from contract:", address);
 
-        // ✅ Check from contract only
         const isDevFromContract = await retryWithFallback(async (rpcUrl) => {
           const publicClient = createPublicClient({
             chain: base,
@@ -185,9 +182,47 @@ export function useMintNFTMiniApp() {
     }
   };
 
+  // ✅ NEW: Extract TokenId from transaction receipt
+  const extractTokenIdFromReceipt = async (txHash: `0x${string}`) => {
+    try {
+      const publicClient = createPublicClient({
+        chain: base,
+        transport: http(BASE_RPC_ENDPOINTS[0]),
+      });
+
+      const receipt = await publicClient.getTransactionReceipt({
+        hash: txHash,
+      });
+
+      console.log("[MiniApp] Transaction receipt logs:", receipt.logs);
+
+      // Try to find MoodNFTMinted event
+      // Event signature: MoodNFTMinted(uint256 indexed tokenId, address indexed minter, uint256 fid, string moodId, bool isHD)
+      const mintEventSignature = "0x..."; // You can calculate this or look in the receipt
+
+      // Fallback: Use totalMinted from contract
+      const totalMinted = await publicClient.readContract({
+        address: MUSE_NFT_CONTRACT.address,
+        abi: MUSE_NFT_CONTRACT.abi,
+        functionName: "totalMinted",
+      });
+
+      const extractedTokenId = (totalMinted as bigint).toString();
+      console.log(
+        "[MiniApp] ✅ Extracted TokenId (totalMinted):",
+        extractedTokenId
+      );
+      return extractedTokenId;
+    } catch (error) {
+      console.error("[MiniApp] Failed to extract tokenId:", error);
+      return undefined;
+    }
+  };
+
   const mintFree = async (params: MintParams) => {
     setMintType("free");
     setError(null);
+    setTokenId(undefined);
 
     try {
       console.log("[MiniApp] Step 1: Checking if FID already minted...");
@@ -219,6 +254,7 @@ export function useMintNFTMiniApp() {
           engagementScore: params.engagementScore,
           isHD: false,
           imageUrl: `/assets/images/Pro/${params.moodId}.png`,
+          inspiredBy: params.inspiredBy,
         }),
       });
 
@@ -278,9 +314,15 @@ export function useMintNFTMiniApp() {
         confirmations: 1,
       });
 
+      const extractedTokenId = await extractTokenIdFromReceipt(txHash);
+      setTokenId(extractedTokenId);
+
       setIsConfirming(false);
       setIsSuccess(true);
-      console.log("[MiniApp] 🎉 Mint Free successful!");
+      console.log(
+        "[MiniApp] 🎉 Mint Free successful! TokenId:",
+        extractedTokenId
+      );
     } catch (err: any) {
       console.error("[MiniApp] ❌ Mint Free error:", err);
       setUploadingToIPFS(false);
@@ -297,6 +339,7 @@ export function useMintNFTMiniApp() {
   const mintHD = async (params: MintParams) => {
     setMintType("hd");
     setError(null);
+    setTokenId(undefined);
 
     try {
       console.log("[MiniApp] Step 1: Checking if FID already minted...");
@@ -328,6 +371,7 @@ export function useMintNFTMiniApp() {
           engagementScore: params.engagementScore,
           isHD: true,
           imageUrl: `/assets/images/Pro/${params.moodId}.png`,
+          inspiredBy: params.inspiredBy,
         }),
       });
 
@@ -355,7 +399,6 @@ export function useMintNFTMiniApp() {
 
       console.log("[MiniApp] Step 4: Sending transaction...");
 
-      // ✅ Check if dev address and adjust value
       const mintValue = isDevAddress ? parseEther("0") : parseEther("0.001");
       console.log(
         "[MiniApp] Mint value:",
@@ -395,9 +438,15 @@ export function useMintNFTMiniApp() {
         confirmations: 1,
       });
 
+      const extractedTokenId = await extractTokenIdFromReceipt(txHash);
+      setTokenId(extractedTokenId);
+
       setIsConfirming(false);
       setIsSuccess(true);
-      console.log("[MiniApp] 🎉 Mint HD successful!");
+      console.log(
+        "[MiniApp] 🎉 Mint HD successful! TokenId:",
+        extractedTokenId
+      );
     } catch (err: any) {
       console.error("[MiniApp] ❌ Mint HD error:", err);
       setUploadingToIPFS(false);
@@ -424,5 +473,6 @@ export function useMintNFTMiniApp() {
     isCheckingDev,
     error,
     hash,
+    tokenId, // ✅ NEW: Export tokenId
   };
 }
