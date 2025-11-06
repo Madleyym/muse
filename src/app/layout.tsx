@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://muse.write3.fun/og-image.png", // ✅ CHANGED to absolute
         width: 1200,
         height: 630,
         alt: "Muse - Mint Your Mood NFT",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Muse - Mint Your Mood NFT",
     description: "Turn your Farcaster vibe into collectible art on Base",
-    images: ["/og-image.png"],
+    images: ["https://muse.write3.fun/og-image.png"], // ✅ CHANGED to absolute
   },
 };
 
