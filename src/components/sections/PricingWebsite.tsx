@@ -1105,17 +1105,7 @@ export default function PricingWebsite() {
                 >
                   Share on Warpcast 🎨
                 </a>
-
-                <a
-                  href={getTransactionUrl(hash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center border-2 border-purple-200 text-purple-600 text-xs py-2 px-3 rounded-lg hover:bg-purple-50 transition font-medium"
-                >
-                  View on Basescan
-                </a>
-
-                <p className="text-xs text-slate-500 text-center mt-2">
+                    <p className="text-xs text-slate-500 text-center mt-2">
                   Each FID can only mint once
                 </p>
               </div>

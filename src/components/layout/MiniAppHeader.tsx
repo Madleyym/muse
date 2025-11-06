@@ -104,16 +104,15 @@ export default function MiniAppHeader() {
     setIsSidebarOpen(false);
   };
 
-  // ✅ NEW: Generate share cast URL
-  const getShareCastUrl = () => {
-    const baseUrl = "https://warpcast.com/~/compose";
-    const text = encodeURIComponent(
-      `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on Base.\n\nFree SD or Premium HD editions available!\n\nTry it now: https://muse.write3.fun/miniapp`
-    );
-    const embedUrl = encodeURIComponent("https://muse.write3.fun/og-image.png");
+const getShareCastUrl = () => {
+  const baseUrl = "https://warpcast.com/~/compose";
+  const text = encodeURIComponent(
+    `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on Base.\n\nFree SD or Premium HD editions available!\n\nTry it now: https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse`
+  );
+  const embedUrl = encodeURIComponent("https://muse.write3.fun/og-image.png");
 
-    return `${baseUrl}?text=${text}&embeds[]=${embedUrl}`;
-  };
+  return `${baseUrl}?text=${text}&embeds[]=${embedUrl}`;
+};
 
   return (
     <>
