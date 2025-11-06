@@ -1,6 +1,7 @@
 "use client";
 
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer"; // ✅ ADD
 import Link from "next/link";
 import { useState, useEffect, memo } from "react";
 import Image from "next/image";
@@ -168,7 +169,6 @@ export default function GalleryPage() {
   const [mintedNFTs, setMintedNFTs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalMinted, setTotalMinted] = useState(0);
-  const [initialLoad, setInitialLoad] = useState(true);
 
   const getDefaultAvatar = (username: string) => {
     const firstLetter = username.charAt(0).toUpperCase();
@@ -184,25 +184,28 @@ export default function GalleryPage() {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
+    if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
   };
 
-  // ✅ ONLY ONE fetchMintedNFTs function
-  const fetchMintedNFTs = async (forceRefresh = false) => {
+  // ✅ IMPROVED: Fetch with no-cache
+  const fetchMintedNFTs = async (silent = false) => {
     try {
-      if (initialLoad) {
+      if (!silent) {
         setLoading(true);
       }
 
-      const url = forceRefresh
-        ? "/api/nfts/minted?refresh=true"
-        : "/api/nfts/minted";
+      console.log("🔄 Fetching NFTs...", new Date().toISOString());
 
-      const response = await fetch(url, {
-        cache: forceRefresh ? "no-store" : "force-cache",
-        next: { revalidate: 20 },
+      const response = await fetch("/api/nfts/minted?refresh=true", {
+        method: "GET",
+        cache: "no-store", // ✅ No cache
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
       });
 
       const data = await response.json();
@@ -210,7 +213,6 @@ export default function GalleryPage() {
       console.log("📦 API Response:", {
         success: data.success,
         count: data.nfts?.length || 0,
-        cached: data.cached,
         timestamp: data.timestamp,
       });
 
@@ -244,24 +246,35 @@ export default function GalleryPage() {
     } catch (error) {
       console.error("❌ Failed to fetch minted NFTs:", error);
     } finally {
-      setLoading(false);
-      if (initialLoad) {
-        setInitialLoad(false);
+      if (!silent) {
+        setLoading(false);
       }
     }
   };
 
-  // ✅ ONLY ONE useEffect for fetch
+  // ✅ Initial fetch on mount
   useEffect(() => {
     fetchMintedNFTs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ✅ AUTO-REFRESH every 30 seconds (background)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log("🔄 Auto-refreshing NFTs...");
+      fetchMintedNFTs(true); // silent refresh
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ✅ Manual refresh button
   const handleRefresh = async () => {
-    await fetchMintedNFTs(true);
+    await fetchMintedNFTs(false);
   };
 
-  // ✅ Gradient animation effect
+  // ✅ Gradient animation
   useEffect(() => {
     const interval = setInterval(() => {
       setGlobalGradientIndex((prev) => (prev + 1) % 10);
@@ -310,6 +323,7 @@ export default function GalleryPage() {
     <main className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
       <Header />
 
+      {/* Hero Stats Section */}
       <section className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-8 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
           <div className="text-center">
@@ -360,6 +374,7 @@ export default function GalleryPage() {
         </div>
       </section>
 
+      {/* Filter Bar */}
       <section className="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 border-b border-purple-100/50 py-4 sm:py-6 sticky top-0 z-40 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
           <div className="flex items-center justify-between gap-3">
@@ -367,10 +382,12 @@ export default function GalleryPage() {
               <div className="text-sm sm:text-base font-semibold text-slate-700 flex-shrink-0">
                 {loading ? "Loading..." : `${mintedNFTs.length} Moods`}
               </div>
+              {/* ✅ Refresh button */}
               <button
                 onClick={handleRefresh}
                 disabled={loading}
                 className="text-xs sm:text-sm px-3 py-1.5 border border-purple-200 rounded-lg hover:bg-purple-50 transition disabled:opacity-50 flex items-center gap-1.5"
+                title="Refresh gallery"
               >
                 <svg
                   className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -385,8 +402,16 @@ export default function GalleryPage() {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </button>
+              {/* ✅ Live indicator */}
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span>Live (30s)</span>
+              </div>
             </div>
 
             <select
@@ -403,6 +428,7 @@ export default function GalleryPage() {
         </div>
       </section>
 
+      {/* Gallery Grid */}
       <section className="py-8 sm:py-12" id="gallery">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-0">
           {loading ? (
@@ -446,6 +472,7 @@ export default function GalleryPage() {
         </div>
       </section>
 
+      {/* CTA Section */}
       <section className="py-12 sm:py-16 bg-gradient-to-br from-purple-600 to-blue-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
@@ -473,6 +500,10 @@ export default function GalleryPage() {
         </div>
       </section>
 
+      {/* ✅ ADD FOOTER */}
+      <Footer />
+
+      {/* Modal */}
       {showModal && selectedNFT && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
