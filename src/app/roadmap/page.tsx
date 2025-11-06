@@ -1,6 +1,7 @@
 "use client";
 
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer"; // ✅ ADDED
 import Link from "next/link";
 import { useState } from "react";
 
@@ -275,13 +276,13 @@ export default function RoadmapPage() {
               </Link>
             </div>
             <p className="text-xs text-slate-500 mt-4">
-              Last updated: November 3, 2025
+              Last updated: November 6, 2025
             </p>
           </div>
         </div>
       </section>
 
-      {/* CTA Section - MATCHED WITH CTASection.tsx STYLES */}
+      {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-purple-600 to-blue-600">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
@@ -308,6 +309,9 @@ export default function RoadmapPage() {
           </div>
         </div>
       </section>
+
+      {/* ✅ FOOTER ADDED */}
+      <Footer />
     </main>
   );
 }
