@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { useFrameWallet } from "@/hooks/useFrameWallet";
-import sdk from "@farcaster/frame-sdk";
 
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
@@ -52,6 +51,24 @@ export default function MiniAppHeader() {
     setPfpError(false);
   }, [farcasterData?.pfpUrl]);
 
+  // Debug SDK availability on mount
+  useEffect(() => {
+    console.log("[MiniAppHeader] SDK Debug Info:", {
+      hasSdk: !!(window as any).sdk,
+      hasFarcaster: !!(window as any).farcaster,
+      sdkActions: (window as any).sdk?.actions,
+      farcasterActions: (window as any).farcaster?.actions,
+      availableMethods: {
+        openUrl:
+          !!(window as any).sdk?.actions?.openUrl ||
+          !!(window as any).farcaster?.actions?.openUrl,
+        openComposer:
+          !!(window as any).sdk?.actions?.openComposer ||
+          !!(window as any).farcaster?.actions?.openComposer,
+      },
+    });
+  }, []);
+
   const handlePfpError = () => {
     console.error(
       "[MiniAppHeader] Failed to load profile picture:",
@@ -93,32 +110,93 @@ export default function MiniAppHeader() {
     setIsSidebarOpen(false);
   };
 
-  const handleShare = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  // ✅ FIXED: Direct Warpcast Share using Farcaster SDK (Multiple Methods)
+  const handleShare = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
 
     const text =
       "Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base\n\nFree SD or Premium HD editions available!";
     const embedUrl = "https://muse.write3.fun/og-image.png";
 
-    // Use Farcaster SDK if available
-    if (typeof window !== "undefined" && (window as any).farcaster) {
-      console.log("[Share] Using Farcaster SDK");
-      (window as any).farcaster.actions.openComposer({
-        text: text,
-        embeds: [embedUrl],
+    console.log("[Share] Attempting to share...");
+
+    try {
+      // Method 1: Try sdk.actions.openUrl (Farcaster Frame SDK)
+      if (
+        typeof window !== "undefined" &&
+        (window as any).sdk?.actions?.openUrl
+      ) {
+        console.log("[Share] Using sdk.actions.openUrl");
+        await (window as any).sdk.actions.openUrl(
+          `https://warpcast.com/~/compose?text=${encodeURIComponent(
+            text
+          )}&embeds[]=${encodeURIComponent(embedUrl)}`
+        );
+        return;
+      }
+
+      // Method 2: Try farcaster.actions.openUrl
+      if (
+        typeof window !== "undefined" &&
+        (window as any).farcaster?.actions?.openUrl
+      ) {
+        console.log("[Share] Using farcaster.actions.openUrl");
+        await (window as any).farcaster.actions.openUrl(
+          `https://warpcast.com/~/compose?text=${encodeURIComponent(
+            text
+          )}&embeds[]=${encodeURIComponent(embedUrl)}`
+        );
+        return;
+      }
+
+      // Method 3: Try openComposer directly (most reliable in Warpcast)
+      if (
+        typeof window !== "undefined" &&
+        (window as any).farcaster?.actions?.openComposer
+      ) {
+        console.log("[Share] Using farcaster.actions.openComposer");
+        await (window as any).farcaster.actions.openComposer({
+          text: text,
+          embeds: [embedUrl],
+        });
+        return;
+      }
+
+      // Method 4: Check for any SDK instance
+      const sdk = (window as any).sdk || (window as any).farcaster;
+      if (sdk?.actions) {
+        console.log("[Share] Using generic SDK actions");
+        if (sdk.actions.openComposer) {
+          await sdk.actions.openComposer({
+            text: text,
+            embeds: [embedUrl],
+          });
+          return;
+        }
+        if (sdk.actions.openUrl) {
+          await sdk.actions.openUrl(
+            `https://warpcast.com/~/compose?text=${encodeURIComponent(
+              text
+            )}&embeds[]=${encodeURIComponent(embedUrl)}`
+          );
+          return;
+        }
+      }
+
+      // If we get here, no SDK found
+      console.warn("[Share] No Farcaster SDK found");
+      console.log("[Share] Available window objects:", {
+        hasSdk: !!(window as any).sdk,
+        hasFarcaster: !!(window as any).farcaster,
+        sdkActions: (window as any).sdk?.actions,
+        farcasterActions: (window as any).farcaster?.actions,
       });
-      return;
+
+      alert("Please open this in Warpcast app to share");
+    } catch (error) {
+      console.error("[Share] All methods failed:", error);
+      alert("Unable to open share composer. Please try again.");
     }
-
-    // Fallback: Intent URL
-    const intentUrl = `intent://warpcast.com/~/compose?text=${encodeURIComponent(
-      text
-    )}&embeds[]=${encodeURIComponent(
-      embedUrl
-    )}#Intent;scheme=https;package=com.farcaster.mobile;end`;
-
-    console.log("[Share] Using intent URL");
-    window.location.href = intentUrl;
   };
 
   return (
