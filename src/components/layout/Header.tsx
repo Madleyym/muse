@@ -125,7 +125,7 @@ export default function Header() {
                 <li>
                   <a
                     className="flex items-center gap-x-1.5 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:text-purple-600 group"
-                    href="https://warpcast.com"
+                    href="https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -416,7 +416,7 @@ export default function Header() {
                   </li>
                   <li>
                     <a
-                      href="https://warpcast.com"
+                      href="https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-between px-4 py-3 text-base font-medium text-neutral-700 hover:bg-purple-50 rounded-xl transition group"

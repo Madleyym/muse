@@ -259,7 +259,7 @@ export default function RoadmapPage() {
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
-                    href="https://warpcast.com"
+                    href="https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-5 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition text-sm font-medium shadow"

@@ -57,7 +57,7 @@ export default function Footer() {
             {/* <span className="text-neutral-400">|</span>
 
             <a
-              href="https://warpcast.com"
+              href="https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[11px] font-medium text-neutral-500 hover:text-purple-600 transition"
@@ -71,7 +71,7 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               {/* ✅ Farcaster Icon - SVG */}
               <a
-                href="https://warpcast.com"
+                href="https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-purple-600 hover:text-purple-700 transition"
@@ -193,7 +193,7 @@ export default function Footer() {
             <div className="flex flex-col items-start gap-y-1.5">
               <a
                 className="flex items-center gap-x-2 whitespace-nowrap text-sm font-medium text-neutral-500 hover:text-purple-600 transition group"
-                href="https://warpcast.com"
+                href="https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -259,7 +259,7 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             {/* Farcaster */}
             <a
-              href="https://warpcast.com"
+              href="https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse"
               title="Farcaster"
               target="_blank"
               rel="noopener noreferrer"
