@@ -1058,32 +1058,32 @@ export default function PricingWebsite() {
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
 
-                {/* ✅ UPDATED: Share dengan Static OG Image */}
+                {/* ✅ Share to Warpcast Button di Website */}
                 <a
                   href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
                     `Just minted my ${
                       farcasterData?.mood || "Creative Mind"
-                    } mood NFT! 🎨✨\n\nPowered by Muse on Base ⚡\n\nMint yours: https://muse.write3.fun`
+                    } mood NFT! 🎨✨\n\nPowered by Muse on @base.base.eth \n\nMint yours: https://muse.write3.fun`
                   )}&embeds[]=${encodeURIComponent(
                     `https://muse.write3.fun${
                       currentMood?.ogImage || "/og/fire-starter.png"
-                    }`
+                    }` 
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full text-center bg-purple-600 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-700 transition font-medium mb-2"
                 >
-                  Share on Warpcast
+                  Share on Warpcast 🎨
                 </a>
 
-                <a
+                {/* <a
                   href={getTransactionUrl(hash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full text-center border-2 border-purple-200 text-purple-600 text-xs py-2 px-3 rounded-lg hover:bg-purple-50 transition font-medium"
                 >
                   View on Basescan
-                </a>
+                </a> */}
 
                 <p className="text-xs text-slate-500 text-center mt-2">
                   Each FID can only mint once
