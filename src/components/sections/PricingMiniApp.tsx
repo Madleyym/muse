@@ -964,14 +964,14 @@ export default function PricingMiniApp() {
                   {hash.slice(0, 8)}...{hash.slice(-6)}
                 </p>
 
-                {/* ✅ NEW: Share to Warpcast Button */}
+                {/* ✅ Line ~800+ - Share to Warpcast Button di MiniApp */}
                 <a
                   href={`https://warpcast.com/~/compose?text=${encodeURIComponent(
-                    `Just minted my mood NFT on @muse! 🎨\n\nMood: ${
+                    `Just minted my ${
                       farcasterData?.mood || "Creative Mind"
-                    }\nMinted on Base Network ⚡\n\nMint yours: https://muse.write3.fun`
+                    } mood NFT! 🎨✨\n\nPowered by Muse on @base.base.eth \n\nMint yours: https://muse.write3.fun/miniapp`
                   )}&embeds[]=${encodeURIComponent(
-                    `https://basescan.org/tx/${hash}`
+                    "https://muse.write3.fun/og-image.png"
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -980,14 +980,14 @@ export default function PricingMiniApp() {
                   Share on Warpcast 🚀
                 </a>
 
-                <a
+                {/* <a
                   href={getTransactionUrl(hash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full text-center border-2 border-purple-200 text-purple-600 text-xs py-2 px-3 rounded-lg hover:bg-purple-50 transition font-medium"
                 >
                   View on Basescan
-                </a>
+                </a> */}
 
                 <p className="text-xs text-slate-500 text-center mt-2">
                   Each FID can only mint once
