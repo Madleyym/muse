@@ -51,24 +51,6 @@ export default function MiniAppHeader() {
     setPfpError(false);
   }, [farcasterData?.pfpUrl]);
 
-  // Debug SDK availability on mount
-  useEffect(() => {
-    console.log("[MiniAppHeader] SDK Debug Info:", {
-      hasSdk: !!(window as any).sdk,
-      hasFarcaster: !!(window as any).farcaster,
-      sdkActions: (window as any).sdk?.actions,
-      farcasterActions: (window as any).farcaster?.actions,
-      availableMethods: {
-        openUrl:
-          !!(window as any).sdk?.actions?.openUrl ||
-          !!(window as any).farcaster?.actions?.openUrl,
-        openComposer:
-          !!(window as any).sdk?.actions?.openComposer ||
-          !!(window as any).farcaster?.actions?.openComposer,
-      },
-    });
-  }, []);
-
   const handlePfpError = () => {
     console.error(
       "[MiniAppHeader] Failed to load profile picture:",
@@ -110,7 +92,7 @@ export default function MiniAppHeader() {
     setIsSidebarOpen(false);
   };
 
-  // ✅ FIXED: Direct Warpcast Share using Farcaster SDK (Multiple Methods)
+  // ✅ FIXED: Share function with multiple fallback methods
   const handleShare = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
 
@@ -121,81 +103,50 @@ export default function MiniAppHeader() {
     console.log("[Share] Attempting to share...");
 
     try {
-      // Method 1: Try sdk.actions.openUrl (Farcaster Frame SDK)
+      // Method 1: Try window.sdk (if already loaded)
       if (
         typeof window !== "undefined" &&
         (window as any).sdk?.actions?.openUrl
       ) {
-        console.log("[Share] Using sdk.actions.openUrl");
+        console.log("[Share] Using window.sdk.actions.openUrl");
         await (window as any).sdk.actions.openUrl(
           `https://warpcast.com/~/compose?text=${encodeURIComponent(
             text
           )}&embeds[]=${encodeURIComponent(embedUrl)}`
         );
+        console.log("[Share] ✅ Success via window.sdk");
         return;
       }
 
-      // Method 2: Try farcaster.actions.openUrl
-      if (
-        typeof window !== "undefined" &&
-        (window as any).farcaster?.actions?.openUrl
-      ) {
-        console.log("[Share] Using farcaster.actions.openUrl");
-        await (window as any).farcaster.actions.openUrl(
-          `https://warpcast.com/~/compose?text=${encodeURIComponent(
-            text
-          )}&embeds[]=${encodeURIComponent(embedUrl)}`
-        );
-        return;
-      }
+      // Method 2: Try dynamic import
+      console.log("[Share] Trying dynamic SDK import...");
+      const { default: sdk } = await import("@farcaster/frame-sdk");
 
-      // Method 3: Try openComposer directly (most reliable in Warpcast)
-      if (
-        typeof window !== "undefined" &&
-        (window as any).farcaster?.actions?.openComposer
-      ) {
-        console.log("[Share] Using farcaster.actions.openComposer");
-        await (window as any).farcaster.actions.openComposer({
-          text: text,
-          embeds: [embedUrl],
-        });
-        return;
-      }
-
-      // Method 4: Check for any SDK instance
-      const sdk = (window as any).sdk || (window as any).farcaster;
-      if (sdk?.actions) {
-        console.log("[Share] Using generic SDK actions");
-        if (sdk.actions.openComposer) {
-          await sdk.actions.openComposer({
-            text: text,
-            embeds: [embedUrl],
-          });
-          return;
-        }
-        if (sdk.actions.openUrl) {
-          await sdk.actions.openUrl(
-            `https://warpcast.com/~/compose?text=${encodeURIComponent(
-              text
-            )}&embeds[]=${encodeURIComponent(embedUrl)}`
-          );
-          return;
-        }
-      }
-
-      // If we get here, no SDK found
-      console.warn("[Share] No Farcaster SDK found");
-      console.log("[Share] Available window objects:", {
-        hasSdk: !!(window as any).sdk,
-        hasFarcaster: !!(window as any).farcaster,
-        sdkActions: (window as any).sdk?.actions,
-        farcasterActions: (window as any).farcaster?.actions,
-      });
-
-      alert("Please open this in Warpcast app to share");
+      await sdk.actions.openUrl(
+        `https://warpcast.com/~/compose?text=${encodeURIComponent(
+          text
+        )}&embeds[]=${encodeURIComponent(embedUrl)}`
+      );
+      console.log("[Share] ✅ Success via dynamic import");
     } catch (error) {
-      console.error("[Share] All methods failed:", error);
-      alert("Unable to open share composer. Please try again.");
+      console.error("[Share] SDK methods failed:", error);
+
+      // Method 3: Fallback to postMessage (iframe communication)
+      try {
+        console.log("[Share] Trying postMessage fallback...");
+        window.parent.postMessage(
+          {
+            type: "fc:frame:openUrl",
+            url: `https://warpcast.com/~/compose?text=${encodeURIComponent(
+              text
+            )}&embeds[]=${encodeURIComponent(embedUrl)}`,
+          },
+          "*"
+        );
+        console.log("[Share] ✅ PostMessage sent");
+      } catch (fallbackError) {
+        console.error("[Share] ❌ All methods failed:", fallbackError);
+      }
     }
   };
 
