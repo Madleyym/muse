@@ -6,10 +6,8 @@ import Image from "next/image";
 import { useFarcaster } from "@/contexts/FarcasterContext";
 import { useFrameWallet } from "@/hooks/useFrameWallet";
 
-// Helper function to check if URL is valid and safe
 const isValidImageUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
-
   try {
     const parsed = new URL(url);
     return parsed.protocol === "https:";
@@ -24,22 +22,16 @@ export default function MiniAppHeader() {
   const { address, isConnected, connect, disconnect } = useFrameWallet();
   const [pfpError, setPfpError] = useState(false);
 
-  // Check if PFP URL is valid
   const hasValidPfp = isValidImageUrl(farcasterData?.pfpUrl) && !pfpError;
 
-  // ✅ Auto-connect on mount (but don't force if user not ready)
   useEffect(() => {
     if (!isConnected && !address) {
       console.log("[MiniAppHeader] 🚀 Auto-connecting wallet...");
-
-      // ✅ Add small delay to let Frame SDK initialize
       const timer = setTimeout(() => {
         connect().catch((err) => {
           console.warn("[MiniAppHeader] Auto-connect failed:", err.message);
-          // ✅ Don't throw error, just log (user can manually connect later)
         });
-      }, 500); // ✅ Wait 500ms for SDK to be ready
-
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -70,7 +62,6 @@ export default function MiniAppHeader() {
   const FallbackAvatar = ({ size = "small" }: { size?: "small" | "large" }) => {
     const initial = farcasterData?.displayName?.charAt(0).toUpperCase() || "?";
     const sizeClass = size === "large" ? "text-xl" : "text-xs";
-
     return (
       <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
         <span className={sizeClass}>{initial}</span>
@@ -78,7 +69,6 @@ export default function MiniAppHeader() {
     );
   };
 
-  // ✅ Handle connect wallet
   const handleConnect = async () => {
     try {
       await connect();
@@ -88,14 +78,12 @@ export default function MiniAppHeader() {
     }
   };
 
-  // ✅ Handle disconnect wallet
   const handleDisconnect = () => {
     disconnect();
     setIsSidebarOpen(false);
     console.log("[MiniAppHeader] Wallet disconnected");
   };
 
-  // ✅ Smooth scroll to pricing function
   const handleScrollToPricing = () => {
     const pricingElement = document.getElementById("pricing");
     if (pricingElement) {
@@ -104,15 +92,20 @@ export default function MiniAppHeader() {
     setIsSidebarOpen(false);
   };
 
-const getShareCastUrl = () => {
-  const baseUrl = "https://warpcast.com/~/compose";
-  const text = encodeURIComponent(
-    `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base.base.eth.\n\nFree SD or Premium HD editions available!\n\nTry it now: https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse`
-  );
-  const embedUrl = encodeURIComponent("https://muse.write3.fun/og-image.png");
+  // ✅ FIXED: Remove URL from text, only use embeds[]
+  const getShareCastUrl = () => {
+    const baseUrl = "https://warpcast.com/~/compose";
+    const text = encodeURIComponent(
+      `Just discovered Muse! 🎨✨\n\nTurn your Farcaster vibe into unique mood NFTs on @base.base.eth \n\nFree SD or Premium HD editions available!`
+    );
+    // Option 1: Embed static OG image
+    const embedUrl = encodeURIComponent("https://muse.write3.fun/og-image.png");
 
-  return `${baseUrl}?text=${text}&embeds[]=${embedUrl}`;
-};
+    // Option 2: Embed MiniApp URL (will auto-fetch OG from manifest)
+    // const embedUrl = encodeURIComponent("https://farcaster.xyz/miniapps/5R8ES6mG26Bl/muse");
+
+    return `${baseUrl}?text=${text}&embeds[]=${embedUrl}`;
+  };
 
   return (
     <>
@@ -142,7 +135,7 @@ const getShareCastUrl = () => {
             <div className="flex-1"></div>
 
             <div className="flex items-center gap-x-3">
-              {/* ✅ NEW: Share Cast Button (Desktop) */}
+              {/* Share Cast Button (Desktop) */}
               <a
                 href={getShareCastUrl()}
                 target="_blank"
@@ -322,7 +315,6 @@ const getShareCastUrl = () => {
                         <FallbackAvatar size="large" />
                       )}
                     </div>
-
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-white text-base truncate">
                         {farcasterData.displayName}
@@ -333,7 +325,6 @@ const getShareCastUrl = () => {
                       <div className="text-xs text-white/70 mt-1">
                         FID: {farcasterData.fid}
                       </div>
-
                       {farcasterData.mood && (
                         <div className="text-xs text-white font-semibold mt-2 bg-white/20 rounded px-2 py-0.5 inline-block">
                           {farcasterData.mood}
@@ -351,7 +342,7 @@ const getShareCastUrl = () => {
 
             <div className="px-4 py-4">
               <div className="space-y-3">
-                {/* ✅ NEW: Share Cast Button (Mobile - in Sidebar) */}
+                {/* Share Cast Button (Mobile) */}
                 <a
                   href={getShareCastUrl()}
                   target="_blank"
@@ -393,7 +384,6 @@ const getShareCastUrl = () => {
                   </button>
                 )}
 
-                {/* Show wallet address if connected */}
                 {address && (
                   <div className="bg-purple-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-neutral-600 mb-1">
@@ -405,7 +395,6 @@ const getShareCastUrl = () => {
                   </div>
                 )}
 
-                {/* Disconnect button - Only show if connected */}
                 {isConnected && (
                   <button
                     onClick={handleDisconnect}
@@ -415,7 +404,6 @@ const getShareCastUrl = () => {
                   </button>
                 )}
 
-                {/* Admin Showcase Button */}
                 {farcasterData?.fid === 1346047 && (
                   <Link
                     href="/showcase"
