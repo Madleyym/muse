@@ -60,14 +60,26 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    // ✅ FIX: Set timeout to force ready after 200ms
+    const forceReadyTimeout = setTimeout(() => {
+      if (!ready) {
+        console.warn("[FarcasterContext] ⏰ Force ready after timeout");
+        setReady(true);
+      }
+    }, 200); // ✅ Reduced from implicit wait
+
     const detectEnvironment = () => {
       try {
         if (typeof window === "undefined") {
           setReady(true);
+          clearTimeout(forceReadyTimeout);
           return;
         }
 
         const url = new URL(window.location.href);
+
+        // ✅ FIX: Pathname check FIRST (synchronous)
+        const isMiniAppRoute = url.pathname.startsWith("/miniapp");
 
         // Device detection
         const userAgent = navigator.userAgent.toLowerCase();
@@ -84,10 +96,7 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         const isIframe = window.self !== window.top;
         const warpcastParam = url.searchParams.get("fc") === "true";
 
-        // Path check
-        const isMiniAppRoute = url.pathname.startsWith("/miniapp");
-
-        // Check for Farcaster SDK
+        // ✅ FIX: Check for Farcaster SDK (with faster timeout)
         let hasFarcasterSDK = false;
         try {
           if ((window as any).farcaster !== undefined) {
@@ -105,8 +114,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           isIframe ||
           warpcastParam;
 
+        // ✅ FIX: If on /miniapp route, assume miniapp EVEN IF NO SDK YET
         const finalIsMiniApp =
-          isMiniAppRoute && (hasFarcasterSDK || detectedIsWarpcast);
+          isMiniAppRoute && (hasFarcasterSDK || detectedIsWarpcast || true); // ✅ Force true if on /miniapp
 
         let finalEnvironment: "web" | "miniapp" | "warpcast" = "web";
 
@@ -142,15 +152,22 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
         document.body.classList.add(`${finalEnvironment}-mode`);
 
         setReady(true);
+        clearTimeout(forceReadyTimeout); // ✅ Clear timeout if detection done
       } catch (error: any) {
         console.error("[FarcasterContext] ❌ Error:", error);
         setEnvironment("web");
         setIsMiniApp(false);
         setReady(true);
+        clearTimeout(forceReadyTimeout);
       }
     };
 
+    // ✅ FIX: Run detection immediately (no delay)
     detectEnvironment();
+
+    return () => {
+      clearTimeout(forceReadyTimeout);
+    };
   }, []);
 
   return (
